@@ -7,7 +7,3 @@
    ```
 
 2. Access the backend at [http://localhost:8000](http://localhost:8000)
-
-## Database Structure
-
-![Database Structure](assets/db_erd.png)
