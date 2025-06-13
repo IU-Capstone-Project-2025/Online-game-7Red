@@ -51,20 +51,20 @@ async def search_game_room(assigned_id: str):
 
 
 # for creating user
-async def create_user(id: int, login: str, password: str, created_at: datetime | None = None, last_visited: datetime | None = None ):
-    query = users.insert().values(id=id, login = login, password=password, created_at=created_at or datetime.utcnow(), last_visited = last_visited or datetime.utcnow())
+async def create_user(login: str, password: str, created_at: datetime | None = None, last_visited: datetime | None = None ):
+    query = people.insert().values(login = login, password=password, created_at=created_at or datetime.utcnow(), last_visited = last_visited or datetime.utcnow())
     return await database.execute(query)
 
 # for deleting user
 async def delete_user(user_id: int):
-    query = users.delete().where(users.c.id == user_id)
+    query = people.delete().where(people.c.id == user_id)
     return await database.execute(query)
 
 # for searching user
 async def search_user_by_id(user_id: int):
-    query = users.select().where(users.c.id == user_id)
+    query = people.select().where(people.c.id == user_id)
     return await database.fetch_one(query)
 
 async def search_user_by_login(login: str):
-    query = users.select().where(users.c.login == login)
+    query = people.select().where(people.c.login == login)
     return await database.fetch_one(query)
