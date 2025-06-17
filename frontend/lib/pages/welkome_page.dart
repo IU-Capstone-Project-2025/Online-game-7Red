@@ -1,5 +1,12 @@
 import 'package:flutter/material.dart';
 import '../data/styles.dart';
+// import '../services/remote_service.dart';
+// import '../models/post.dart';
+
+import 'package:http/http.dart' as http;
+import 'dart:convert';
+
+
 
 class WelkomePage extends StatefulWidget {
   const WelkomePage({super.key});
@@ -9,6 +16,31 @@ class WelkomePage extends StatefulWidget {
 }
 
 class _WelkomePageState extends State<WelkomePage> {
+  String postText = 'none of response';
+
+  Future<void> signUp(String nickname, String email, String password, String repeatedPassword) async {
+    final url = Uri.parse('http://localhost:8000/auth/signup');
+    final response = await http.post(
+      url,
+      headers: {'Content-Type': 'application/json'},
+      body: jsonEncode({
+        'nickname': nickname,
+        'email': email,
+        'password': password,
+        'repeated_password': repeatedPassword,
+      }),
+    );
+
+    if (response.statusCode == 200 || response.statusCode == 201) {
+      print('Registration successful: ${response.body}');
+      postText = 'Registration successful: ${response.body}';
+    } else {
+      print('Registration failed: ${response.body}');
+      postText = 'Registration failed: ${response.body}';
+    }
+  }
+
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -121,7 +153,48 @@ class _WelkomePageState extends State<WelkomePage> {
                   ),
                 ],
               ),
-              const Expanded(flex: 6, child: Text("")),
+              const Expanded(flex: 4, child: Text("")),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                crossAxisAlignment: CrossAxisAlignment.center,
+                children: [
+                  SizedBox(
+                    width: 200,
+                    height: 50,
+                    child: ElevatedButton(
+                      style: ButtonStyle(
+                        backgroundColor: WidgetStateProperty.all<Color>(
+                          buttonColor,
+                        ),
+                        textStyle: WidgetStateProperty.all<TextStyle>(
+                          buttonTextStyle,
+                        ),
+                        foregroundColor: WidgetStateProperty.all<Color>(
+                          grey3A3A3AColor,
+                        ),
+                        shape:
+                            WidgetStateProperty.all<RoundedRectangleBorder>(
+                              RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(10),
+                              ),
+                            ),
+                        side: MaterialStateProperty.all<BorderSide>(
+                          BorderSide(color: grey3A3A3AColor, width: 1),
+                        ),
+                      ),
+                      onPressed: () {
+                        signUp('t_nickname', 't_email', 't_password', 't_password');
+                      },
+                      child: const Text('Test post to backend'),
+                    ),
+                  ),
+                  Padding(padding: EdgeInsets.only(left: 30)),
+                  Text(
+                    "${postText}",
+                    style: basicTextStyle,
+                  ),
+                ]
+              )
             ],
           ),
         ),
