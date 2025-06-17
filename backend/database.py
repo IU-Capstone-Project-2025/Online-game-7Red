@@ -76,6 +76,6 @@ async def search_user_by_login(login: str):
     return await database.fetch_one(query)
 
 async def create_profile(user_id: int, name: str, avatar: str = None):
-    query = profiles.insert().value(user_id=user_id, name=name, avatar=avatar)
+    query = profiles.insert().values(user_id=user_id, name=name, avatar=avatar)
     return await database.execute(query)
 
