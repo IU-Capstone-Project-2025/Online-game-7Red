@@ -7,6 +7,7 @@ router = APIRouter(prefix="/auth", tags=["auth"])
 
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
+
 @router.post("/signup")
 async def signup(request: SignUpRequest):
     # Check if the user alredy registered

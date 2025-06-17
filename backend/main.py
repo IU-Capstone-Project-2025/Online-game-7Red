@@ -3,8 +3,17 @@ from backend.routers.auth import router as auth_router
 from backend.routers.rooms import router as rooms_router
 from backend.routers.game import router as game_router
 from backend.database import database
+from fastapi.middleware.cors import CORSMiddleware
 
 app = FastAPI()
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],  # Для разработки можно "*", для прода лучше указать конкретные домены
+    allow_credentials=True,
+    allow_methods=["*"],  # Или конкретные методы: ["GET", "POST", "OPTIONS", etc.]
+    allow_headers=["*"],
+)
 
 @app.on_event("startup")
 async def startup():

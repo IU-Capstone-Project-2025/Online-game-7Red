@@ -22,7 +22,7 @@ class _WelkomePageState extends State<WelkomePage> {
     final url = Uri.parse('http://localhost:8000/auth/signup');
     final response = await http.post(
       url,
-      headers: {'Content-Type': 'application/json'},
+      headers: {'Content-Type': 'application/json', 'accept': 'application/json'},
       body: jsonEncode({
         'nickname': nickname,
         'email': email,
@@ -33,10 +33,14 @@ class _WelkomePageState extends State<WelkomePage> {
 
     if (response.statusCode == 200 || response.statusCode == 201) {
       print('Registration successful: ${response.body}');
-      postText = 'Registration successful: ${response.body}';
+      setState(() {
+        postText = 'Registration successful: ${response.body}';
+      });
     } else {
       print('Registration failed: ${response.body}');
-      postText = 'Registration failed: ${response.body}';
+      setState(() {
+        postText = 'Registration failed: ${response.body}';
+      });
     }
   }
 
@@ -183,7 +187,7 @@ class _WelkomePageState extends State<WelkomePage> {
                         ),
                       ),
                       onPressed: () {
-                        signUp('t_nickname', 't_email', 't_password', 't_password');
+                        signUp('nickname', 'anastasia.shlomov@gmail.com', 'password', 'password');
                       },
                       child: const Text('Test post to backend'),
                     ),
