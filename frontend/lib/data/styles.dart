@@ -8,8 +8,9 @@ TextStyle titleStyle = const TextStyle(
 );
 
 TextStyle buttonTextStyle = const TextStyle(
+  fontFamily: 'Awesome5',
   fontSize: 14,
-  fontWeight: FontWeight.w900,
+  fontWeight: FontWeight.w600,
   color: Color.fromARGB(255, 58, 58, 58)
 );
 
@@ -19,6 +20,7 @@ TextStyle basicTextStyle = const TextStyle(
   color: Color.fromARGB(255, 58, 58, 58)
 );
 
+Color backInvisColor = const Color.fromARGB(125, 218, 209, 193);
 
 Color grey3A3A3AColor = const Color.fromARGB(255, 58, 58, 58);
 

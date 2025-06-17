@@ -64,9 +64,9 @@ class _WelkomePageState extends State<WelkomePage> {
                             ),
                           ),
                           onPressed: () {
-                            Navigator.of(context).pushNamed('/intro1');
+                            Navigator.of(context).pushNamed('/signin');
                           },
-                          child: const Text('SIGN IN'),
+                          child: const Text('SIGN  IN'),
                         ),
                       ),
                       Text(""),
@@ -107,9 +107,9 @@ class _WelkomePageState extends State<WelkomePage> {
                             ),
                           ),
                           onPressed: () {
-                            Navigator.of(context).pushNamed('/intro1');
+                            Navigator.of(context).pushNamed('/signup');
                           },
-                          child: const Text('SIGN UP'),
+                          child: const Text('SIGN  UP'),
                         ),
                       ),
                       Text(""),
