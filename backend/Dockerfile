@@ -4,6 +4,6 @@ WORKDIR /app
 
 COPY . /app/backend
 
-RUN pip install fastapi uvicorn "pydantic[email]"
+RUN pip install fastapi uvicorn "pydantic[email]" sqlalchemy databases python-dotenv passlib[bcrypt] asyncpg
 
 CMD ["uvicorn", "backend.main:app", "--host", "0.0.0.0", "--port", "8000"]
