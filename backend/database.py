@@ -1,5 +1,5 @@
 import os
-from sqlalchemy import MetaData, Table, Column, Integer, String, create_engine, TIMESTAMP
+from sqlalchemy import MetaData, Table, Column, Integer, String, create_engine, TIMESTAMP, ForeignKey
 from databases import Database
 from dotenv import load_dotenv
 from datetime import datetime
@@ -30,6 +30,14 @@ people = Table(
     Column("last_visited", TIMESTAMP(timezone=True), default=datetime.utcnow),
 )
 
+profiles = Table(
+    "profiles",
+    metadata,
+    Column("user_id", Integer, ForeignKey("users.id", ondelete="CASCADE"), primary_key=True),
+    Column("name", String(100), nullable=False),
+    Column("avatar", String(255)),
+)
+
 database = Database(DATABASE_URL)
 engine = create_engine(DATABASE_URL)
 
@@ -47,8 +55,6 @@ async def delete_game_room(room_id: int):
 async def search_game_room(assigned_id: str):
     query = games.select().where(games.c.assigned_id == assigned_id)
     return await database.fetch_one(query)
-
-
 
 # for creating user
 async def create_user(login: str, password: str, created_at: datetime | None = None, last_visited: datetime | None = None ):
@@ -68,3 +74,8 @@ async def search_user_by_id(user_id: int):
 async def search_user_by_login(login: str):
     query = people.select().where(people.c.login == login)
     return await database.fetch_one(query)
+
+async def create_profile(user_id: int, name: str, avatar: str = None):
+    query = profiles.insert().value(user_id=user_id, name=name, avatar=avatar)
+    return await database.execute(query)
+
