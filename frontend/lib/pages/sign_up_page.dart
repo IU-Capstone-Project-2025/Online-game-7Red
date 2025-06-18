@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import '../data/styles.dart';
+import 'package:http/http.dart' as http;
+import 'dart:convert';
 
 class SignUpPage extends StatefulWidget {
   const SignUpPage({super.key});
@@ -13,6 +15,38 @@ class _SignUpPageState extends State<SignUpPage> {
   final TextEditingController controller2 = TextEditingController();
   final TextEditingController controller3 = TextEditingController();
   final TextEditingController controller4 = TextEditingController();
+
+  String postText = '';
+  String errNickname = '';
+  String errEmail = '';
+  String errPassword = '';
+  String errRepeatedPassword = '';
+  bool regSuccess = false;
+
+  Future<void> signUp(String nickname, String email, String password, String repeatedPassword) async {
+    final url = Uri.parse('http://localhost:8000/auth/signup');
+    final response = await http.post(
+      url,
+      headers: {'Content-Type': 'application/json', 'accept': 'application/json'},
+      body: jsonEncode({
+        'nickname': nickname,
+        'email': email,
+        'password': password,
+        'repeated_password': repeatedPassword,
+      }),
+    );
+
+    if (response.statusCode == 200 || response.statusCode == 201) {
+      setState(() {
+        regSuccess = true;
+      });
+    } else {
+      setState(() {
+        regSuccess = false;
+        errEmail = '(already in use)';
+      });
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -71,6 +105,8 @@ class _SignUpPageState extends State<SignUpPage> {
                         Padding(padding: const EdgeInsets.only(left: 47)),
                         Text("Nickname", style: basicTextStyle,),
                         const Expanded(flex: 1, child: Text("")),
+                        Text(errNickname, style: errorTextStyle, textAlign: TextAlign.right),
+                        Padding(padding: const EdgeInsets.only(right: 47)),
                       ]
                     ),
                     Padding(padding: const EdgeInsets.only(top: 5)),
@@ -97,6 +133,8 @@ class _SignUpPageState extends State<SignUpPage> {
                         Padding(padding: const EdgeInsets.only(left: 47)),
                         Text("Email address", style: basicTextStyle),
                         const Expanded(flex: 1, child: Text("")),
+                        Text(errEmail, style: errorTextStyle, textAlign: TextAlign.right),
+                        Padding(padding: const EdgeInsets.only(right: 47)),
                       ]
                     ),
                     Padding(padding: const EdgeInsets.only(top: 5)),
@@ -123,6 +161,8 @@ class _SignUpPageState extends State<SignUpPage> {
                         Padding(padding: const EdgeInsets.only(left: 47)),
                         Text("Password", style: basicTextStyle),
                         const Expanded(flex: 1, child: Text("")),
+                        Text(errPassword, style: errorTextStyle, textAlign: TextAlign.right),
+                        Padding(padding: const EdgeInsets.only(right: 47)),
                       ]
                     ),
                     Padding(padding: const EdgeInsets.only(top: 5)),
@@ -149,6 +189,8 @@ class _SignUpPageState extends State<SignUpPage> {
                         Padding(padding: const EdgeInsets.only(left: 47)),
                         Text("Repeat password", style: basicTextStyle),
                         const Expanded(flex: 1, child: Text("")),
+                        Text(errRepeatedPassword, style: errorTextStyle, textAlign: TextAlign.right),
+                        Padding(padding: const EdgeInsets.only(right: 47)),
                       ]
                     ),
                     Padding(padding: const EdgeInsets.only(top: 5)),
@@ -193,16 +235,51 @@ class _SignUpPageState extends State<SignUpPage> {
                               BorderSide(color: grey3A3A3AColor, width: 1),
                             ),
                           ),
-                          onPressed: () {
+                          onPressed: () async{
+                            setState(() {
+                              postText = '';
+                              errNickname = '';
+                              errEmail = '';
+                              errPassword = '';
+                              errRepeatedPassword = '';
+                            });
                             if (controller.text.isEmpty || controller2.text.isEmpty || controller3.text.isEmpty || controller4.text.isEmpty) {
+                              setState(() {
+                                postText = 'All fields are required';
+                              });
                               return;
-                            } else {
-                              // pass
+                            }
+                            else if (controller.text.length > 10) {
+                              setState(() {
+                                errNickname = '(1-10 symbols)';
+                              });
+                              return;
+                            }
+                            else if (controller3.text.length > 10 || controller3.text.length < 6) {
+                              setState(() {
+                                errPassword = '(6-10 symbols)';
+                              });
+                              return;
+                            } 
+                            else if (controller3.text != controller4.text) {
+                              setState(() {
+                                errRepeatedPassword = '(passwords different)';
+                              });
+                              return;
+                            } 
+                            else {
+                              await signUp(controller.text, controller2.text, controller3.text, controller4.text);
+                              if (regSuccess) {
+                                Navigator.pushNamed(context, '/mainmenu');
+                              }
                             }
                           },
                           child: const Text('SIGN  UP'),
                         ),
                       ),
+                      Padding(padding: const EdgeInsets.only(top: 10)),
+                      Text("$postText", style: errorTextStyle,),
+
 
                   ],
                 ),
