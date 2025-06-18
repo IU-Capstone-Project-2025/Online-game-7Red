@@ -5,12 +5,14 @@ services:
     ports:
       - "8000:8000"
     restart: unless-stopped
+    env_file:
+      - ./database/.env
 
-  frontend:
-    build: ./frontend
-    # ports: 
-    # command: 
+  # frontend:
+  #   build: ./frontend
+  #   # ports:
+  #  
 
-  ml:
-    build: ./ml
-    # command: 
+  # ml:
+  #   build: ./ml
+  #   
