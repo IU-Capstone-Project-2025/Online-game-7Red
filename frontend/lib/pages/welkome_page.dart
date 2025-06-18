@@ -95,7 +95,7 @@ class _WelkomePageState extends State<WelkomePage> {
                                     borderRadius: BorderRadius.circular(10),
                                   ),
                                 ),
-                            side: MaterialStateProperty.all<BorderSide>(
+                            side: WidgetStateProperty.all<BorderSide>(
                               BorderSide(color: grey3A3A3AColor, width: 1),
                             ),
                           ),
@@ -138,7 +138,7 @@ class _WelkomePageState extends State<WelkomePage> {
                                     borderRadius: BorderRadius.circular(10),
                                   ),
                                 ),
-                            side: MaterialStateProperty.all<BorderSide>(
+                            side: WidgetStateProperty.all<BorderSide>(
                               BorderSide(color: grey3A3A3AColor, width: 1),
                             ),
                           ),
@@ -182,7 +182,7 @@ class _WelkomePageState extends State<WelkomePage> {
                                 borderRadius: BorderRadius.circular(10),
                               ),
                             ),
-                        side: MaterialStateProperty.all<BorderSide>(
+                        side: WidgetStateProperty.all<BorderSide>(
                           BorderSide(color: grey3A3A3AColor, width: 1),
                         ),
                       ),
@@ -196,6 +196,17 @@ class _WelkomePageState extends State<WelkomePage> {
                   Text(
                     "${postText}",
                     style: basicTextStyle,
+                  ),
+                  Padding(padding: EdgeInsets.only(left: 30)),
+                  SizedBox(
+                    width: 60,
+                    height: 60,
+                    child: IconButton(
+                      onPressed: () {
+                        Navigator.pushNamed(context, '/mainmenu');
+                      },
+                      icon: const Icon(Icons.skip_next, size: 44),
+                    ),
                   ),
                 ]
               )

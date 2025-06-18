@@ -189,7 +189,7 @@ class _SignUpPageState extends State<SignUpPage> {
                                     borderRadius: BorderRadius.circular(10),
                                   ),
                                 ),
-                            side: MaterialStateProperty.all<BorderSide>(
+                            side: WidgetStateProperty.all<BorderSide>(
                               BorderSide(color: grey3A3A3AColor, width: 1),
                             ),
                           ),
@@ -197,7 +197,7 @@ class _SignUpPageState extends State<SignUpPage> {
                             if (controller.text.isEmpty || controller2.text.isEmpty || controller3.text.isEmpty || controller4.text.isEmpty) {
                               return;
                             } else {
-                              Navigator.of(context).pushNamed('/');
+                              // pass
                             }
                           },
                           child: const Text('SIGN  UP'),
