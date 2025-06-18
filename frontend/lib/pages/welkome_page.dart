@@ -1,7 +1,5 @@
 import 'package:flutter/material.dart';
 import '../data/styles.dart';
-// import '../services/remote_service.dart';
-// import '../models/post.dart';
 
 import 'package:http/http.dart' as http;
 import 'dart:convert';
@@ -95,7 +93,7 @@ class _WelkomePageState extends State<WelkomePage> {
                                     borderRadius: BorderRadius.circular(10),
                                   ),
                                 ),
-                            side: MaterialStateProperty.all<BorderSide>(
+                            side: WidgetStateProperty.all<BorderSide>(
                               BorderSide(color: grey3A3A3AColor, width: 1),
                             ),
                           ),
@@ -138,7 +136,7 @@ class _WelkomePageState extends State<WelkomePage> {
                                     borderRadius: BorderRadius.circular(10),
                                   ),
                                 ),
-                            side: MaterialStateProperty.all<BorderSide>(
+                            side: WidgetStateProperty.all<BorderSide>(
                               BorderSide(color: grey3A3A3AColor, width: 1),
                             ),
                           ),
@@ -158,47 +156,16 @@ class _WelkomePageState extends State<WelkomePage> {
                 ],
               ),
               const Expanded(flex: 4, child: Text("")),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                crossAxisAlignment: CrossAxisAlignment.center,
-                children: [
-                  SizedBox(
-                    width: 200,
-                    height: 50,
-                    child: ElevatedButton(
-                      style: ButtonStyle(
-                        backgroundColor: WidgetStateProperty.all<Color>(
-                          buttonColor,
-                        ),
-                        textStyle: WidgetStateProperty.all<TextStyle>(
-                          buttonTextStyle,
-                        ),
-                        foregroundColor: WidgetStateProperty.all<Color>(
-                          grey3A3A3AColor,
-                        ),
-                        shape:
-                            WidgetStateProperty.all<RoundedRectangleBorder>(
-                              RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(10),
-                              ),
-                            ),
-                        side: MaterialStateProperty.all<BorderSide>(
-                          BorderSide(color: grey3A3A3AColor, width: 1),
-                        ),
-                      ),
-                      onPressed: () {
-                        signUp('nickname', 'anastasia.shlomov@gmail.com', 'password', 'password');
-                      },
-                      child: const Text('Test post to backend'),
-                    ),
-                  ),
-                  Padding(padding: EdgeInsets.only(left: 30)),
-                  Text(
-                    "${postText}",
-                    style: basicTextStyle,
-                  ),
-                ]
-              )
+              SizedBox(
+                width: 60,
+                height: 60,
+                child: IconButton(
+                  onPressed: () {
+                    Navigator.pushNamed(context, '/mainmenu');
+                  },
+                  icon: const Icon(Icons.skip_next, size: 44),
+                ),
+              ),
             ],
           ),
         ),
