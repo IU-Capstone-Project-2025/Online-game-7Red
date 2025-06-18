@@ -1,9 +1,6 @@
 import 'package:flutter/material.dart';
 import '../data/styles.dart';
 
-import 'package:http/http.dart' as http;
-import 'dart:convert';
-
 
 
 class WelkomePage extends StatefulWidget {
@@ -14,35 +11,6 @@ class WelkomePage extends StatefulWidget {
 }
 
 class _WelkomePageState extends State<WelkomePage> {
-  String postText = 'none of response';
-
-  Future<void> signUp(String nickname, String email, String password, String repeatedPassword) async {
-    final url = Uri.parse('http://localhost:8000/auth/signup');
-    final response = await http.post(
-      url,
-      headers: {'Content-Type': 'application/json', 'accept': 'application/json'},
-      body: jsonEncode({
-        'nickname': nickname,
-        'email': email,
-        'password': password,
-        'repeated_password': repeatedPassword,
-      }),
-    );
-
-    if (response.statusCode == 200 || response.statusCode == 201) {
-      print('Registration successful: ${response.body}');
-      setState(() {
-        postText = 'Registration successful: ${response.body}';
-      });
-    } else {
-      print('Registration failed: ${response.body}');
-      setState(() {
-        postText = 'Registration failed: ${response.body}';
-      });
-    }
-  }
-
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
