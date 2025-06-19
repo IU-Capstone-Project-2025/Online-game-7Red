@@ -1,4 +1,4 @@
-version: "3.9"
+# version: "3.9"
 services:
   backend:
     build: ./backend
@@ -7,6 +7,16 @@ services:
     restart: unless-stopped
     env_file:
       - ./database/.env   # or ./backend/.env if your .env is inside backend
+  
+  frontend:
+    build: 
+      context: ./frontend
+      dockerfile: Dockerfile
+    ports:
+      - "8080:80"
+    depends_on:
+      - backend
+    restart: unless-stopped
 
   # frontend:
   #   build: ./frontend
