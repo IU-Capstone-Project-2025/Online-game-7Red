@@ -32,7 +32,7 @@ The application includes the following core components:
    docker-compose up --build
    ```
 
-2. Access the backend at:
- [http://localhost:8000](http://localhost:8000)
+2. Access to the website at:
+ [http://localhost:8080](http://localhost:8080)
 
 3. After starting the backend, you can access the interactive Swagger UI at: [http://localhost:8000/docs](http://localhost:8000/docs)
