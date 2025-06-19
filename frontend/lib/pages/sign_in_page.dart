@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import '../data/styles.dart';
+import 'package:http/http.dart' as http;
+import 'dart:convert';
 
 class SignInPage extends StatefulWidget {
   const SignInPage({super.key});
@@ -11,6 +13,33 @@ class SignInPage extends StatefulWidget {
 class _SignInPageState extends State<SignInPage> {
   final TextEditingController controller = TextEditingController();
   final TextEditingController controller2 = TextEditingController();
+
+  String postText = '';
+  bool logSuccess = false;
+
+  Future<void> signIn(String email, String password) async {
+    final url = Uri.parse('http://localhost:8000/auth/signin');
+    final response = await http.post(
+      url,
+      headers: {'Content-Type': 'application/json', 'accept': 'application/json'},
+      body: jsonEncode({
+        'email': email,
+        'password': password,
+      }),
+    );
+
+    if (response.statusCode == 200) {
+      setState(() {
+        logSuccess = true;
+      });
+    } else {
+      setState(() {
+        logSuccess = false;
+        postText = 'Invalid email or password';
+      });
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -138,16 +167,27 @@ class _SignInPageState extends State<SignInPage> {
                               BorderSide(color: grey3A3A3AColor, width: 1),
                             ),
                           ),
-                          onPressed: () {
+                          onPressed: () async {
+                            setState(() {
+                              postText = '';
+                            });
                             if (controller.text.isEmpty || controller2.text.isEmpty) {
+                              setState(() {
+                                postText = 'All fields are required';
+                              });
                               return;
                             } else {
-                              // pass
+                              await signIn(controller.text, controller2.text);
+                              if (logSuccess) {
+                                Navigator.pushNamed(context, '/mainmenu');
+                              }
                             }
                           },
                           child: const Text('SIGN  IN'),
                         ),
                       ),
+                      Padding(padding: const EdgeInsets.only(top: 10)),
+                      Text("$postText", style: errorTextStyle,),
 
                   ],
                 ),

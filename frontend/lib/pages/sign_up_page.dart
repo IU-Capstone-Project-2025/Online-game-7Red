@@ -242,6 +242,7 @@ class _SignUpPageState extends State<SignUpPage> {
                               errEmail = '';
                               errPassword = '';
                               errRepeatedPassword = '';
+                              regSuccess = false;
                             });
                             if (controller.text.isEmpty || controller2.text.isEmpty || controller3.text.isEmpty || controller4.text.isEmpty) {
                               setState(() {
