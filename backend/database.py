@@ -116,6 +116,6 @@ async def add_user_to_room(user_id: int, assigned_id: str):
     room = await database.fetch_one(query)
     if not room:
         raise Exception("Room not found")
-    room_id = room["id"]
+    room_id = room["room_id"]
     insert_query = user_room.insert().values(user_id=user_id, room_id=room_id)
     await database.execute(insert_query)
