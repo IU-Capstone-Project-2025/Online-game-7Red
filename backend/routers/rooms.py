@@ -74,7 +74,7 @@ async def player_not_ready( user_id: int, assigned_id: str):
     
 
 @router.post("/{room_id}/state")
-async def update_game_state(assigned_id: str):
+async def update_room_state(assigned_id: str):
     try:
         players, ready_players = await get_room_players_and_ready(assigned_id)
         return {
