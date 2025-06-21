@@ -1,7 +1,7 @@
 from fastapi import APIRouter, Body, HTTPException
 from backend.models import  JoinRoomRequest
 from backend.database import (assigned_id_exists, password_exist, create_game_room, add_user_to_room, 
-search_game_room)
+search_game_room, remove_user_from_room)
 import random
 router = APIRouter(prefix="/rooms", tags=["rooms"])
 
@@ -41,24 +41,28 @@ async def join_room(request: JoinRoomRequest):
         raise HTTPException(status_code=404, detail="Room not found")
     if room["password"] != request.password:
         raise HTTPException(status_code=403, detail="Incorrect password")
+    if room["game_state"] != "waiting":
+        raise HTTPException(status_code=403, detail="Game already started")
     await add_user_to_room(request.user_id, request.assigned_id)
     return {"message": "User added to the room"}
 
 
-@router.post("{room_id}/leave")
-async def leave_room(room_id: str, player_id: int = Body(..., embed=True)):
-    #
-    return {
-        "message": "Not implemented yet"
-    }
+@router.post("/{assigned_id}/leave")
+async def leave_room(user_id: int, assigned_id: str):
+    try:
+        await remove_user_from_room(user_id, assigned_id)
+        return {"message": f"User {user_id} left room {assigned_id}"}
+    except Exception as e:
+       raise HTTPException(status_code=404, detail=str(e))
+   
 
-@router.post("/{room_id}/ready")
-async def player_ready(room_id: str, player_id: int = Body(..., embed=True)):
+@router.post("/{assigned_id}/ready")
+async def player_ready(user_id: int, assigned_id: str):
     # Recieve ready messages from players
     return {"message": "Not implemented yet"}
 
-@router.post("{room_id}/not_ready")
-async def player_ready(room_id: str, player_id: int = Body(..., embed=True)):
+@router.post("/{assigned_id}/not_ready")
+async def player_not_ready( user_id: int, assigned_id: str):
     # Recieve not_ready messages from players
     return {"message": "Not implemented yet"}
 

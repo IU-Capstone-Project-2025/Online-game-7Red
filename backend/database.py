@@ -119,3 +119,13 @@ async def add_user_to_room(user_id: int, assigned_id: str):
     room_id = room["room_id"]
     insert_query = user_room.insert().values(user_id=user_id, room_id=room_id)
     await database.execute(insert_query)
+    
+
+async def remove_user_from_room(user_id: int, assigned_id: str):
+    query = games.select().where(games.c.assigned_id == assigned_id)
+    room = await database.fetch_one(query)
+    if not room:
+        raise Exception("Room mot found")
+    room_id = room["room_id"]
+    delete = user_room.delete().where((user_room.c.user_id == user_id) & (user_room.c.room_id == room_id))
+    await database.execute(delete)
