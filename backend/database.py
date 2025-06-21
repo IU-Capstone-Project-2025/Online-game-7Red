@@ -1,5 +1,5 @@
 import os
-from sqlalchemy import MetaData, Table, Column, Integer, String, create_engine, TIMESTAMP, ForeignKey
+from sqlalchemy import MetaData, Table, Column, Integer, String, create_engine, TIMESTAMP, ForeignKey, Boolean
 from databases import Database
 from dotenv import load_dotenv
 from datetime import datetime
@@ -26,6 +26,7 @@ user_room = Table(
     metadata,
     Column("user_id", Integer, ForeignKey("users.id", ondelete="CASCADE"), primary_key=True),
     Column("room_id", Integer, ForeignKey("game_rooms.room_id", ondelete="CASCADE"), primary_key=True),
+    Column("ready", Boolean, default=False),
 )
 
 people = Table(
@@ -129,3 +130,32 @@ async def remove_user_from_room(user_id: int, assigned_id: str):
     room_id = room["room_id"]
     delete = user_room.delete().where((user_room.c.user_id == user_id) & (user_room.c.room_id == room_id))
     await database.execute(delete)
+    
+    
+async def set_user_ready(user_id: int, assigned_id: str, ready: bool):
+    query = games.select().where(games.c.assigned_id == assigned_id)
+    room = await database.fetch_one(query)
+    if not room:
+        raise Exception("Room not found")
+    room_id = room["room_id"]
+    set_query = user_room.update().where((user_room.c.user_id == user_id) & (user_room.c.room_id == room_id)).values(ready=ready)
+    await database.execute(set_query)
+    
+async def get_room_players_and_ready(assigned_id: str):
+    query = games.select().where(games.c.assigned_id == assigned_id)
+    room = await database.fetch_one(query)
+    if not room:
+        raise Exception("Room not found")
+    room_id = room["room_id"]
+
+    players = (user_room.join(profiles, user_room.c.user_id == profiles.c.user_id))
+    query = (
+        user_room.select()
+        .with_only_columns([profiles.c.name, user_room.c.ready])
+        .select_from(players)
+        .where(user_room.c.room_id == room_id)
+    )
+    rows = await database.fetch_all(query)
+    players = [row["name"] for row in rows]
+    ready_p = [row["name"] for row in rows if row["ready"]]
+    return players, ready_p

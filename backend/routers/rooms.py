@@ -1,7 +1,7 @@
 from fastapi import APIRouter, Body, HTTPException
 from backend.models import  JoinRoomRequest
 from backend.database import (assigned_id_exists, password_exist, create_game_room, add_user_to_room, 
-search_game_room, remove_user_from_room)
+search_game_room, remove_user_from_room, set_user_ready, get_room_players_and_ready)
 import random
 router = APIRouter(prefix="/rooms", tags=["rooms"])
 
@@ -58,22 +58,32 @@ async def leave_room(user_id: int, assigned_id: str):
 
 @router.post("/{assigned_id}/ready")
 async def player_ready(user_id: int, assigned_id: str):
-    # Recieve ready messages from players
-    return {"message": "Not implemented yet"}
+    try:
+        await set_user_ready(user_id, assigned_id, True)
+        return {"message": f"Player {user_id} is ready in room {assigned_id}"}
+    except Exception as e:
+        raise HTTPException(status_code=404, detail=str(e))
 
 @router.post("/{assigned_id}/not_ready")
 async def player_not_ready( user_id: int, assigned_id: str):
-    # Recieve not_ready messages from players
-    return {"message": "Not implemented yet"}
-
-
+    try:
+        await set_user_ready(user_id, assigned_id, False)
+        return {"message": f"Player {user_id} is not ready in room {assigned_id}"}
+    except Exception as e:
+        raise HTTPException(status_code=404, detail=str(e))
+    
 
 @router.post("/{room_id}/state")
-async def update_game_state(room_id: str, state: dict = Body(...)):
-    # Update the game state for a room.
-    # Flutter sends the new state
-    # Save the state in the database
-    return {"message": "Not implemented yet"}
+async def update_game_state(assigned_id: str):
+    try:
+        players, ready_players = await get_room_players_and_ready(assigned_id)
+        return {
+            "players": players,
+            "ready_players": ready_players
+        }
+    except Exception as e:
+        raise HTTPException(status_code=404, detail=str(e))
+
 
 @router.get("/{room_id}/state")
 async def get_game_state(room_id: str):
