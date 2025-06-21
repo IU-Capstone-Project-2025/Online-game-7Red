@@ -73,7 +73,7 @@ async def player_not_ready( user_id: int, assigned_id: str):
         raise HTTPException(status_code=404, detail=str(e))
     
 
-@router.post("/{room_id}/state")
+@router.post("/{assigned_id}/state")
 async def update_room_state(assigned_id: str):
     try:
         players, ready_players = await get_room_players_and_ready(assigned_id)
@@ -85,7 +85,7 @@ async def update_room_state(assigned_id: str):
         raise HTTPException(status_code=404, detail=str(e))
 
 
-@router.get("/{room_id}/state")
+@router.get("/{assigned_id}/state")
 async def get_game_state(room_id: str):
     # Get the current game state for a room.
     # Get the state from the database
