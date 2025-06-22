@@ -47,7 +47,7 @@ async def join_room(request: JoinRoomRequest):
     return {"message": "User added to the room"}
 
 
-@router.post("/{assigned_id}/leave")
+@router.post("/leave")
 async def leave_room(user_id: int, assigned_id: str):
     try:
         await remove_user_from_room(user_id, assigned_id)
@@ -73,7 +73,7 @@ async def player_not_ready( user_id: int, assigned_id: str):
         raise HTTPException(status_code=404, detail=str(e))
     
 
-@router.post("/{assigned_id}/state")
+@router.post("/state")
 async def update_room_state(assigned_id: str):
     try:
         players, ready_players = await get_room_players_and_ready(assigned_id)

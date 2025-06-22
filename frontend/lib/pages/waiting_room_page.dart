@@ -62,7 +62,7 @@ class _WaitingRoomPageState extends State<WaitingRoomPage> {
       url,
       headers: {'Content-Type': 'application/json', 'accept': 'application/json'},
       body: jsonEncode({
-        'room_id': room_id,
+        'assigned_id': room_id,
       }),
     );
 
@@ -158,8 +158,8 @@ class _WaitingRoomPageState extends State<WaitingRoomPage> {
       url,
       headers: {'Content-Type': 'application/json', 'accept': 'application/json'},
       body: jsonEncode({
-        'my_id': id,
-        'room_id': room_id,
+        'user_id': id,
+        'assigned_id': room_id,
       })
     );
 
@@ -207,11 +207,11 @@ class _WaitingRoomPageState extends State<WaitingRoomPage> {
                     width: 60,
                     height: 60,
                     child: IconButton(
-                      onPressed: () {
+                      onPressed: () async {
                         setState(() {
                           logSuccess = false;
                         });
-                        leaveRoom(gameProvider.myID, gameProvider.roomId);
+                        await leaveRoom(gameProvider.myID, gameProvider.roomId);
                         if (logSuccess) {
                           gameProvider.clearRoomInfo();
                           gameProvider.clearReady();
