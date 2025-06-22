@@ -23,6 +23,8 @@ class _WaitingRoomPageState extends State<WaitingRoomPage> {
   String room_id = '';
   String room_password = '';
 
+  Future<String> assigned_room = Future.value('');
+
   List<String> players = [];
   List<String> ready_players = [];
 
@@ -45,6 +47,7 @@ class _WaitingRoomPageState extends State<WaitingRoomPage> {
 
   void _startPolling() async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
+    // await assigned_room = Future.value(prefs.getString('roomId') ?? '00000');
     room_id = prefs.getString('roomId') ?? '00000';
     ready = prefs.getBool('ready') ?? false;
 

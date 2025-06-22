@@ -48,7 +48,10 @@ async def join_room(request: JoinRoomRequest):
 
 
 @router.post("/leave")
-async def leave_room(user_id: int, assigned_id: str):
+async def leave_room(
+    user_id: int = Body(..., embed=True),
+    assigned_id: str = Body(..., embed=True)
+):
     try:
         await remove_user_from_room(user_id, assigned_id)
         return {"message": f"User {user_id} left room {assigned_id}"}
@@ -74,7 +77,7 @@ async def player_not_ready( user_id: int, assigned_id: str):
     
 
 @router.post("/state")
-async def update_room_state(assigned_id: str):
+async def update_room_state(assigned_id: str = Body(..., embed=True)):
     try:
         players, ready_players = await get_room_players_and_ready(assigned_id)
         return {
