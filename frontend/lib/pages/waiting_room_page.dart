@@ -23,6 +23,8 @@ class _WaitingRoomPageState extends State<WaitingRoomPage> {
   String room_id = '';
   String room_password = '';
 
+  Future<String> assigned_room = Future.value('');
+
   List<String> players = [];
   List<String> ready_players = [];
 
@@ -45,10 +47,11 @@ class _WaitingRoomPageState extends State<WaitingRoomPage> {
 
   void _startPolling() async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
+    // await assigned_room = Future.value(prefs.getString('roomId') ?? '00000');
     room_id = prefs.getString('roomId') ?? '00000';
     ready = prefs.getBool('ready') ?? false;
 
-    _fetchPlayers();
+    await _fetchPlayers();
     
     // Затем повторяем каждые 2 секунды
     _pollingTimer = Timer.periodic(Duration(seconds: 2), (timer) async{
@@ -62,7 +65,7 @@ class _WaitingRoomPageState extends State<WaitingRoomPage> {
       url,
       headers: {'Content-Type': 'application/json', 'accept': 'application/json'},
       body: jsonEncode({
-        'room_id': room_id,
+        'assigned_id': room_id,
       }),
     );
 
@@ -71,7 +74,7 @@ class _WaitingRoomPageState extends State<WaitingRoomPage> {
       setState(() {
         players = List<String>.from(responseBody['players']);
         ready_players = List<String>.from(responseBody['ready_players']);
-        if (ready_players.length == players.length && ready_players.length > 2) {
+        if (ready_players.length == players.length && ready_players.length >= 2) {
           startGame(room_id);
         }
       });
@@ -89,8 +92,8 @@ class _WaitingRoomPageState extends State<WaitingRoomPage> {
       url,
       headers: {'Content-Type': 'application/json', 'accept': 'application/json'},
       body: jsonEncode({
-        'my_id': my_id,
-        'room_id': room_id,
+        'user_id': my_id,
+        'assigned_id': room_id,
       }),
     );
 
@@ -113,8 +116,8 @@ class _WaitingRoomPageState extends State<WaitingRoomPage> {
       url,
       headers: {'Content-Type': 'application/json', 'accept': 'application/json'},
       body: jsonEncode({
-        'my_id': my_id,
-        'room_id': room_id,
+        'user_id': my_id,
+        'assigned_id': room_id,
       }),
     );
 
@@ -158,8 +161,8 @@ class _WaitingRoomPageState extends State<WaitingRoomPage> {
       url,
       headers: {'Content-Type': 'application/json', 'accept': 'application/json'},
       body: jsonEncode({
-        'my_id': id,
-        'room_id': room_id,
+        'user_id': id,
+        'assigned_id': room_id,
       })
     );
 
@@ -207,15 +210,16 @@ class _WaitingRoomPageState extends State<WaitingRoomPage> {
                     width: 60,
                     height: 60,
                     child: IconButton(
-                      onPressed: () {
+                      onPressed: () async {
                         setState(() {
                           logSuccess = false;
                         });
-                        leaveRoom(gameProvider.myID, gameProvider.roomId);
+                        await leaveRoom(gameProvider.myID, gameProvider.roomId);
                         if (logSuccess) {
                           gameProvider.clearRoomInfo();
                           gameProvider.clearReady();
                           Navigator.pushNamed(context, '/mainmenu');
+                          _pollingTimer?.cancel();
                         }
                       },
                       icon: const Icon(Icons.arrow_back_rounded, size: 44),
@@ -247,27 +251,27 @@ class _WaitingRoomPageState extends State<WaitingRoomPage> {
                 ],
               ),
               const Expanded(flex: 1, child: Text("")),
-              Container(
-                width: 350,
-                height: 65,
-                decoration:  BoxDecoration(
-                  color: whiteInvisColor,
-                  borderRadius: BorderRadius.circular(20),
-                  border: Border.all(color: grey3A3A3AColor, width: 0.1),
-                ),
-                child: Row(
-                  children: [
-                    Padding(padding: const EdgeInsets.only(left: 20)),
-                    Icon(Icons.account_circle, size: 50),
-                    Padding(padding: const EdgeInsets.only(left: 20)),
-                    Text(gameProvider.myName, style: basicTextStyle),
-                    Expanded(flex: 1, child: Text("")),
-                    Icon(Icons.check_rounded, color: Colors.green, size: 50),
-                    Padding(padding: const EdgeInsets.only(right: 20)),
-                  ]
-                )
-              ),
-              Padding(padding: const EdgeInsets.only(top: 20)),
+              // Container(
+              //   width: 350,
+              //   height: 65,
+              //   decoration:  BoxDecoration(
+              //     color: whiteInvisColor,
+              //     borderRadius: BorderRadius.circular(20),
+              //     border: Border.all(color: grey3A3A3AColor, width: 0.1),
+              //   ),
+              //   child: Row(
+              //     children: [
+              //       Padding(padding: const EdgeInsets.only(left: 20)),
+              //       Icon(Icons.account_circle, size: 50),
+              //       Padding(padding: const EdgeInsets.only(left: 20)),
+              //       Text(gameProvider.myName, style: basicTextStyle),
+              //       Expanded(flex: 1, child: Text("")),
+              //       Icon(Icons.check_rounded, color: Colors.green, size: 50),
+              //       Padding(padding: const EdgeInsets.only(right: 20)),
+              //     ]
+              //   )
+              // ),
+              // Padding(padding: const EdgeInsets.only(top: 20)),
               for (int i = 0; i < players.length; i++)
                 Column(
                   children: [
@@ -294,7 +298,7 @@ class _WaitingRoomPageState extends State<WaitingRoomPage> {
                     Padding(padding: const EdgeInsets.only(top: 20)),
                   ],
                 ),
-              for (int i = players.length; i < 3; i++)
+              for (int i = players.length; i < 4; i++)
                 Column(
                   children: [
                     Container(
@@ -319,14 +323,14 @@ class _WaitingRoomPageState extends State<WaitingRoomPage> {
                     shape: WidgetStateProperty.all<RoundedRectangleBorder>(RoundedRectangleBorder(borderRadius: BorderRadius.circular(20),),),
                     side: WidgetStateProperty.all<BorderSide>(BorderSide(color: grey3A3A3AColor, width: 1),),
                   ),
-                  onPressed: () {
+                  onPressed: () async{
                     setState(() {
                       logSuccess = false;
                     });
                     if (!ready) {
-                      sendReady(gameProvider.myID, gameProvider.roomId);
+                      await sendReady(gameProvider.myID, gameProvider.roomId);
                     } else {
-                      sendNotReady(gameProvider.myID, gameProvider.roomId);
+                      await sendNotReady(gameProvider.myID, gameProvider.roomId);
                     }
                     if (logSuccess) {
                       setState(() {

@@ -31,7 +31,7 @@ class _MainMenuPageState extends State<MainMenuPage> {
       url,
       headers: {'Content-Type': 'application/json', 'accept': 'application/json'},
       body: jsonEncode({
-        'my_id': id,
+        'user_id': id,
       }),
     );
 
@@ -39,7 +39,7 @@ class _MainMenuPageState extends State<MainMenuPage> {
 
     if (response.statusCode == 200) {
       setState(() {
-        room_id = responseBody['room_id'];
+        room_id = responseBody['assigned_id'];
         room_password = responseBody['password'];
         logSuccess = true;
       });
@@ -56,9 +56,9 @@ class _MainMenuPageState extends State<MainMenuPage> {
       url,
       headers: {'Content-Type': 'application/json', 'accept': 'application/json'},
       body: jsonEncode({
-        'my_id': id,
-        'room_id': room_id,
+        'assigned_id': room_id,
         'password': password,
+        'user_id': id,
       }),
     );
 
@@ -203,17 +203,17 @@ class _MainMenuPageState extends State<MainMenuPage> {
                                           BorderSide(color: grey3A3A3AColor, width: 1),
                                         ),
                                       ),
-                                      onPressed: () {
+                                      onPressed: () async{
                                         setState(() {
                                           logSuccess = false;
                                         });
-                                        createRoom(gameProvider.myID);
+                                        await createRoom(gameProvider.myID);
                                         if (logSuccess) {
                                           gameProvider.roomId = room_id;
                                           gameProvider.roomPassword = room_password;
                                           gameProvider.saveRoomInfo();
                                           Navigator.of(context).pop();
-                                          Navigator.pushNamed(context, '/waiting_room');
+                                          Navigator.pushNamed(context, '/waitingroom');
                                         }
                                       },
                                       child: Column(
@@ -356,7 +356,7 @@ class _MainMenuPageState extends State<MainMenuPage> {
                                                                   BorderSide(color: grey3A3A3AColor, width: 1),
                                                                 ),
                                                               ),
-                                                              onPressed: () {
+                                                              onPressed: () async{
                                                                 setState(() {
                                                                   postText = '';
                                                                   logSuccess = false;
@@ -367,7 +367,7 @@ class _MainMenuPageState extends State<MainMenuPage> {
                                                                   }); // ???? WTF Почему не всплывает?..
                                                                   return;
                                                                 } else {
-                                                                  connectToRoom(gameProvider.myID, controller.text, controller2.text);
+                                                                  await connectToRoom(gameProvider.myID, controller.text, controller2.text);
                                                                   if (logSuccess) {
                                                                     gameProvider.roomId = controller.text;
                                                                     gameProvider.roomPassword = controller2.text;
