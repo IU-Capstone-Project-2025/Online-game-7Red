@@ -219,6 +219,7 @@ class _WaitingRoomPageState extends State<WaitingRoomPage> {
                           gameProvider.clearRoomInfo();
                           gameProvider.clearReady();
                           Navigator.pushNamed(context, '/mainmenu');
+                          _pollingTimer?.cancel();
                         }
                       },
                       icon: const Icon(Icons.arrow_back_rounded, size: 44),
