@@ -51,7 +51,7 @@ class _WaitingRoomPageState extends State<WaitingRoomPage> {
     room_id = prefs.getString('roomId') ?? '00000';
     ready = prefs.getBool('ready') ?? false;
 
-    _fetchPlayers();
+    await _fetchPlayers();
     
     // Затем повторяем каждые 2 секунды
     _pollingTimer = Timer.periodic(Duration(seconds: 2), (timer) async{

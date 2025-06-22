@@ -151,7 +151,7 @@ async def get_room_players_and_ready(assigned_id: str):
     players = (user_room.join(profiles, user_room.c.user_id == profiles.c.user_id))
     query = (
         user_room.select()
-        .with_only_columns([profiles.c.name, user_room.c.ready])
+        .with_only_columns(profiles.c.name, user_room.c.ready)
         .select_from(players)
         .where(user_room.c.room_id == room_id)
     )
