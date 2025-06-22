@@ -31,7 +31,7 @@ class _MainMenuPageState extends State<MainMenuPage> {
       url,
       headers: {'Content-Type': 'application/json', 'accept': 'application/json'},
       body: jsonEncode({
-        'my_id': id,
+        'user_id': id,
       }),
     );
 
@@ -39,7 +39,7 @@ class _MainMenuPageState extends State<MainMenuPage> {
 
     if (response.statusCode == 200) {
       setState(() {
-        room_id = responseBody['room_id'];
+        room_id = responseBody['assigned_id'];
         room_password = responseBody['password'];
         logSuccess = true;
       });
@@ -57,7 +57,7 @@ class _MainMenuPageState extends State<MainMenuPage> {
       headers: {'Content-Type': 'application/json', 'accept': 'application/json'},
       body: jsonEncode({
         'my_id': id,
-        'room_id': room_id,
+        'assigned_id': room_id,
         'password': password,
       }),
     );
