@@ -85,9 +85,3 @@ async def update_room_state(assigned_id: str):
         raise HTTPException(status_code=404, detail=str(e))
 
 
-@router.get("/{assigned_id}/state")
-async def get_game_state(room_id: str):
-    # Get the current game state for a room.
-    # Get the state from the database
-    return {"message": "Not implemented yet"}
-
