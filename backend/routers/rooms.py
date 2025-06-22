@@ -23,7 +23,7 @@ async def generate_unique_password():
             
 
 @router.get("/create")
-async def create_room(user_id: int):
+async def create_room(user_id: int = Body(..., embed=True)):
     assigned_id = await generate_unique_assigned_id()
     password = await generate_unique_password()
     await create_game_room(assigned_id, password)
@@ -47,8 +47,11 @@ async def join_room(request: JoinRoomRequest):
     return {"message": "User added to the room"}
 
 
-@router.post("/{assigned_id}/leave")
-async def leave_room(user_id: int, assigned_id: str):
+@router.post("/leave")
+async def leave_room(
+    user_id: int = Body(..., embed=True),
+    assigned_id: str = Body(..., embed=True)
+):
     try:
         await remove_user_from_room(user_id, assigned_id)
         return {"message": f"User {user_id} left room {assigned_id}"}
@@ -56,7 +59,7 @@ async def leave_room(user_id: int, assigned_id: str):
        raise HTTPException(status_code=404, detail=str(e))
    
 
-@router.post("/{assigned_id}/ready")
+@router.post("/ready")
 async def player_ready(user_id: int, assigned_id: str):
     try:
         await set_user_ready(user_id, assigned_id, True)
@@ -64,7 +67,7 @@ async def player_ready(user_id: int, assigned_id: str):
     except Exception as e:
         raise HTTPException(status_code=404, detail=str(e))
 
-@router.post("/{assigned_id}/not_ready")
+@router.post("/not_ready")
 async def player_not_ready( user_id: int, assigned_id: str):
     try:
         await set_user_ready(user_id, assigned_id, False)
@@ -73,8 +76,8 @@ async def player_not_ready( user_id: int, assigned_id: str):
         raise HTTPException(status_code=404, detail=str(e))
     
 
-@router.post("/{assigned_id}/state")
-async def update_room_state(assigned_id: str):
+@router.post("/state")
+async def update_room_state(assigned_id: str = Body(..., embed=True)):
     try:
         players, ready_players = await get_room_players_and_ready(assigned_id)
         return {
