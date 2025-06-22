@@ -1,6 +1,6 @@
 from fastapi import APIRouter, HTTPException
 from backend.models import SignInRequest, SignUpRequest
-from backend.database import create_user, search_user_by_login, create_profile
+from backend.database import create_user, search_user_by_login, create_profile, get_profile_by_user_id
 from passlib.context import CryptContext
 
 router = APIRouter(prefix="/auth", tags=["auth"])
@@ -20,7 +20,7 @@ async def signup(request: SignUpRequest):
     hashed_password = pwd_context.hash(request.password)
     user_id = await create_user(request.email, hashed_password)
     await create_profile(user_id, request.nickname)
-    return {"message": "User reqistered succesfully"}
+    return {"message": "User reqistered succesfully", "user_id": user_id}
 
 
 @router.post("/signin")
@@ -30,5 +30,12 @@ async def signin(request: SignInRequest):
         raise HTTPException(status_code=401, detail="Invalid email or password")
     if not pwd_context.verify(request.password, user["password"]):
         raise HTTPException(status_code=401, detail="Invalid email or password")
-    return {"message": "Sign in succesfully", "user_id":user["id"]}
+    
+    profile = await get_profile_by_user_id(user["id"])
+    nickname = profile["name"] if profile else None
+    return {
+        "message": "Sign in succesfully", 
+        "user_id": user["id"],
+        "nickname": nickname
+        }
 
