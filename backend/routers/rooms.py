@@ -22,8 +22,8 @@ async def generate_unique_password():
     raise Exception("Could not generate unique password")
             
 
-@router.post("/create")
-async def create_room(user_id: int = Body(..., embed=True)):
+@router.get("/create")
+async def create_room(user_id: int):
     assigned_id = await generate_unique_assigned_id()
     password = await generate_unique_password()
     await create_game_room(assigned_id, password)
@@ -47,11 +47,8 @@ async def join_room(request: JoinRoomRequest):
     return {"message": "User added to the room"}
 
 
-@router.post("/leave")
-async def leave_room(
-    user_id: int = Body(..., embed=True),
-    assigned_id: str = Body(..., embed=True)
-):
+@router.post("/{assigned_id}/leave")
+async def leave_room(user_id: int, assigned_id: str):
     try:
         await remove_user_from_room(user_id, assigned_id)
         return {"message": f"User {user_id} left room {assigned_id}"}
@@ -76,8 +73,8 @@ async def player_not_ready( user_id: int, assigned_id: str):
         raise HTTPException(status_code=404, detail=str(e))
     
 
-@router.post("/state")
-async def update_room_state(assigned_id: str = Body(..., embed=True)):
+@router.post("/{assigned_id}/state")
+async def update_room_state(assigned_id: str):
     try:
         players, ready_players = await get_room_players_and_ready(assigned_id)
         return {
