@@ -22,7 +22,7 @@ async def generate_unique_password():
     raise Exception("Could not generate unique password")
             
 
-@router.get("/create")
+@router.post("/create")
 async def create_room(user_id: int = Body(..., embed=True)):
     assigned_id = await generate_unique_assigned_id()
     password = await generate_unique_password()
@@ -86,5 +86,3 @@ async def update_room_state(assigned_id: str = Body(..., embed=True)):
         }
     except Exception as e:
         raise HTTPException(status_code=404, detail=str(e))
-
-
