@@ -59,16 +59,16 @@ async def leave_room(
        raise HTTPException(status_code=404, detail=str(e))
    
 
-@router.post("/{assigned_id}/ready")
-async def player_ready(user_id: int, assigned_id: str):
+@router.post("/ready")
+async def player_ready(user_id: int = Body(..., embed=True), assigned_id: str = Body(..., embed=True)):
     try:
         await set_user_ready(user_id, assigned_id, True)
         return {"message": f"Player {user_id} is ready in room {assigned_id}"}
     except Exception as e:
         raise HTTPException(status_code=404, detail=str(e))
 
-@router.post("/{assigned_id}/not_ready")
-async def player_not_ready( user_id: int, assigned_id: str):
+@router.post("/not_ready")
+async def player_not_ready( user_id: int = Body(..., embed=True), assigned_id: str = Body(..., embed=True)):
     try:
         await set_user_ready(user_id, assigned_id, False)
         return {"message": f"Player {user_id} is not ready in room {assigned_id}"}

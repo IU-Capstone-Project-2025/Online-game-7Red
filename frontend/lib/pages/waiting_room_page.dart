@@ -92,8 +92,8 @@ class _WaitingRoomPageState extends State<WaitingRoomPage> {
       url,
       headers: {'Content-Type': 'application/json', 'accept': 'application/json'},
       body: jsonEncode({
-        'my_id': my_id,
-        'room_id': room_id,
+        'user_id': my_id,
+        'assigned_id': room_id,
       }),
     );
 
@@ -116,8 +116,8 @@ class _WaitingRoomPageState extends State<WaitingRoomPage> {
       url,
       headers: {'Content-Type': 'application/json', 'accept': 'application/json'},
       body: jsonEncode({
-        'my_id': my_id,
-        'room_id': room_id,
+        'user_id': my_id,
+        'assigned_id': room_id,
       }),
     );
 
@@ -251,27 +251,27 @@ class _WaitingRoomPageState extends State<WaitingRoomPage> {
                 ],
               ),
               const Expanded(flex: 1, child: Text("")),
-              Container(
-                width: 350,
-                height: 65,
-                decoration:  BoxDecoration(
-                  color: whiteInvisColor,
-                  borderRadius: BorderRadius.circular(20),
-                  border: Border.all(color: grey3A3A3AColor, width: 0.1),
-                ),
-                child: Row(
-                  children: [
-                    Padding(padding: const EdgeInsets.only(left: 20)),
-                    Icon(Icons.account_circle, size: 50),
-                    Padding(padding: const EdgeInsets.only(left: 20)),
-                    Text(gameProvider.myName, style: basicTextStyle),
-                    Expanded(flex: 1, child: Text("")),
-                    Icon(Icons.check_rounded, color: Colors.green, size: 50),
-                    Padding(padding: const EdgeInsets.only(right: 20)),
-                  ]
-                )
-              ),
-              Padding(padding: const EdgeInsets.only(top: 20)),
+              // Container(
+              //   width: 350,
+              //   height: 65,
+              //   decoration:  BoxDecoration(
+              //     color: whiteInvisColor,
+              //     borderRadius: BorderRadius.circular(20),
+              //     border: Border.all(color: grey3A3A3AColor, width: 0.1),
+              //   ),
+              //   child: Row(
+              //     children: [
+              //       Padding(padding: const EdgeInsets.only(left: 20)),
+              //       Icon(Icons.account_circle, size: 50),
+              //       Padding(padding: const EdgeInsets.only(left: 20)),
+              //       Text(gameProvider.myName, style: basicTextStyle),
+              //       Expanded(flex: 1, child: Text("")),
+              //       Icon(Icons.check_rounded, color: Colors.green, size: 50),
+              //       Padding(padding: const EdgeInsets.only(right: 20)),
+              //     ]
+              //   )
+              // ),
+              // Padding(padding: const EdgeInsets.only(top: 20)),
               for (int i = 0; i < players.length; i++)
                 Column(
                   children: [
@@ -298,7 +298,7 @@ class _WaitingRoomPageState extends State<WaitingRoomPage> {
                     Padding(padding: const EdgeInsets.only(top: 20)),
                   ],
                 ),
-              for (int i = players.length; i < 3; i++)
+              for (int i = players.length; i < 4; i++)
                 Column(
                   children: [
                     Container(
@@ -323,14 +323,14 @@ class _WaitingRoomPageState extends State<WaitingRoomPage> {
                     shape: WidgetStateProperty.all<RoundedRectangleBorder>(RoundedRectangleBorder(borderRadius: BorderRadius.circular(20),),),
                     side: WidgetStateProperty.all<BorderSide>(BorderSide(color: grey3A3A3AColor, width: 1),),
                   ),
-                  onPressed: () {
+                  onPressed: () async{
                     setState(() {
                       logSuccess = false;
                     });
                     if (!ready) {
-                      sendReady(gameProvider.myID, gameProvider.roomId);
+                      await sendReady(gameProvider.myID, gameProvider.roomId);
                     } else {
-                      sendNotReady(gameProvider.myID, gameProvider.roomId);
+                      await sendNotReady(gameProvider.myID, gameProvider.roomId);
                     }
                     if (logSuccess) {
                       setState(() {
