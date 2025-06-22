@@ -74,7 +74,7 @@ class _WaitingRoomPageState extends State<WaitingRoomPage> {
       setState(() {
         players = List<String>.from(responseBody['players']);
         ready_players = List<String>.from(responseBody['ready_players']);
-        if (ready_players.length == players.length && ready_players.length > 2) {
+        if (ready_players.length == players.length && ready_players.length >= 2) {
           startGame(room_id);
         }
       });
