@@ -1,5 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+import 'package:http/http.dart' as http;
+import 'dart:convert';
+
 import '../data/styles.dart';
+import '../providers/provider.dart';
 
 class MainMenuPage extends StatefulWidget {
   const MainMenuPage({super.key});
@@ -11,8 +16,69 @@ class MainMenuPage extends StatefulWidget {
 class _MainMenuPageState extends State<MainMenuPage> {
   final TextEditingController controller = TextEditingController();
   final TextEditingController controller2 = TextEditingController();
+
+  String postText = '';
+  bool logSuccess = false;
+  String nickname = '';
+  int ID = -1;
+
+  String room_id = '';
+  String room_password = '';
+
+  Future<void> createRoom(int id) async {
+    final url = Uri.parse('http://localhost:8000/rooms/create');
+    final response = await http.post(
+      url,
+      headers: {'Content-Type': 'application/json', 'accept': 'application/json'},
+      body: jsonEncode({
+        'my_id': id,
+      }),
+    );
+
+    final responseBody = json.decode(response.body);
+
+    if (response.statusCode == 200) {
+      setState(() {
+        room_id = responseBody['room_id'];
+        room_password = responseBody['password'];
+        logSuccess = true;
+      });
+    } else {
+      setState(() {
+        logSuccess = false;
+      });
+    }
+  }
+
+  Future<void> connectToRoom(int id, String room_id, String password) async {
+    final url = Uri.parse('http://localhost:8000/rooms/join');
+    final response = await http.post(
+      url,
+      headers: {'Content-Type': 'application/json', 'accept': 'application/json'},
+      body: jsonEncode({
+        'my_id': id,
+        'room_id': room_id,
+        'password': password,
+      }),
+    );
+
+    if (response.statusCode == 200) {
+      setState(() {
+        logSuccess = true;
+      });
+    } else {
+      setState(() {
+        logSuccess = false;
+        postText = 'Invalid ID or Password';
+      });
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
+    final gameProvider = Provider.of<GameProvider>(context);
+    gameProvider.loadIdAndName();
+
     return Scaffold(
       body: Container(
         decoration: BoxDecoration(
@@ -35,6 +101,7 @@ class _MainMenuPageState extends State<MainMenuPage> {
                     height: 80,
                     child: IconButton(
                       onPressed: () {
+                        gameProvider.clearMyPersonalInfo();
                         Navigator.pushNamed(context, '/');
                       },
                       icon: const Icon(Icons.door_back_door_outlined, size: 60),
@@ -137,8 +204,17 @@ class _MainMenuPageState extends State<MainMenuPage> {
                                         ),
                                       ),
                                       onPressed: () {
-                                        Navigator.of(context).pop();
-                                        //pass;
+                                        setState(() {
+                                          logSuccess = false;
+                                        });
+                                        createRoom(gameProvider.myID);
+                                        if (logSuccess) {
+                                          gameProvider.roomId = room_id;
+                                          gameProvider.roomPassword = room_password;
+                                          gameProvider.saveRoomInfo();
+                                          Navigator.of(context).pop();
+                                          Navigator.pushNamed(context, '/waiting_room');
+                                        }
                                       },
                                       child: Column(
                                         children: [
@@ -281,15 +357,30 @@ class _MainMenuPageState extends State<MainMenuPage> {
                                                                 ),
                                                               ),
                                                               onPressed: () {
+                                                                setState(() {
+                                                                  postText = '';
+                                                                  logSuccess = false;
+                                                                });
                                                                 if (controller.text.isEmpty || controller2.text.isEmpty) {
+                                                                  setState(() {
+                                                                    postText = "All fields are required";
+                                                                  }); // ???? WTF Почему не всплывает?..
                                                                   return;
                                                                 } else {
-                                                                  Navigator.of(context).pushNamed('/');
+                                                                  connectToRoom(gameProvider.myID, controller.text, controller2.text);
+                                                                  if (logSuccess) {
+                                                                    gameProvider.roomId = controller.text;
+                                                                    gameProvider.roomPassword = controller2.text;
+                                                                    gameProvider.saveRoomInfo();
+                                                                    Navigator.pushNamed(context, '/waitingroom');
+                                                                  }
                                                                 }
                                                               },
-                                                              child: const Text('SIGN  IN'),
+                                                              child: const Text('CONNECT'),
                                                             ),
                                                           ),
+                                                          Padding(padding: const EdgeInsets.only(top: 10)),
+                                                          Text(postText, style: errorTextStyle,),
 
                                                       ],
                                                     ),

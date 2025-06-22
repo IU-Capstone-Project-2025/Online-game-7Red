@@ -1,7 +1,10 @@
 import 'package:flutter/material.dart';
-import '../data/styles.dart';
+import 'package:provider/provider.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
+
+import '../providers/provider.dart';
+import '../data/styles.dart';
 
 class SignInPage extends StatefulWidget {
   const SignInPage({super.key});
@@ -15,7 +18,11 @@ class _SignInPageState extends State<SignInPage> {
   final TextEditingController controller2 = TextEditingController();
 
   String postText = '';
+  String errEmail = '';
   bool logSuccess = false;
+  
+  String nickname = 'None';
+  int ID = -1;
 
   Future<void> signIn(String email, String password) async {
     final url = Uri.parse('http://localhost:8000/auth/signin');
@@ -27,9 +34,12 @@ class _SignInPageState extends State<SignInPage> {
         'password': password,
       }),
     );
+    final responseBody = json.decode(response.body);
 
     if (response.statusCode == 200) {
       setState(() {
+        nickname = responseBody['nickname'];
+        ID = responseBody['user_id'];
         logSuccess = true;
       });
     } else {
@@ -42,6 +52,8 @@ class _SignInPageState extends State<SignInPage> {
 
   @override
   Widget build(BuildContext context) {
+    final gameProvider = Provider.of<GameProvider>(context);
+
     return Scaffold(
       body: Container(
         decoration: BoxDecoration(
@@ -97,6 +109,8 @@ class _SignInPageState extends State<SignInPage> {
                         Padding(padding: const EdgeInsets.only(left: 47)),
                         Text("Email address", style: basicTextStyle,),
                         const Expanded(flex: 1, child: Text("")),
+                        Text(errEmail, style: errorTextStyle, textAlign: TextAlign.right),
+                        Padding(padding: const EdgeInsets.only(right: 47)),
                       ]
                     ),
                     Padding(padding: const EdgeInsets.only(top: 5)),
@@ -170,15 +184,26 @@ class _SignInPageState extends State<SignInPage> {
                           onPressed: () async {
                             setState(() {
                               postText = '';
+                              errEmail = '';
                             });
                             if (controller.text.isEmpty || controller2.text.isEmpty) {
                               setState(() {
                                 postText = 'All fields are required';
                               });
                               return;
+                            } else if (controller.text.contains('@') == false) {
+                              setState(() {
+                                errEmail = 'Invalid email';
+                              });
+                              return;
                             } else {
                               await signIn(controller.text, controller2.text);
                               if (logSuccess) {
+                                gameProvider.myID = ID;
+                                gameProvider.myName = nickname;
+                                gameProvider.email = controller.text;
+                                gameProvider.password = controller2.text;
+                                gameProvider.saveMyPersonalInfo();
                                 Navigator.pushNamed(context, '/mainmenu');
                               }
                             }

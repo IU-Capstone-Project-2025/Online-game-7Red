@@ -129,7 +129,7 @@ class _WelkomePageState extends State<WelkomePage> {
                 height: 60,
                 child: IconButton(
                   onPressed: () {
-                    Navigator.pushNamed(context, '/mainmenu');
+                    Navigator.pushNamed(context, '/waitingroom');
                   },
                   icon: const Icon(Icons.skip_next, size: 44),
                 ),
