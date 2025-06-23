@@ -159,3 +159,22 @@ async def get_room_players_and_ready(assigned_id: str):
     players = [row["name"] for row in rows]
     ready_p = [row["name"] for row in rows if row["ready"]]
     return players, ready_p
+
+async def get_room_players_ids_and_names(assigned_id: str):
+    query = games.select().where(games.c.assigned_id == assigned_id)
+    room = await database.fetch_one(query)
+    if not room:
+        raise Exception("Room not found")
+    room_id = room["room_id"]
+
+    players = (user_room.join(profiles, user_room.c.user_id == profiles.c.user_id))
+    query = (
+        user_room.select()
+        .with_only_columns([profiles.c.name, user_room.c.user_id])
+        .select_from(players)
+        .where(user_room.c.room_id == room_id)
+    )
+    rows = await database.fetch_all(query)
+    players = [row["name"] for row in rows]
+    ids = [row["user_id"] for row in rows]
+    return players, ids
