@@ -6,6 +6,7 @@ import 'pages/sign_in_page.dart';
 import 'pages/sign_up_page.dart';
 import 'pages/main_menu_page.dart';
 import 'pages/waiting_room_page.dart';
+import 'pages/game_page.dart';
 
 void main() {
   WidgetsFlutterBinding.ensureInitialized();
@@ -34,6 +35,7 @@ class MyApp extends StatelessWidget {
         '/signup': (context) => SignUpPage(),
         '/mainmenu': (context) => MainMenuPage(),
         '/waitingroom': (context) => WaitingRoomPage(),
+        '/gameroom': (context) => GameRoomPage(),
       },
     );
   }

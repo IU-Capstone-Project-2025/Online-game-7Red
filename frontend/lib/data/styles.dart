@@ -57,3 +57,9 @@ Color buttonColor = const Color.fromRGBO(247, 216, 167, 1);
 Color whiteInvisColor = const Color.fromARGB(204, 255, 255, 255);
 
 Color cancelRedButtonColor = const Color.fromARGB(255, 252, 178, 171);
+
+Color invisColor = const Color.fromARGB(0, 255, 255, 255);
+
+Color redCard = const Color.fromARGB(255, 249, 61, 61);
+
+Color handInvisColor = const Color.fromARGB(58, 212, 197, 172);
