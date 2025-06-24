@@ -50,13 +50,22 @@ async def game_websocket(websocket: WebSocket, room_id: int, player_id: int):
             new_palette = data["pallete"]
 
             if  type_cur == "my_turn" and game.current_player == player_id:
-                is_winning = game.check_move(
-                    player_id=player_id,
-                    card_played=my_palette_ch,
-                    new_rule=new_rule,
-                    new_hand=new_hand,
-                    new_palette=new_palette
-                )
+                if not game.players[player_id]["possible_moves"]:
+                    is_winning = game.check_move(
+                        player_id=player_id,
+                        card_played=my_palette_ch,
+                        new_rule=new_rule,
+                        new_hand=new_hand,
+                        new_palette=new_palette
+                    )
+                else:
+                    is_winning = game.check_in_possible_moves(
+                        player_id=player_id,
+                        card_played=my_palette_ch,
+                        new_rule=new_rule,
+                        new_hand=new_hand,
+                        new_palette=new_palette
+                    )
                 
                 if is_winning:
                     await websocket.send_json({"type": "right_turn"})
@@ -66,16 +75,20 @@ async def game_websocket(websocket: WebSocket, room_id: int, player_id: int):
                                                "rule_ch": new_rule,
                                                "old_rule": game.current_rule})
                     continue 
-            
+
+            elif type_cur == "time_out":
+                is_winning = False
+
             game.next_player()
             next_lose = game.check_winning_at_beginning(game.current_player)
             await broadcast_game_state(game, player_id, is_winning, my_palette_ch, next_lose)
             max_checks = len(game.players_id_list)
             while next_lose and max_checks > 0:
                 max_checks -= 1
+                cur_player = game.current_player
                 game.next_player()
                 next_lose = game.check_winning_at_beginning(game.current_player)
-                await broadcast_game_state(game, game.current_player, 0, None, next_lose)
+                await broadcast_game_state(game, cur_player, 0, None, next_lose)
             
 
     except WebSocketDisconnect:

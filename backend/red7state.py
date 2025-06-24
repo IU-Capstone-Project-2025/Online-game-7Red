@@ -204,6 +204,24 @@ class Red7GameState:
         self.players[player_id]["possible_moves"] = winning_moves
 
         return len(winning_moves) > 0
+    
+    def check_in_possible_moves(self, player_id: int, new_rule: str, new_hand: List[str], new_palette: List[str]) -> bool:
+        moves = self.players[player_id]["possible_moves"]
+
+        target_move = {
+            "new_rule": new_rule,
+            "new_hand": new_hand,
+            "new_palette": new_palette
+        }
+
+        exact_match = any(
+            move["new_rule"] == target_move["new_rule"]
+            and sorted(move["new_hand"]) == sorted(target_move["new_hand"])
+            and sorted(move["new_palette"]) == sorted(target_move["new_palette"])
+            for move in moves
+        )
+
+        return exact_match
 
     def check_move(self, player_id: int, new_rule: str, new_hand: List[str], new_palette: List[str]) -> bool:
         """
