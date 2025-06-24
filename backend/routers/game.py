@@ -1,4 +1,4 @@
-from fastapi import APIRouter, WebSocket, WebSocketDisconnect, HTTPException
+from fastapi import APIRouter, WebSocket, WebSocketDisconnect
 from typing import Dict
 from backend.red7state import Red7GameState
 
@@ -41,15 +41,15 @@ async def game_websocket(websocket: WebSocket, room_id: int, player_id: int):
 
             data = await websocket.receive_json()
 
+            type_cur = data["type"] #my_turn or time_out
             player_id = data["my_id"]
             room_id = data["room_id"]
             my_palette_ch = data["my_pallete_ch"]
-            new_rule = data["curr_rule"]
+            new_rule = data["rule_ch"]
             new_hand = data["my_hand"]
             new_palette = data["pallete"]
 
-            
-            if game.current_player == player_id:
+            if  type_cur == "my_turn" and game.current_player == player_id:
                 is_winning = game.check_move(
                     player_id=player_id,
                     card_played=my_palette_ch,
@@ -61,41 +61,45 @@ async def game_websocket(websocket: WebSocket, room_id: int, player_id: int):
                 if is_winning:
                     await websocket.send_json({"type": "right_turn"})
                 else:
-                    await websocket.send_json({"type": "wrong_result", 
+                    await websocket.send_json({"type": "wrong_turn", 
                                                "my_pallete_ch": my_palette_ch,
-                                               "return_rule": game.current_rule})
-                
-                await broadcast_game_state(game, player_id, is_winning, my_palette_ch)
+                                               "rule_ch": new_rule,
+                                               "old_rule": game.current_rule})
+                    continue 
+            
+            game.next_player()
+            next_lose = game.check_winning_at_beginning(game.current_player)
+            await broadcast_game_state(game, player_id, is_winning, my_palette_ch, next_lose)
+            max_checks = len(game.players_id_list)
+            while next_lose and max_checks > 0:
+                max_checks -= 1
                 game.next_player()
+                next_lose = game.check_winning_at_beginning(game.current_player)
+                await broadcast_game_state(game, game.current_player, 0, None, next_lose)
+            
 
     except WebSocketDisconnect:
         del manager.connections[player_id]
-        # Handle player disconnect logic
+        # Check if room is now empty
+        game = manager.active_games.get(room_id)
+        if game and all(p not in manager.connections for p in game.players_id_list):
+            del manager.active_games[room_id]
+            #delete_game_room(room_id)
     except Exception as e:
         await websocket.close(code=1011, reason=str(e))
 
-async def broadcast_game_state(game: Red7GameState, cur_player_id: int, is_winning: bool, my_palette_ch: str):
+async def broadcast_game_state(game: Red7GameState, cur_player_id: int, is_winning: bool, my_palette_ch: str, next_lose: bool):
     """Send updated game state to all players in room"""
     if not game:
         return
 
     for player_id in game.players_id_list:
         if player_id in manager.connections:
-            if player_id == cur_player_id:
-                await manager.connections[player_id].send_json({
-                    "type": "change_turn",
-                    "loose": 0 if is_winning else 1,
-                    "id_did": cur_player_id,
-                    "his_palette_ch": my_palette_ch,
-                    "rule": game.current_rule,
-                    "next_lose": 0 if game.check_winning_at_beginning(game.current_player) else 1
-                })
-            else: 
-                await manager.connections[player_id].send_json({
-                    "type": "change_turn",
-                    "loose": 0 if is_winning else 1,
-                    "id_did": cur_player_id,
-                    "his_palette_ch": my_palette_ch,
-                    "rule": game.current_rule,
-                    "next_lose": 0 if game.check_winning_at_beginning(game.current_player) else 1
-                })
+            await manager.connections[player_id].send_json({
+                "type": "change_turn",
+                "loose": 0 if is_winning else 1, #imp several 2 if "next_lose" is 1
+                "id_did": cur_player_id, #imp (check)
+                "his_palette_ch": my_palette_ch,
+                "rule": game.current_rule,
+                "next_lose": 0 if next_lose else 1
+            })
