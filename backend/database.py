@@ -67,6 +67,10 @@ async def search_game_room(assigned_id: str):
     query = games.select().where(games.c.assigned_id == assigned_id)
     return await database.fetch_one(query)
 
+async def return_room_id_using_assigned_id(assigned_id: str):
+    query = games.select().with_only_columns([games.c.room_id]).where(games.c.assigned_id == assigned_id)
+    result = await database.fetch_one(query)
+    return result.room_id
 
 # check for assigned_id and password existance
 async def assigned_id_exists(assigned_id: str) -> bool:
@@ -131,6 +135,11 @@ async def remove_user_from_room(user_id: int, assigned_id: str):
     delete = user_room.delete().where((user_room.c.user_id == user_id) & (user_room.c.room_id == room_id))
     await database.execute(delete)
     
+    check = user_room.select().where(user_room.c.room_id == room_id)
+    members = await database.fetch_all(check)
+    if not members:
+        await delete_game_room(room_id)
+    
     
 async def set_user_ready(user_id: int, assigned_id: str, ready: bool):
     query = games.select().where(games.c.assigned_id == assigned_id)
@@ -159,3 +168,22 @@ async def get_room_players_and_ready(assigned_id: str):
     players = [row["name"] for row in rows]
     ready_p = [row["name"] for row in rows if row["ready"]]
     return players, ready_p
+
+async def get_room_players_ids_and_names(assigned_id: str):
+    query = games.select().where(games.c.assigned_id == assigned_id)
+    room = await database.fetch_one(query)
+    if not room:
+        raise Exception("Room not found")
+    room_id = room["room_id"]
+
+    players = (user_room.join(profiles, user_room.c.user_id == profiles.c.user_id))
+    query = (
+        user_room.select()
+        .with_only_columns([profiles.c.name, user_room.c.user_id])
+        .select_from(players)
+        .where(user_room.c.room_id == room_id)
+    )
+    rows = await database.fetch_all(query)
+    players = [row["name"] for row in rows]
+    ids = [row["user_id"] for row in rows]
+    return players, ids
