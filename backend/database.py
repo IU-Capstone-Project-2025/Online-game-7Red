@@ -131,6 +131,11 @@ async def remove_user_from_room(user_id: int, assigned_id: str):
     delete = user_room.delete().where((user_room.c.user_id == user_id) & (user_room.c.room_id == room_id))
     await database.execute(delete)
     
+    check = user_room.select().where(user_room.c.room_id == room_id)
+    members = await database.fetch_all(check)
+    if not members:
+        await delete_game_room(room_id)
+    
     
 async def set_user_ready(user_id: int, assigned_id: str, ready: bool):
     query = games.select().where(games.c.assigned_id == assigned_id)
