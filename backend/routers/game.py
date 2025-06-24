@@ -1,6 +1,7 @@
 from fastapi import APIRouter, WebSocket, WebSocketDisconnect
 from typing import Dict
 from backend.red7state import Red7GameState
+from backend.database import return_room_id_using_assigned_id
 
 router = APIRouter(prefix="/game", tags=["game"])
 
@@ -21,10 +22,10 @@ class GameManager:
 manager = GameManager()
 
 @router.websocket("/{room_id}/ws")
-async def game_websocket(websocket: WebSocket, room_id: int, player_id: int):
+async def game_websocket(websocket: WebSocket, assigned_id: int, player_id: int):
     await websocket.accept()
     manager.connections[player_id] = websocket
-    
+    room_id = return_room_id_using_assigned_id(assigned_id)
     try:
         # Initialize or join game
         game = await manager.create_game(room_id)

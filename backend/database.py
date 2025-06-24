@@ -67,6 +67,10 @@ async def search_game_room(assigned_id: str):
     query = games.select().where(games.c.assigned_id == assigned_id)
     return await database.fetch_one(query)
 
+async def return_room_id_using_assigned_id(assigned_id: str):
+    query = games.select().with_only_columns([games.c.room_id]).where(games.c.assigned_id == assigned_id)
+    result = await database.fetch_one(query)
+    return result.room_id
 
 # check for assigned_id and password existance
 async def assigned_id_exists(assigned_id: str) -> bool:
