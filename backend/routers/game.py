@@ -1,7 +1,6 @@
-from fastapi import APIRouter, WebSocket, WebSocketDisconnect
+from fastapi import APIRouter, Query, WebSocket, WebSocketDisconnect
 from typing import Dict
 from backend.red7state import Red7GameState
-from backend.database import return_room_id_using_assigned_id
 
 router = APIRouter(prefix="/game", tags=["game"])
 
@@ -21,15 +20,22 @@ class GameManager:
 
 manager = GameManager()
 
-@router.websocket("/{room_id}/ws")
-async def game_websocket(websocket: WebSocket, assigned_id: int, player_id: int):
+@router.websocket("/{assigned_id}/ws")
+async def game_websocket(
+    websocket: WebSocket,
+    assigned_id: str,
+    player_id: int = Query(...)):
     await websocket.accept()
+    print(f"Connected: assigned_id={assigned_id}, player_id={player_id}", flush=True)
     manager.connections[player_id] = websocket
-    room_id = return_room_id_using_assigned_id(assigned_id)
+    #room_id = await return_room_id_using_assigned_id(str(assigned_id))
+    room_id = assigned_id
+    print(f"Room ID: {room_id}", flush=True)  # Debug room ID lookup
     try:
         # Initialize or join game
         game = await manager.create_game(room_id)
         
+        print(f"names: {game.players_name_list}, ids: {game.players_id_list}, my_hand: {game.players[player_id]}", flush=True) 
         # Send initial game state
         await websocket.send_json({
             "type": "initialized",
@@ -44,7 +50,7 @@ async def game_websocket(websocket: WebSocket, assigned_id: int, player_id: int)
 
             type_cur = data["type"] #my_turn or time_out
             player_id = data["my_id"]
-            room_id = data["room_id"]
+            room_id = data["my_room"]
             my_palette_ch = data["my_pallete_ch"]
             new_rule = data["rule_ch"]
             new_hand = data["my_hand"]
@@ -54,7 +60,6 @@ async def game_websocket(websocket: WebSocket, assigned_id: int, player_id: int)
                 if not game.players[player_id]["possible_moves"]:
                     is_winning = game.check_move(
                         player_id=player_id,
-                        card_played=my_palette_ch,
                         new_rule=new_rule,
                         new_hand=new_hand,
                         new_palette=new_palette
@@ -62,7 +67,6 @@ async def game_websocket(websocket: WebSocket, assigned_id: int, player_id: int)
                 else:
                     is_winning = game.check_in_possible_moves(
                         player_id=player_id,
-                        card_played=my_palette_ch,
                         new_rule=new_rule,
                         new_hand=new_hand,
                         new_palette=new_palette
@@ -93,13 +97,18 @@ async def game_websocket(websocket: WebSocket, assigned_id: int, player_id: int)
             
 
     except WebSocketDisconnect:
+        print("hrre", flush=True)
         del manager.connections[player_id]
         # Check if room is now empty
         game = manager.active_games.get(room_id)
         if game and all(p not in manager.connections for p in game.players_id_list):
             del manager.active_games[room_id]
+            print("hrre", flush=True)
             #delete_game_room(room_id)
     except Exception as e:
+        print("heeerre", flush=True)
+        print(e, flush=True)
+        print(str(e), flush=True)
         await websocket.close(code=1011, reason=str(e))
 
 async def broadcast_game_state(game: Red7GameState, cur_player_id: int, is_winning: bool, my_palette_ch: str, next_lose: bool):
