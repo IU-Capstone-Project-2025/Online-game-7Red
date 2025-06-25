@@ -42,9 +42,11 @@ class _GameRoomPageState extends State<GameRoomPage> {
 
   bool myTurn = false;
   bool myAllTurn = false;
-  bool ruleChanged = false;
-  bool palleteChanged = false;
+  bool ruleChanged = true;
+  bool palleteChanged = true;
 
+  bool youLose = false;
+ 
   // List<String> myPallete = ["R7", "O6", "Y5", "G4", "B3"];
   // List<String> myHand = ["G4", "B3", "I2", "V1"];
   // String currRuleCard = "R0";
@@ -57,16 +59,22 @@ class _GameRoomPageState extends State<GameRoomPage> {
   }
 
   void _connectToWebSocket() async{
-    SharedPreferences prefs = await SharedPreferences.getInstance();
-    roomID = await prefs.getString('roomId');
-    userID = await prefs.getInt('myID');
-    serverUrl = 'ws://localhost:8000/game/$roomID/ws?player_id=$userID';
-    _webSocket = GameWebSocket(
-      serverUrl: serverUrl,
-      onMessageReceived: _handleMessage,
-      onConnectionClosed: _onDisconnected,
+    try {
+      SharedPreferences prefs = await SharedPreferences.getInstance();
+      roomID = await prefs.getString('roomId');
+      userID = await prefs.getInt('myID');
+      serverUrl = 'ws://localhost:8000/game/$roomID/ws?player_id=$userID';
+      _webSocket = GameWebSocket(
+        serverUrl: serverUrl,
+        onMessageReceived: _handleMessage,
+        onConnectionClosed: _onDisconnected,
+      );
+      _webSocket.connect();
+    } catch (e) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text('Ошибка подключения: $e')),
     );
-    _webSocket.connect();
+  }
   }
 
   void _handleMessage(dynamic message) {  //мб тут не так будет соо отправляться (не то передаю)
@@ -138,6 +146,9 @@ class _GameRoomPageState extends State<GameRoomPage> {
       }
       _ruleCard = message['old_rule'];
       myTurn = true;
+      palleteChanged = false;
+      ruleChanged = false;
+      myAllTurn = true;
     });
   }
 
@@ -163,6 +174,9 @@ class _GameRoomPageState extends State<GameRoomPage> {
         _activePlayers.remove(message['id_did']);
         if (_activePlayers.length == 1) {
           // TODO: Закончить игру с победой
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text('Вы победили!')),
+          );
         }
       } else {
         if (message['his_pallete_ch'] != null) {
@@ -181,6 +195,9 @@ class _GameRoomPageState extends State<GameRoomPage> {
       if (_players.firstWhere((p) => p.id == _currentPlayerId).isMe) {
         if (_nextLose == 1) {
           //TODO: Закончить игру c поражением
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text('Вы проиграли!')),
+          );
           _pallete = [];
           _myHand = [];
         }
@@ -203,8 +220,7 @@ class _GameRoomPageState extends State<GameRoomPage> {
         setState(() => _timeLeft--);
       } else {
         timer.cancel();
-        // Автоматически завершаем ход, если время вышло
-        if (myTurn) {
+        if (myAllTurn) {
           _submitTurnTimeout();
         }
       }
@@ -213,6 +229,11 @@ class _GameRoomPageState extends State<GameRoomPage> {
 
   void _submitTurn() {
     _turnTimer?.cancel();
+
+    setState(() {
+      myTurn = false;
+      myAllTurn = true;
+    });
 
     final message = {
       'type': 'my_turn',
@@ -224,15 +245,28 @@ class _GameRoomPageState extends State<GameRoomPage> {
       'pallete': _pallete,
     };
 
-    _webSocket.sendMessage(message);
-
     setState(() {
-      myTurn = false;
+      palleteChanged = true;
+      ruleChanged = true;
     });
+
+    _webSocket.sendMessage(message);
   }
 
   void _submitTurnTimeout() {
     _turnTimer?.cancel();
+
+    setState(() {
+      _myHand = [];
+      _pallete = [];
+      myTurn = false;
+      myAllTurn = false;
+      youLose = true;
+      //TODO: выйти из игры
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Время вышло, вы проиграли!')),
+      );
+    });
 
     final message = {
       'type': 'time_out',
@@ -245,13 +279,6 @@ class _GameRoomPageState extends State<GameRoomPage> {
     };
 
     _webSocket.sendMessage(message);
-
-    setState(() {
-      _myHand = [];
-      _pallete = [];
-      myTurn = false;
-      //TODO: выйти из игры
-    });
   }
 
   int nextPlayerId(int currID) {
@@ -304,6 +331,7 @@ class _GameRoomPageState extends State<GameRoomPage> {
                         // send http-request
                         // delete data
                         // pass to main menu
+                        _submitTurnTimeout();
                         Navigator.pushNamed(context, '/mainmenu');
                       },
                       icon: const Icon(Icons.door_back_door_outlined, size: 60),
@@ -577,23 +605,34 @@ class _GameRoomPageState extends State<GameRoomPage> {
                         ],
                       ),
                     Padding(padding: const EdgeInsets.only(left: 11)),
-                    SizedBox(
-                      width: 100,
-                      height: 50,
-                      child: ElevatedButton(
-                        style: ButtonStyle(
-                          backgroundColor: WidgetStateProperty.all<Color>(myAllTurn ? (myTurn ? buttonColor : greyButtonColor) : invisColor,),
-                          textStyle: WidgetStateProperty.all<TextStyle>(buttonTextStyle,),
-                          foregroundColor: WidgetStateProperty.all<Color>(myAllTurn ? (myTurn ? grey3A3A3AColor : Colors.white) : invisColor,),
-                          shape: WidgetStateProperty.all<RoundedRectangleBorder>(RoundedRectangleBorder(borderRadius: BorderRadius.circular(30),),),
-                          side: WidgetStateProperty.all<BorderSide>(BorderSide(color: myAllTurn ?  grey3A3A3AColor : invisColor, width: 1),),
+                    if (myAllTurn)
+                      SizedBox(
+                        width: 100,
+                        height: 50,
+                        child: 
+                        ElevatedButton(
+                          style: ButtonStyle(
+                            backgroundColor: WidgetStateProperty.all<Color>(myTurn ? buttonColor : greyButtonColor),
+                            textStyle: WidgetStateProperty.all<TextStyle>(myTurn ? buttonTextStyle : buttonWhiteTextStyle),
+                            foregroundColor: WidgetStateProperty.all<Color>(myTurn ? grey3A3A3AColor : Colors.white),
+                            shape: WidgetStateProperty.all<RoundedRectangleBorder>(RoundedRectangleBorder(borderRadius: BorderRadius.circular(30),),),
+                            side: WidgetStateProperty.all<BorderSide>(BorderSide(color: grey3A3A3AColor, width: 1),),
+                          ),
+                          onPressed: () {
+                            if (myAllTurn && myTurn) {
+                              _submitTurn();
+                            }
+                          },
+                        child: Text('SUBMIT'),
                         ),
-                        onPressed: () {
-                          _submitTurn();
-                        },
-                      child: Text('SUBMIT'),
+                      )
+                    else 
+                      SizedBox(
+                        height: 100,
+                        width: 50,
+                        child: Text(youLose ? 'You LOSE' : 'WAIT Opponent...', style: buttonTextStyle,),
                       ),
-                    ),
+
                   ],
                 ),
               )

@@ -55,6 +55,20 @@ TextStyle cardNumStyle = const TextStyle(
   color: Colors.white
 );
 
+TextStyle buttonWhiteTextStyle = const TextStyle(
+  fontFamily: 'Awesome5',
+  fontSize: 14,
+  fontWeight: FontWeight.w600,
+  color: Colors.white
+);
+
+TextStyle buttonInvisTextStyle = const TextStyle(
+  fontFamily: 'Awesome5',
+  fontSize: 14,
+  fontWeight: FontWeight.w600,
+  color: Color.fromARGB(0, 255, 255, 255)
+);
+
 Color backInvisColor = const Color.fromARGB(125, 218, 209, 193);
 
 Color grey3A3A3AColor = const Color.fromARGB(255, 58, 58, 58);
