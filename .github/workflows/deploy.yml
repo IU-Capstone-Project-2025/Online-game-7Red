@@ -68,16 +68,48 @@ jobs:
         with:
           key: ${{ secrets.VPS_SSH_KEY }}
           known_hosts: 'just-a-placeholder-so-we-dont-get-errors'
-          
+
+      - name: Copy docker-compose.yml to VPS
+        run: |
+          scp -o StrictHostKeyChecking=no ./docker-compose.yml ${{ secrets.VPS_USERNAME }}@${{ secrets.VPS_IP }}:/root/app/   
+      
       - name: Deploy to VPS
         run: |
-          ssh -o StrictHostKeyChecking=no ${{ secrets.VPS_USERNAME }}@${{ secrets.VPS_IP }} << EOF
-            docker pull ${{ env.DOCKER_HUB_REPO }}:${{ env.BACKEND_TAG }}
-            docker pull ${{ env.DOCKER_HUB_REPO }}:${{ env.FRONTEND_TAG }}
+          ssh -o StrictHostKeyChecking=no ${{ secrets.VPS_USERNAME }}@${{ secrets.VPS_IP }} << 'EOF'
+            mkdir -p /deploy/database
             
-            sed -i "s|image:.*backend|image: ${{ env.DOCKER_HUB_REPO }}:${{ env.BACKEND_TAG }}|" docker-compose.yml
-            sed -i "s|image:.*frontend|image: ${{ env.DOCKER_HUB_REPO }}:${{ env.FRONTEND_TAG }}|" docker-compose.yml
-            
+            cat > /deploy/docker-compose.yml << 'COMPOSE'
+            version: "3.9"
+            services:
+              backend:
+                image: ${{ env.DOCKER_HUB_REPO }}:${{ env.BACKEND_TAG }}
+                ports:
+                  - "8000:8000"
+                env_file:
+                  - ./database/.env
+                restart: unless-stopped
+
+              frontend:
+                image: ${{ env.DOCKER_HUB_REPO }}:${{ env.FRONTEND_TAG }}
+                ports:
+                  - "8080:80"
+                depends_on:
+                  - backend
+                restart: unless-stopped
+            COMPOSE
+
+            cat > /deploy/database/.env << 'ENV'
+            PROJECT_ID=small-frog-40177030
+            DB_USER=neondb_owner
+            DB_PASS=npg_gCvztMWnb3G7
+            BRANCH_ID=br-falling-paper-a8xmzet9
+            DATABASE_URL=postgresql+asyncpg://neondb_owner:npg_gCvztMWnb3G7@ep-rapid-water-a86zpa0x-pooler.eastus2.azure.neon.tech/red7_db?sslmode=require
+            ENV
+
+            chmod 600 /deploy/database/.env
+            chown -R root:root /deploy
+
+            cd /deploy
             docker-compose down
             docker-compose up -d
           EOF
