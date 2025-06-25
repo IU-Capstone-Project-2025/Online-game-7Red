@@ -45,6 +45,8 @@ class _GameRoomPageState extends State<GameRoomPage> {
   bool ruleChanged = true;
   bool palleteChanged = true;
 
+  bool youLose = false;
+ 
   // List<String> myPallete = ["R7", "O6", "Y5", "G4", "B3"];
   // List<String> myHand = ["G4", "B3", "I2", "V1"];
   // String currRuleCard = "R0";
@@ -254,6 +256,18 @@ class _GameRoomPageState extends State<GameRoomPage> {
   void _submitTurnTimeout() {
     _turnTimer?.cancel();
 
+    setState(() {
+      _myHand = [];
+      _pallete = [];
+      myTurn = false;
+      myAllTurn = false;
+      youLose = true;
+      //TODO: выйти из игры
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Время вышло, вы проиграли!')),
+      );
+    });
+
     final message = {
       'type': 'time_out',
       'my_id': userID,
@@ -265,16 +279,6 @@ class _GameRoomPageState extends State<GameRoomPage> {
     };
 
     _webSocket.sendMessage(message);
-
-    setState(() {
-      _myHand = [];
-      _pallete = [];
-      myTurn = false;
-      //TODO: выйти из игры
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Время вышло, вы проиграли!')),
-      );
-    });
   }
 
   int nextPlayerId(int currID) {
@@ -625,7 +629,7 @@ class _GameRoomPageState extends State<GameRoomPage> {
                       SizedBox(
                         height: 100,
                         width: 50,
-                        child: Text("")
+                        child: Text(youLose ? 'You LOSE' : 'WAIT Opponent...', style: buttonTextStyle,),
                       ),
 
                   ],
