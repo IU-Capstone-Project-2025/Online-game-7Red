@@ -163,6 +163,9 @@ class _GameRoomPageState extends State<GameRoomPage> {
         _activePlayers.remove(message['id_did']);
         if (_activePlayers.length == 1) {
           // TODO: Закончить игру с победой
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text('Вы победили!')),
+          );
         }
       } else {
         if (message['his_pallete_ch'] != null) {
@@ -181,6 +184,9 @@ class _GameRoomPageState extends State<GameRoomPage> {
       if (_players.firstWhere((p) => p.id == _currentPlayerId).isMe) {
         if (_nextLose == 1) {
           //TODO: Закончить игру c поражением
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text('Вы проиграли!')),
+          );
           _pallete = [];
           _myHand = [];
         }
@@ -203,7 +209,6 @@ class _GameRoomPageState extends State<GameRoomPage> {
         setState(() => _timeLeft--);
       } else {
         timer.cancel();
-        // Автоматически завершаем ход, если время вышло
         if (myTurn) {
           _submitTurnTimeout();
         }
@@ -213,6 +218,10 @@ class _GameRoomPageState extends State<GameRoomPage> {
 
   void _submitTurn() {
     _turnTimer?.cancel();
+
+    setState(() {
+      myTurn = false;
+    });
 
     final message = {
       'type': 'my_turn',
@@ -225,10 +234,6 @@ class _GameRoomPageState extends State<GameRoomPage> {
     };
 
     _webSocket.sendMessage(message);
-
-    setState(() {
-      myTurn = false;
-    });
   }
 
   void _submitTurnTimeout() {
@@ -251,6 +256,9 @@ class _GameRoomPageState extends State<GameRoomPage> {
       _pallete = [];
       myTurn = false;
       //TODO: выйти из игры
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Время вышло, вы проиграли!')),
+      );
     });
   }
 
@@ -589,7 +597,9 @@ class _GameRoomPageState extends State<GameRoomPage> {
                           side: WidgetStateProperty.all<BorderSide>(BorderSide(color: myAllTurn ?  grey3A3A3AColor : invisColor, width: 1),),
                         ),
                         onPressed: () {
-                          _submitTurn();
+                          if (myAllTurn && myTurn) {
+                            _submitTurn();
+                          }
                         },
                       child: Text('SUBMIT'),
                       ),
