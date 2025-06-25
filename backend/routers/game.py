@@ -78,6 +78,7 @@ async def game_websocket(
                 if is_winning:
                     await websocket.send_json({"type": "right_turn"})
                 else:
+                    print(f"old_r {game.int_to_rule(game.current_rule)} new_r {new_rule} pal_ch {my_palette_ch}")
                     await websocket.send_json({"type": "wrong_turn", 
                                                "my_pallete_ch": my_palette_ch,
                                                "rule_ch": new_rule,

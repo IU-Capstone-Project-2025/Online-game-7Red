@@ -253,7 +253,7 @@ class Red7GameState:
         self.players[player_id]["palette"] = new_palette
         #print(f'rule: {new_rule} hand: {new_hand} pallete: {new_palette}', flush=True)
         if new_rule != None:
-            self.current_rule = self.rule_to_int(new_rule)
+            self.current_rule = self.rule_to_int(new_rule[0])
 
         #print(self.current_rule, flush=True)
 
