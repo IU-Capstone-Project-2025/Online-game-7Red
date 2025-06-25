@@ -112,10 +112,14 @@ class _GameRoomPageState extends State<GameRoomPage> {
       }
       
       if (gamemode == 2) {
-        if (player.isMe == false ) {
+        if (_players.length == 1) {
           playerUp = player;
         } else {
-          playerUp = _players.firstWhere((p) => p.id == _activePlayers[1]);
+          if (player.isMe == false ) {
+            playerUp = player;
+          } else {
+            playerUp = _players.firstWhere((p) => p.id == _activePlayers[1]);
+          }
         }
       }
       
@@ -124,7 +128,6 @@ class _GameRoomPageState extends State<GameRoomPage> {
   }
 
   void _handleWrongTurn(Map<String, dynamic> message) {
-    // Вернуть карты, если ход неверный
     setState(() {
       if (message['my_pallete_ch'] != null) {
         _pallete.remove(message['my_pallete_ch']);
@@ -136,16 +139,9 @@ class _GameRoomPageState extends State<GameRoomPage> {
       _ruleCard = message['old_rule'];
       myTurn = true;
     });
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text('Недопустимый ход!')),
-    );
   }
 
   void _handleRightTurn() {
-    // Ход принят, ждем смены хода
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text('Ход принят!')),
-    );
     setState(() {
       myTurn = false;
       ruleChanged = true;
@@ -327,7 +323,7 @@ class _GameRoomPageState extends State<GameRoomPage> {
                         children: [
                           Icon(Icons.filter_7, size: 24, color: grey3A3A3AColor,),
                           Padding(padding: const EdgeInsets.only(right: 5),),
-                          Text(playerUp!.name, style: buttonTextStyle),
+                          Text(playerUp?.name ?? "Waiting...", style: buttonTextStyle),
                         ],
                       )
                     ]
@@ -385,17 +381,19 @@ class _GameRoomPageState extends State<GameRoomPage> {
                   Column(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
+                      if (gamemode == 2)
+                        Padding(padding: const EdgeInsets.only(top: 20)),
                       Row(
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
-                          for (int i = 0; i < playerUp!.pallete.length; i++)
+                          for (int i = 0; i < (playerUp != null ? playerUp!.pallete.length : 0); i++)
                                 Row(
                                   children: [
                                     CentralCardWidget(card: playerUp!.pallete[i]),
                                     Padding(padding: const EdgeInsets.only(left: 18)),
                                   ],
                                 ),
-                          for (int i = playerUp!.pallete.length; i < 7; i++)
+                          for (int i = playerUp != null ? playerUp!.pallete.length : 0; i < 7; i++)
                             Row(
                               children: [
                                 Container(
