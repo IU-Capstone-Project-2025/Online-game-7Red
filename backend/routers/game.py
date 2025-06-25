@@ -92,8 +92,10 @@ async def game_websocket(
             game.next_player()
             print(f'Cur player after {game.current_player}')
             next_lose = not game.check_winning_at_beginning(game.current_player)
+            print("SSSSSSS", flush=True)
             print(f"Next lose out loop {next_lose}")
-            await broadcast_game_state(game, player_id, is_winning, my_palette_ch, next_lose)
+            await broadcast_game_state(game, player_id, is_winning, my_palette_ch, new_rule, next_lose)
+            print("SSSSSSS", flush=True)
             print(f"Next lose out loop {next_lose}")
             max_checks = len(game.players_id_list)
             while next_lose and max_checks > 0:
@@ -102,7 +104,7 @@ async def game_websocket(
                 game.next_player()
                 next_lose = not game.check_winning_at_beginning(game.current_player)
                 print(f"Next lose in loop {next_lose}")
-                await broadcast_game_state(game, cur_player, 0, None, next_lose)
+                await broadcast_game_state(game, cur_player, 0, None, None, next_lose)
             
 
     except WebSocketDisconnect:
@@ -120,7 +122,7 @@ async def game_websocket(
         print(str(e), flush=True)
         await websocket.close(code=1011, reason=str(e))
 
-async def broadcast_game_state(game: Red7GameState, cur_player_id: int, is_winning: bool, my_palette_ch: str, next_lose: bool):
+async def broadcast_game_state(game: Red7GameState, cur_player_id: int, is_winning: bool, my_palette_ch: str, new_rule: str, next_lose: bool):
     """Send updated game state to all players in room"""
     if not game:
         return
@@ -130,9 +132,9 @@ async def broadcast_game_state(game: Red7GameState, cur_player_id: int, is_winni
         if player_id in manager.connections:
             await manager.connections[player_id].send_json({
                 "type": "change_turn",
-                "loose": 0 if is_winning else 1, #imp several 2 if "next_lose" is 1
+                "lose": 0 if is_winning else 1, #imp several 2 if "next_lose" is 1
                 "id_did": cur_player_id, #imp (check)
-                "his_palette_ch": my_palette_ch,
-                "rule": game.current_rule,
+                "his_pallete_ch": my_palette_ch,
+                "rule_ch": new_rule,
                 "next_lose": 1 if next_lose else 0
             })
