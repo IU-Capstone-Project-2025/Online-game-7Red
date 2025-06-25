@@ -127,7 +127,7 @@ async def broadcast_game_state(game: Red7GameState, cur_player_id: int, is_winni
     if not game:
         return
 
-    print(f"is_win {is_winning}, cur_player {cur_player_id}, pal_ch {my_palette_ch}, rule {game.current_rule}, next_lose {next_lose}")
+    print(f"is_win {is_winning}, cur_player {cur_player_id}, pal_ch {my_palette_ch}, rule {new_rule}, next_lose {next_lose}")
     for player_id in game.players_id_list:
         if player_id in manager.connections:
             await manager.connections[player_id].send_json({

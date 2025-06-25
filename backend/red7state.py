@@ -141,7 +141,8 @@ class Red7GameState:
         original_state = {
             'hand': self.players[player_id]["hand"].copy(),
             'palette': self.players[player_id]["palette"].copy(),
-            'rule': self.current_rule
+            'rule': self.current_rule,
+            'rule_card': self.cur_rule_card
         }
         winning_moves = []
 
@@ -160,6 +161,7 @@ class Red7GameState:
                 if i == j:
                     continue
                 new_rule = possible_rules[i]
+                #print(f"new rule {new_rule}")
                 card_played = possible_cards[j]
 
                 if new_rule[0] is None and card_played is None:
@@ -176,11 +178,12 @@ class Red7GameState:
                     new_palette.append(card_played)
 
                 # --- Handle Rule Change (if any) ---
-                orig_rule_str = self.int_to_rule(original_state['rule'])
-                if orig_rule_str == new_rule[0]:
-                    continue
+                orig_rule_str = self.cur_rule_card
+                # if orig_rule_str == new_rule:
+                #     continue
                 
-                actual_rule = new_rule[0] if new_rule[0] is not None else orig_rule_str
+                new_rule_full = str(new_rule[0]) + str(new_rule[1])
+                actual_rule = new_rule_full if new_rule[0] is not None else orig_rule_str
 
                 if new_rule[0] is not None:  # Only remove a card for rule changes (not for None)
                     # Find the first card in hand matching the new rule's color
@@ -202,8 +205,11 @@ class Red7GameState:
         self.players[player_id]["hand"] = original_state['hand']
         self.players[player_id]["palette"] = original_state['palette']
         self.current_rule = original_state['rule']
+        print(f"before {self.cur_rule_card} after {original_state['rule_card']}")
+        self.cur_rule_card = original_state['rule_card']
 
         self.players[player_id]["possible_moves"] = winning_moves
+        print(self.players[player_id]["possible_moves"], flush=True)
         print("Win at beg!!!", flush=True)
         print(len(winning_moves), flush=True)
         return len(winning_moves) > 0
@@ -217,12 +223,28 @@ class Red7GameState:
             "new_palette": new_palette
         }
 
-        exact_match = any(
-            move["new_rule"] == target_move["new_rule"]
-            and sorted(move["new_hand"]) == sorted(target_move["new_hand"])
-            and sorted(move["new_palette"]) == sorted(target_move["new_palette"])
-            for move in moves
-        )
+        if new_rule == None:
+            exact_match = any(
+                move["new_rule"] == self.cur_rule_card
+                and sorted(move["new_hand"]) == sorted(target_move["new_hand"])
+                and sorted(move["new_palette"]) == sorted(target_move["new_palette"])
+                for move in moves
+            )
+        
+        else:
+            exact_match = any(
+                move["new_rule"] == target_move["new_rule"]
+                and sorted(move["new_hand"]) == sorted(target_move["new_hand"])
+                and sorted(move["new_palette"]) == sorted(target_move["new_palette"])
+                for move in moves
+            )
+
+        if exact_match:
+            self.players[player_id]["hand"] = new_hand
+            self.players[player_id]["palette"] = new_palette
+            if new_rule != None:
+                self.cur_rule_card = new_rule
+                self.current_rule = self.rule_to_int(self.cur_rule_card[0])
 
         return exact_match
 
