@@ -81,7 +81,7 @@ jobs:
             mkdir -p /deploy/database
           PREPARE_EOF
       
-            - name: Deploy on VPS
+      - name: Deploy on VPS
         run: |
           ssh -o StrictHostKeyChecking=no ${{ secrets.VPS_USERNAME }}@${{ secrets.VPS_IP }} << 'COMPOSE_EOF'
             set -e
