@@ -42,8 +42,8 @@ class _GameRoomPageState extends State<GameRoomPage> {
 
   bool myTurn = false;
   bool myAllTurn = false;
-  bool ruleChanged = false;
-  bool palleteChanged = false;
+  bool ruleChanged = true;
+  bool palleteChanged = true;
 
   // List<String> myPallete = ["R7", "O6", "Y5", "G4", "B3"];
   // List<String> myHand = ["G4", "B3", "I2", "V1"];
