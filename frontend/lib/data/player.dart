@@ -1,5 +1,5 @@
 class Player {
-  final int id;
+  int id = 0;
   final String name;
   final bool isMe;
   List<String> pallete = [];

@@ -206,7 +206,8 @@ class _GameRoomPageState extends State<GameRoomPage> {
         myAllTurn = true;
       }
 
-      if (_activePlayers.length == 1) {
+      if (_activePlayers.length == 1 && youLose == false) {
+        _turnTimer?.cancel();
         youWin = true;
         youLose = false;
         _pallete = [];
@@ -288,8 +289,19 @@ class _GameRoomPageState extends State<GameRoomPage> {
   }
 
   int nextPlayerId(int currID) {
-    final index = _activePlayers.indexOf(currID);
-    return _activePlayers[(index + 1) % _activePlayers.length];
+    final index = _players.indexOf(_players.firstWhere((p) => p.id == currID));
+    int nextIndex = (index + 1) % _players.length;
+    while (true) {
+      if (_activePlayers.contains(_players[nextIndex].id)) {
+        return _players[nextIndex].id;
+      } else {
+        nextIndex = (nextIndex + 1) % _players.length;
+      }
+    }
+    
+
+    // final index = _activePlayers.indexOf(currID);
+    // return _activePlayers[(index + 1) % _activePlayers.length];
   }
 
   void _onDisconnected() {
@@ -428,6 +440,7 @@ class _GameRoomPageState extends State<GameRoomPage> {
                             ),
                             onPressed: () {
                               _webSocket.disconnect();
+                              Navigator.of(context).pop();
                               Navigator.pushNamed(context, '/mainmenu');
                             },
                             child: Column(
@@ -516,6 +529,7 @@ class _GameRoomPageState extends State<GameRoomPage> {
                         onPressed: () {
                           _turnTimer!.cancel();
                           _webSocket.disconnect();
+                          Navigator.of(context).pop();
                           Navigator.pushNamed(context, '/mainmenu');
                         },
                         child: Column(
