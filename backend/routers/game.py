@@ -85,14 +85,17 @@ async def game_websocket(
                 is_winning = False
 
             game.next_player()
-            next_lose = game.check_winning_at_beginning(game.current_player)
+            next_lose = not game.check_winning_at_beginning(game.current_player)
+            print(f"Next lose out loop {next_lose}")
             await broadcast_game_state(game, player_id, is_winning, my_palette_ch, next_lose)
+            print(f"Next lose out loop {next_lose}")
             max_checks = len(game.players_id_list)
             while next_lose and max_checks > 0:
                 max_checks -= 1
                 cur_player = game.current_player
                 game.next_player()
-                next_lose = game.check_winning_at_beginning(game.current_player)
+                next_lose = not game.check_winning_at_beginning(game.current_player)
+                print(f"Next lose in loop {next_lose}")
                 await broadcast_game_state(game, cur_player, 0, None, next_lose)
             
 

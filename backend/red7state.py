@@ -203,7 +203,8 @@ class Red7GameState:
         self.current_rule = original_state['rule']
 
         self.players[player_id]["possible_moves"] = winning_moves
-
+        print("Win at beg!!!", flush=True)
+        print(len(winning_moves), flush=True)
         return len(winning_moves) > 0
     
     def check_in_possible_moves(self, player_id: int, new_rule: str, new_hand: List[str], new_palette: List[str]) -> bool:
@@ -250,12 +251,11 @@ class Red7GameState:
         # 3. Apply proposed changes temporarily
         self.players[player_id]["hand"] = new_hand
         self.players[player_id]["palette"] = new_palette
-        print(f'rule: {new_rule} hand: {new_hand} pallete: {new_palette}', flush=True)
+        #print(f'rule: {new_rule} hand: {new_hand} pallete: {new_palette}', flush=True)
         if new_rule != None:
             self.current_rule = self.rule_to_int(new_rule)
-        else:
-            self.current_rule = "R"
-        print(self.current_rule, flush=True)
+
+        #print(self.current_rule, flush=True)
 
         opponent_ids = [pid for pid in self.players.keys() if pid != player_id]
         
