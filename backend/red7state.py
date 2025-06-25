@@ -39,6 +39,7 @@ class Red7GameState:
         self.min_players = 2
         self.current_player = None
         self.current_rule = 0  # Starts with Red rule (Highest Card)
+        self.cur_rule_card = "R0"
         self.deck = []
         self.discard_pile = []
         self.game_over = False
@@ -245,7 +246,8 @@ class Red7GameState:
         original_state = {
             'hand': self.players[player_id]["hand"].copy(),
             'palette': self.players[player_id]["palette"].copy(),
-            'rule': self.current_rule
+            'rule': self.current_rule,
+            'rule_card': self.cur_rule_card
         }
         
         # 3. Apply proposed changes temporarily
@@ -254,6 +256,7 @@ class Red7GameState:
         #print(f'rule: {new_rule} hand: {new_hand} pallete: {new_palette}', flush=True)
         if new_rule != None:
             self.current_rule = self.rule_to_int(new_rule[0])
+            self.cur_rule_card = new_rule
 
         #print(self.current_rule, flush=True)
 
@@ -266,6 +269,7 @@ class Red7GameState:
             self.players[player_id]["hand"] = original_state['hand']
             self.players[player_id]["palette"] = original_state['palette']
             self.current_rule = original_state['rule']
+            self.cur_rule_card = original_state['rule_card']
         
         return is_winning
 
