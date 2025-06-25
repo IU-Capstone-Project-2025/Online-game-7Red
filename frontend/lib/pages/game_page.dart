@@ -57,16 +57,22 @@ class _GameRoomPageState extends State<GameRoomPage> {
   }
 
   void _connectToWebSocket() async{
-    SharedPreferences prefs = await SharedPreferences.getInstance();
-    roomID = await prefs.getString('roomId');
-    userID = await prefs.getInt('myID');
-    serverUrl = 'ws://localhost:8000/game/$roomID/ws?player_id=$userID';
-    _webSocket = GameWebSocket(
-      serverUrl: serverUrl,
-      onMessageReceived: _handleMessage,
-      onConnectionClosed: _onDisconnected,
+    try {
+      SharedPreferences prefs = await SharedPreferences.getInstance();
+      roomID = await prefs.getString('roomId');
+      userID = await prefs.getInt('myID');
+      serverUrl = 'ws://localhost:8000/game/$roomID/ws?player_id=$userID';
+      _webSocket = GameWebSocket(
+        serverUrl: serverUrl,
+        onMessageReceived: _handleMessage,
+        onConnectionClosed: _onDisconnected,
+      );
+      _webSocket.connect();
+    } catch (e) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text('Ошибка подключения: $e')),
     );
-    _webSocket.connect();
+  }
   }
 
   void _handleMessage(dynamic message) {  //мб тут не так будет соо отправляться (не то передаю)
@@ -138,6 +144,9 @@ class _GameRoomPageState extends State<GameRoomPage> {
       }
       _ruleCard = message['old_rule'];
       myTurn = true;
+      palleteChanged = false;
+      ruleChanged = false;
+      myAllTurn = true;
     });
   }
 
@@ -209,7 +218,7 @@ class _GameRoomPageState extends State<GameRoomPage> {
         setState(() => _timeLeft--);
       } else {
         timer.cancel();
-        if (myTurn) {
+        if (myAllTurn) {
           _submitTurnTimeout();
         }
       }
@@ -221,6 +230,9 @@ class _GameRoomPageState extends State<GameRoomPage> {
 
     setState(() {
       myTurn = false;
+      palleteChanged = true;
+      ruleChanged = true;
+      myAllTurn = true;
     });
 
     final message = {
