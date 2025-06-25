@@ -583,7 +583,7 @@ class _GameRoomPageState extends State<GameRoomPage> {
                       child: ElevatedButton(
                         style: ButtonStyle(
                           backgroundColor: WidgetStateProperty.all<Color>(myAllTurn ? (myTurn ? buttonColor : greyButtonColor) : invisColor,),
-                          textStyle: WidgetStateProperty.all<TextStyle>(buttonTextStyle,),
+                          textStyle: WidgetStateProperty.all<TextStyle>(myAllTurn ? (myTurn ? buttonTextStyle : buttonWhiteTextStyle)  : buttonInvisTextStyle),
                           foregroundColor: WidgetStateProperty.all<Color>(myAllTurn ? (myTurn ? grey3A3A3AColor : Colors.white) : invisColor,),
                           shape: WidgetStateProperty.all<RoundedRectangleBorder>(RoundedRectangleBorder(borderRadius: BorderRadius.circular(30),),),
                           side: WidgetStateProperty.all<BorderSide>(BorderSide(color: myAllTurn ?  grey3A3A3AColor : invisColor, width: 1),),
