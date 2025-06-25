@@ -36,3 +36,23 @@ The application includes the following core components:
  [http://localhost:8080](http://localhost:8080)
 
 3. After starting the backend, you can access the interactive Swagger UI at: [http://localhost:8000/docs](http://localhost:8000/docs)
+
+## To play in a 2 player game mode, do the following:
+
+1. Build and start all services using:
+   ```sh
+   docker-compose up --build
+   ```
+
+2. Open 2 browser tabs at:
+ [http://localhost:8080](http://localhost:8080)
+
+3. Log in into 2 different accounts (using Sign In or Sign Up) from each of the browser tab respectively
+
+4. From one of the logged accounts create a private room (Start new game -> Create private room).
+
+5. From another logged account connect to the created private room using room ID and room password (Start new game -> Connect private room)
+
+6. When in a waiting room, from each of the account click "Get Ready" button
+
+7. Play a game - drag cards and submit your moves from both of the accounts

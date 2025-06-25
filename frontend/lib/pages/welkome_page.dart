@@ -123,17 +123,7 @@ class _WelkomePageState extends State<WelkomePage> {
                   ),
                 ],
               ),
-              const Expanded(flex: 4, child: Text("")),
-              SizedBox(
-                width: 60,
-                height: 60,
-                child: IconButton(
-                  onPressed: () {
-                    Navigator.pushNamed(context, '/mainmenu');
-                  },
-                  icon: const Icon(Icons.skip_next, size: 44),
-                ),
-              ),
+              const Expanded(flex: 6, child: Text("")),
             ],
           ),
         ),

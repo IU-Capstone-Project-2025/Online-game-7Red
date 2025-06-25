@@ -223,6 +223,9 @@ class Red7State:
             #color priority among highest even cards
             my_max_cards = [(color, num) for (color, num) in palette if num == my_max_even]
             opp_max_cards = [(color, num) for (color, num) in opp_palette if num == opp_max_even]
+
+            if len(my_max_cards) == 0:
+                return False
             
             my_best_color = min([color for (color, _) in my_max_cards], default=7)
             opp_best_color = min([color for (color, _) in opp_max_cards], default=7)
@@ -325,6 +328,9 @@ class Red7State:
             #color priority among highest cards < 4
             my_max_cards = [(color, num) for (color, num) in palette if num == my_max_lt4]
             opp_max_cards = [(color, num) for (color, num) in opp_palette if num == opp_max_lt4]
+
+            if len(my_max_cards) == 0:
+                return False
             
             my_best_color = min([color for (color, _) in my_max_cards], default=7)
             opp_best_color = min([color for (color, _) in opp_max_cards], default=7)

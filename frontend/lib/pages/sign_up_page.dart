@@ -1,7 +1,10 @@
 import 'package:flutter/material.dart';
-import '../data/styles.dart';
+import 'package:provider/provider.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
+
+import '../providers/provider.dart';
+import '../data/styles.dart';
 
 class SignUpPage extends StatefulWidget {
   const SignUpPage({super.key});
@@ -23,6 +26,8 @@ class _SignUpPageState extends State<SignUpPage> {
   String errRepeatedPassword = '';
   bool regSuccess = false;
 
+  int ID = -1;
+
   Future<void> signUp(String nickname, String email, String password, String repeatedPassword) async {
     final url = Uri.parse('http://localhost:8000/auth/signup');
     final response = await http.post(
@@ -35,10 +40,12 @@ class _SignUpPageState extends State<SignUpPage> {
         'repeated_password': repeatedPassword,
       }),
     );
+    final responseBody = json.decode(response.body);
 
     if (response.statusCode == 200 || response.statusCode == 201) {
       setState(() {
         regSuccess = true;
+        ID = responseBody['user_id'];
       });
     } else {
       setState(() {
@@ -50,6 +57,8 @@ class _SignUpPageState extends State<SignUpPage> {
 
   @override
   Widget build(BuildContext context) {
+    final gameProvider = Provider.of<GameProvider>(context);
+
     return Scaffold(
       body: Container(
         decoration: BoxDecoration(
@@ -271,6 +280,11 @@ class _SignUpPageState extends State<SignUpPage> {
                             else {
                               await signUp(controller.text, controller2.text, controller3.text, controller4.text);
                               if (regSuccess) {
+                                gameProvider.myID = ID;
+                                gameProvider.myName = controller.text;
+                                gameProvider.email = controller2.text;
+                                gameProvider.password = controller3.text;
+                                gameProvider.saveMyPersonalInfo();
                                 Navigator.pushNamed(context, '/mainmenu');
                               }
                             }
