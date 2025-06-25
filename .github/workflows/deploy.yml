@@ -68,22 +68,20 @@ jobs:
           key: ${{ secrets.VPS_SSH_KEY }}
           known_hosts: 'just-a-placeholder-so-we-dont-get-errors'
 
-      - name: Create deploy directory on VPS
+      - name: Create deploy directory
         run: |
-          ssh -o StrictHostKeyChecking=no ${{ secrets.VPS_USERNAME }}@${{ secrets.VPS_IP }} "mkdir -p /deploy/database"
+          ssh -o StrictHostKeyChecking=no ${{ secrets.VPS_USERNAME }}@${{ secrets.VPS_IP }} \
+            "mkdir -p /deploy/database"
       
-      - name: Deploy to VPS
+      - name: Deploy application
         run: |
-          ssh -o StrictHostKeyChecking=no ${{ secrets.VPS_USERNAME }}@${{ secrets.VPS_IP }} << 'EOF'
-            # Create necessary directories
-            mkdir -p /deploy/database
-            
+          ssh -o StrictHostKeyChecking=no ${{ secrets.VPS_USERNAME }}@${{ secrets.VPS_IP }} << 'DEPLOY_EOF'
             # Create docker-compose.yml
-            cat > /deploy/docker-compose.yml << 'COMPOSE'
+            cat > /deploy/docker-compose.yml << 'COMPOSE_EOF'
             version: "3.9"
             services:
               backend:
-                image: ${{ env.DOCKER_HUB_REPO }}:${{ env.BACKEND_TAG }}
+                image: $DOCKER_IMAGE_BACKEND
                 ports:
                   - "8000:8000"
                 env_file:
@@ -91,22 +89,22 @@ jobs:
                 restart: unless-stopped
 
               frontend:
-                image: ${{ env.DOCKER_HUB_REPO }}:${{ env.FRONTEND_TAG }}
+                image: $DOCKER_IMAGE_FRONTEND
                 ports:
                   - "8080:80"
                 depends_on:
                   - backend
                 restart: unless-stopped
-            COMPOSE
+            COMPOSE_EOF
 
-            # Create .env file with secrets
-            cat > /deploy/database/.env << 'ENV'
-            PROJECT_ID=${{ secrets.PROJECT_ID }}
-            DB_USER=${{ secrets.DB_USER }}
-            DB_PASS=${{ secrets.DB_PASS }}
-            BRANCH_ID=${{ secrets.BRANCH_ID }}
-            DATABASE_URL=${{ secrets.DATABASE_URL }}
-            ENV
+            # Create .env file
+            cat > /deploy/database/.env << 'ENV_EOF'
+            PROJECT_ID=$PROJECT_ID
+            DB_USER=$DB_USER
+            DB_PASS=$DB_PASS
+            BRANCH_ID=$BRANCH_ID
+            DATABASE_URL=$DATABASE_URL
+            ENV_EOF
 
             # Set permissions
             chmod 600 /deploy/database/.env
@@ -114,7 +112,28 @@ jobs:
 
             # Deploy containers
             cd /deploy
-            docker-compose down || true  # Ignore error if no containers are running
+            docker-compose down || true
             docker-compose pull
             docker-compose up -d
-          EOF
+          DEPLOY_EOF
+        env:
+          DOCKER_IMAGE_BACKEND: ${{ env.DOCKER_HUB_REPO }}:${{ env.BACKEND_TAG }}
+          DOCKER_IMAGE_FRONTEND: ${{ env.DOCKER_HUB_REPO }}:${{ env.FRONTEND_TAG }}
+          PROJECT_ID: ${{ secrets.PROJECT_ID }}
+          DB_USER: ${{ secrets.DB_USER }}
+          DB_PASS: ${{ secrets.DB_PASS }}
+          BRANCH_ID: ${{ secrets.BRANCH_ID }}
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+
+      - name: Verify deployment
+        run: |
+          ssh -o StrictHostKeyChecking=no ${{ secrets.VPS_USERNAME }}@${{ secrets.VPS_IP }} << 'VERIFY_EOF'
+            echo "=== Directory structure ==="
+            ls -la /deploy
+            echo "\n=== Database files ==="
+            ls -la /deploy/database
+            echo "\n=== Running containers ==="
+            docker ps
+            echo "\n=== Docker images ==="
+            docker images
+          VERIFY_EOF
