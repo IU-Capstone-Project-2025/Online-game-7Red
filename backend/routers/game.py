@@ -56,6 +56,8 @@ async def game_websocket(
             new_hand = data["my_hand"]
             new_palette = data["pallete"]
 
+            print(f"Got from front {type_cur}, {player_id}, {room_id}, {my_palette_ch}, {new_rule}, {new_hand}, {new_palette}")
+
             if  type_cur == "my_turn" and game.current_player == player_id:
                 if not game.players[player_id]["possible_moves"]:
                     is_winning = game.check_move(
@@ -65,6 +67,7 @@ async def game_websocket(
                         new_palette=new_palette
                     )
                 else:
+                    print("Check in pos moves", flush=True)
                     is_winning = game.check_in_possible_moves(
                         player_id=player_id,
                         new_rule=new_rule,
@@ -78,13 +81,15 @@ async def game_websocket(
                     await websocket.send_json({"type": "wrong_turn", 
                                                "my_pallete_ch": my_palette_ch,
                                                "rule_ch": new_rule,
-                                               "old_rule": game.current_rule})
+                                               "old_rule": game.int_to_rule(game.current_rule)})
                     continue 
 
             elif type_cur == "time_out":
                 is_winning = False
 
+            print(f'Cur player befor {game.current_player}')
             game.next_player()
+            print(f'Cur player after {game.current_player}')
             next_lose = not game.check_winning_at_beginning(game.current_player)
             print(f"Next lose out loop {next_lose}")
             await broadcast_game_state(game, player_id, is_winning, my_palette_ch, next_lose)
@@ -119,6 +124,7 @@ async def broadcast_game_state(game: Red7GameState, cur_player_id: int, is_winni
     if not game:
         return
 
+    print(f"is_win {is_winning}, cur_player {cur_player_id}, pal_ch {my_palette_ch}, rule {game.current_rule}, next_lose {next_lose}")
     for player_id in game.players_id_list:
         if player_id in manager.connections:
             await manager.connections[player_id].send_json({
@@ -127,5 +133,5 @@ async def broadcast_game_state(game: Red7GameState, cur_player_id: int, is_winni
                 "id_did": cur_player_id, #imp (check)
                 "his_palette_ch": my_palette_ch,
                 "rule": game.current_rule,
-                "next_lose": 0 if next_lose else 1
+                "next_lose": 1 if next_lose else 0
             })
