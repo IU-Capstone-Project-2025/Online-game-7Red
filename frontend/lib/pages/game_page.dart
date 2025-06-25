@@ -331,6 +331,7 @@ class _GameRoomPageState extends State<GameRoomPage> {
                         // send http-request
                         // delete data
                         // pass to main menu
+                        _submitTurnTimeout();
                         Navigator.pushNamed(context, '/mainmenu');
                       },
                       icon: const Icon(Icons.door_back_door_outlined, size: 60),
