@@ -230,8 +230,6 @@ class _GameRoomPageState extends State<GameRoomPage> {
 
     setState(() {
       myTurn = false;
-      palleteChanged = true;
-      ruleChanged = true;
       myAllTurn = true;
     });
 
@@ -244,6 +242,11 @@ class _GameRoomPageState extends State<GameRoomPage> {
       'my_hand': _myHand,
       'pallete': _pallete,
     };
+
+    setState(() {
+      palleteChanged = true;
+      ruleChanged = true;
+    });
 
     _webSocket.sendMessage(message);
   }
