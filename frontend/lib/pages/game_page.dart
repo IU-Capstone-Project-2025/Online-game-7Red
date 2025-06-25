@@ -597,25 +597,34 @@ class _GameRoomPageState extends State<GameRoomPage> {
                         ],
                       ),
                     Padding(padding: const EdgeInsets.only(left: 11)),
-                    SizedBox(
-                      width: 100,
-                      height: 50,
-                      child: ElevatedButton(
-                        style: ButtonStyle(
-                          backgroundColor: WidgetStateProperty.all<Color>(myAllTurn ? (myTurn ? buttonColor : greyButtonColor) : invisColor,),
-                          textStyle: WidgetStateProperty.all<TextStyle>(myAllTurn ? (myTurn ? buttonTextStyle : buttonWhiteTextStyle)  : buttonInvisTextStyle),
-                          foregroundColor: WidgetStateProperty.all<Color>(myAllTurn ? (myTurn ? grey3A3A3AColor : Colors.white) : invisColor,),
-                          shape: WidgetStateProperty.all<RoundedRectangleBorder>(RoundedRectangleBorder(borderRadius: BorderRadius.circular(30),),),
-                          side: WidgetStateProperty.all<BorderSide>(BorderSide(color: myAllTurn ?  grey3A3A3AColor : invisColor, width: 1),),
+                    if (myAllTurn)
+                      SizedBox(
+                        width: 100,
+                        height: 50,
+                        child: 
+                        ElevatedButton(
+                          style: ButtonStyle(
+                            backgroundColor: WidgetStateProperty.all<Color>(myTurn ? buttonColor : greyButtonColor),
+                            textStyle: WidgetStateProperty.all<TextStyle>(myTurn ? buttonTextStyle : buttonWhiteTextStyle),
+                            foregroundColor: WidgetStateProperty.all<Color>(myTurn ? grey3A3A3AColor : Colors.white),
+                            shape: WidgetStateProperty.all<RoundedRectangleBorder>(RoundedRectangleBorder(borderRadius: BorderRadius.circular(30),),),
+                            side: WidgetStateProperty.all<BorderSide>(BorderSide(color: grey3A3A3AColor, width: 1),),
+                          ),
+                          onPressed: () {
+                            if (myAllTurn && myTurn) {
+                              _submitTurn();
+                            }
+                          },
+                        child: Text('SUBMIT'),
                         ),
-                        onPressed: () {
-                          if (myAllTurn && myTurn) {
-                            _submitTurn();
-                          }
-                        },
-                      child: Text('SUBMIT'),
+                      )
+                    else 
+                      SizedBox(
+                        height: 100,
+                        width: 50,
+                        child: Text("")
                       ),
-                    ),
+
                   ],
                 ),
               )
