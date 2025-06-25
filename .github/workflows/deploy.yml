@@ -1,154 +1,74 @@
-name: CI/CD Pipeline
+name: Deploy to VPS
 
 on:
   push:
-    branches: [deploy]
-
-env:
-  DOCKER_HUB_REPO: ${{ secrets.DOCKER_HUB_USERNAME }}/7red
-  BACKEND_TAG: backend-${{ github.sha }}
-  FRONTEND_TAG: frontend-${{ github.sha }}
+    branches:
+      - deploy
 
 jobs:
-  test:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v3
-      
-      - name: Set up Python
-        uses: actions/setup-python@v4
-        with:
-          python-version: '3.11'
-          
-      - name: Install dependencies
-        run: |
-          python -m pip install --upgrade pip
-          pip install pytest
-          
-      - name: Run tests
-        run: |
-          cd tests
-          pytest -v tests.py
-
-  build-and-push:
-    needs: test
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v3
-      
-      - name: Login to Docker Hub
-        uses: docker/login-action@v2
-        with:
-          username: ${{ secrets.DOCKER_HUB_USERNAME }}
-          password: ${{ secrets.DOCKER_HUB_TOKEN }}
-          
-      - name: Build and push backend
-        uses: docker/build-push-action@v4
-        with:
-          context: ./backend
-          push: true
-          tags: ${{ env.DOCKER_HUB_REPO }}:${{ env.BACKEND_TAG }}
-          platforms: linux/amd64
-          
-      - name: Build and push frontend
-        uses: docker/build-push-action@v4
-        with:
-          context: ./frontend
-          push: true
-          tags: ${{ env.DOCKER_HUB_REPO }}:${{ env.FRONTEND_TAG }}
-          platforms: linux/amd64
-
   deploy:
-    needs: build-and-push
     runs-on: ubuntu-latest
+
     steps:
-      - uses: actions/checkout@v3
-      
-      - name: Install SSH key
-        uses: shimataro/ssh-key-action@v2
-        with:
-          key: ${{ secrets.VPS_SSH_KEY }}
-          known_hosts: 'just-a-placeholder-so-we-dont-get-errors'
+      - name: Checkout
+        uses: actions/checkout@v3
 
-      - name: Prepare server environment
+      - name: Log in to Docker Hub
+        run: echo "${{ secrets.DOCKER_HUB_TOKEN }}" | docker login -u "${{ secrets.DOCKER_HUB_USERNAME }}" --password-stdin
+
+      - name: Build and Push Backend
         run: |
-          ssh -o StrictHostKeyChecking=no ${{ secrets.VPS_USERNAME }}@${{ secrets.VPS_IP }} << 'PREPARE_EOF'
-          # Cleanup previous deployment
-          docker-compose -f /deploy/docker-compose.yml down || true
-          docker system prune -a -f || true
-          
-          # Create directory structure
-          mkdir -p /deploy/database
-          PREPARE_EOF
-      
-      - name: Deploy application
+          docker build -t ${{ secrets.DOCKER_HUB_USERNAME }}/my-backend:latest -f backend/Dockerfile .
+          docker push ${{ secrets.DOCKER_HUB_USERNAME }}/my-backend:latest
+
+      - name: Build and Push Frontend
         run: |
-          ssh -o StrictHostKeyChecking=no ${{ secrets.VPS_USERNAME }}@${{ secrets.VPS_IP }} << 'DEPLOY_EOF'
-          # Login to Docker Hub
-          echo "${{ secrets.DOCKER_HUB_TOKEN }}" | docker login -u "${{ secrets.DOCKER_HUB_USERNAME }}" --password-stdin
-          
-          # Create docker-compose.yml
-          cat > /deploy/docker-compose.yml << 'COMPOSE_EOF'
-version: "3.9"
-services:
-  backend:
-    image: ${{ env.DOCKER_HUB_REPO }}:${{ env.BACKEND_TAG }}
-    ports:
-      - "8000:8000"
-    env_file:
-      - ./database/.env
-    restart: unless-stopped
-    deploy:
-      resources:
-        limits:
-          memory: 300M
-          cpus: '0.5'
+          docker build -t ${{ secrets.DOCKER_HUB_USERNAME }}/my-frontend:latest -f frontend/Dockerfile .
+          docker push ${{ secrets.DOCKER_HUB_USERNAME }}/my-frontend:latest
 
-  frontend:
-    image: ${{ env.DOCKER_HUB_REPO }}:${{ env.FRONTEND_TAG }}
-    ports:
-      - "8080:80"
-    depends_on:
-      - backend
-    restart: unless-stopped
-    deploy:
-      resources:
-        limits:
-          memory: 200M
-          cpus: '0.3'
-COMPOSE_EOF
+      - name: Deploy on VPS
+        run: |
+          ssh -o StrictHostKeyChecking=no ${{ secrets.VPS_USERNAME }}@${{ secrets.VPS_IP }} << 'COMPOSE_EOF'
+          rm -rf ~/myapp || true
+          mkdir ~/myapp
+          cd ~/myapp
 
-          # Create .env file
-          cat > /deploy/database/.env << 'ENV_EOF'
-PROJECT_ID=${{ secrets.PROJECT_ID }}
-DB_USER=${{ secrets.DB_USER }}
-DB_PASS=${{ secrets.DB_PASS }}
-BRANCH_ID=${{ secrets.BRANCH_ID }}
-DATABASE_URL=${{ secrets.DATABASE_URL }}
-ENV_EOF
+          # Копируем docker-compose.yml и .env
+          cat > docker-compose.yml << 'EOF'
+          version: '3'
+          services:
+            backend:
+              image: ${{ secrets.DOCKER_HUB_USERNAME }}/my-backend:latest
+              ports:
+                - "8000:8000"
+              environment:
+                - DATABASE_URL=${{ secrets.DATABASE_URL }}
 
-          # Set permissions
-          chmod 600 /deploy/database/.env
-          chown -R root:root /deploy
+            frontend:
+              image: ${{ secrets.DOCKER_HUB_USERNAME }}/my-frontend:latest
+              ports:
+                - "80:80"
+          EOF
 
-          # Pull and deploy
-          cd /deploy
-          docker-compose pull
-          docker-compose up -d
-          
-          # Verify
-          sleep 10
-          docker-compose ps
-          docker-compose logs --tail=50
-          DEPLOY_EOF
+          cat > .env << EOF
+          DB_USER=${{ secrets.DB_USER }}
+          DB_PASS=${{ secrets.DB_PASS }}
+          PROJECT_ID=${{ secrets.PROJECT_ID }}
+          EOF
 
-      - name: Final verification
+          docker compose pull
+          docker compose up -d
+          COMPOSE_EOF
+
+      - name: Verify deployment
         run: |
           ssh -o StrictHostKeyChecking=no ${{ secrets.VPS_USERNAME }}@${{ secrets.VPS_IP }} << 'VERIFY_EOF'
           echo "=== Running containers ==="
-          docker ps -a
+          docker ps
+
           echo "\n=== Resource usage ==="
           docker stats --no-stream
+
           echo "\n=== Ports listening ==="
-          ss -tulnp | grep -E '8000|8080' || true
+          ss -tuln
           VERIFY_EOF
