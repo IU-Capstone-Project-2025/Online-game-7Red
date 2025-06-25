@@ -46,11 +46,7 @@ class _GameRoomPageState extends State<GameRoomPage> {
   bool palleteChanged = true;
 
   bool youLose = false;
- 
-  // List<String> myPallete = ["R7", "O6", "Y5", "G4", "B3"];
-  // List<String> myHand = ["G4", "B3", "I2", "V1"];
-  // String currRuleCard = "R0";
-  
+  bool youWin = false;
 
   @override
   void initState() {
@@ -77,7 +73,7 @@ class _GameRoomPageState extends State<GameRoomPage> {
   }
   }
 
-  void _handleMessage(dynamic message) {  //мб тут не так будет соо отправляться (не то передаю)
+  void _handleMessage(dynamic message) {
     switch (message['type']) {
       case 'initialized':
         _handleInitialized(message);
@@ -172,34 +168,36 @@ class _GameRoomPageState extends State<GameRoomPage> {
           }
         }
         _activePlayers.remove(message['id_did']);
-        if (_activePlayers.length == 1) {
-          // TODO: Закончить игру с победой
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text('Вы победили!')),
-          );
-        }
       } else {
         if (message['his_pallete_ch'] != null) {
           if (gamemode == 2) {
             if (player.id == playerUp!.id) {
               playerUp!.pallete.add(message['his_pallete_ch']);
+              playerUp!.numOfCards--;
             }
           }
         }
       }
       if (message['rule_ch'] != null) {
         _ruleCard = message['rule_ch'];
+        if (gamemode == 2) {
+            if (player.id == playerUp!.id) {
+              playerUp!.numOfCards--;
+            }
+          }
       }
       _nextLose = message['next_lose'];
       _currentPlayerId = nextPlayerId(_currentPlayerId);
       if (_players.firstWhere((p) => p.id == _currentPlayerId).isMe) {
         if (_nextLose == 1) {
-          //TODO: Закончить игру c поражением
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text('Вы проиграли!')),
-          );
+          _turnTimer?.cancel();
           _pallete = [];
           _myHand = [];
+          youLose = true;
+          youWin = false;
+          loosingWinning();
+          return;
+          
         }
         myTurn = true;
         palleteChanged = false;
@@ -207,8 +205,19 @@ class _GameRoomPageState extends State<GameRoomPage> {
         my_pallete_ch = "";
         myAllTurn = true;
       }
+
+      if (_activePlayers.length == 1) {
+        youWin = true;
+        youLose = false;
+        _pallete = [];
+        _myHand = [];
+        loosingWinning();
+        return;
+      }
       
-      _startTurnTimer();
+      if (!youLose) {
+        _startTurnTimer();
+      }
     });
   }
 
@@ -262,10 +271,7 @@ class _GameRoomPageState extends State<GameRoomPage> {
       myTurn = false;
       myAllTurn = false;
       youLose = true;
-      //TODO: выйти из игры
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Время вышло, вы проиграли!')),
-      );
+      loosingWinning();
     });
 
     final message = {
@@ -288,9 +294,9 @@ class _GameRoomPageState extends State<GameRoomPage> {
 
   void _onDisconnected() {
     // Обработка разрыва соединения
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text('Соединение с сервером потеряно')),
-    );
+    // ScaffoldMessenger.of(context).showSnackBar(
+    //   SnackBar(content: Text('Соединение с сервером потеряно')),
+    // );
   }
 
   @override
@@ -298,6 +304,239 @@ class _GameRoomPageState extends State<GameRoomPage> {
     _turnTimer?.cancel();
     _webSocket.disconnect();
     super.dispose();
+  }
+
+  IconData getNumOfCardsIcon(int numberOfCards) {
+    if (numberOfCards == 0) {
+      return Icons.filter_none;
+    } else if (numberOfCards == 1) {
+      return Icons.filter_1;
+    } else if (numberOfCards == 2) {
+      return Icons.filter_2;
+    } else if (numberOfCards == 3){
+      return Icons.filter_3;
+    } else if (numberOfCards == 4){
+      return Icons.filter_4;
+    } else if (numberOfCards == 5){
+      return Icons.filter_5;
+    } else if (numberOfCards == 6){
+      return Icons.filter_6;
+    } else {
+      return Icons.filter_7;
+    }
+  }
+
+  void loosingWinning() {
+    showDialog(
+      barrierDismissible: false, 
+      context: context, 
+      builder: (context) {
+        return Dialog(
+          child: Container(
+            width: 427,
+            height: 384,
+            decoration: BoxDecoration(
+              image: DecorationImage(
+                image: AssetImage('lib/assets/background.jpg'),
+                fit: BoxFit.cover,
+              ),
+              borderRadius: BorderRadius.circular(30),
+              border: Border.all(color: grey3A3A3AColor, width: 0.1),
+            ),
+            child:
+              Container(
+                width: 427,
+                height: 384,
+                decoration: BoxDecoration(
+                  color: backInvisColor,
+                  borderRadius: BorderRadius.circular(30),
+                  border: Border.all(color: grey3A3A3AColor, width: 0.1),
+                ),
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Expanded(flex: 1, child: Text(""),),
+                    if (gamemode == 2) 
+                      Text(youWin ? "1st" : "2nd", style: resLoseStyleBig),
+                    Text("place", style: resLoseStyle,),
+                    Expanded(flex: 1, child: Text(""),),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        SizedBox(
+                          width: 114,
+                          height: 114,
+                          child: ElevatedButton(
+                            style: ButtonStyle(
+                                backgroundColor: WidgetStateProperty.all<Color>(
+                                buttonColor,
+                              ),
+                              textStyle: WidgetStateProperty.all<TextStyle>(
+                                buttonTextStyle,
+                              ),
+                              foregroundColor: WidgetStateProperty.all<Color>(
+                                grey3A3A3AColor,
+                              ),
+                              shape:
+                                WidgetStateProperty.all<RoundedRectangleBorder>(
+                                  RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(7),
+                                  ),
+                                ),
+                              side: WidgetStateProperty.all<BorderSide>(
+                                BorderSide(color: grey3A3A3AColor, width: 1),
+                              ),
+                            ),
+                            onPressed: () {
+                              
+                            },
+                            child: Column(
+                              children: [
+                                const Expanded(flex: 1, child: Text(""),),
+                                Icon(Icons.remove_red_eye_outlined, size: 70),
+                                const Expanded(flex: 1, child: Text(""),),
+                                Text("Spectator", style: buttonTextStyle, textAlign: TextAlign.center,),
+                                const Expanded(flex: 1, child: Text(""),),
+                              ],
+                            ),
+                          ),
+                        ),
+                        Padding(padding: const EdgeInsets.only(left: 40)),
+                        SizedBox(
+                          width: 114,
+                          height: 114,
+                          child: ElevatedButton(
+                            style: ButtonStyle(
+                                backgroundColor: WidgetStateProperty.all<Color>(
+                                buttonColor,
+                              ),
+                              textStyle: WidgetStateProperty.all<TextStyle>(
+                                buttonTextStyle,
+                              ),
+                              foregroundColor: WidgetStateProperty.all<Color>(
+                                grey3A3A3AColor,
+                              ),
+                              shape:
+                                WidgetStateProperty.all<RoundedRectangleBorder>(
+                                  RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(7),
+                                  ),
+                                ),
+                              side: WidgetStateProperty.all<BorderSide>(
+                                BorderSide(color: grey3A3A3AColor, width: 1),
+                              ),
+                            ),
+                            onPressed: () {
+                              _webSocket.disconnect();
+                              Navigator.pushNamed(context, '/mainmenu');
+                            },
+                            child: Column(
+                              children: [
+                                const Expanded(flex: 1, child: Text(""),),
+                                Icon(Icons.door_back_door_outlined, size: 70),
+                                const Expanded(flex: 1, child: Text(""),),
+                                Text("Leave the room", style: buttonTextStyle, textAlign: TextAlign.center,),
+                                const Expanded(flex: 1, child: Text(""),),
+                              ],
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                    Expanded(flex: 1, child: Text(""),),
+                  ],
+                ),
+              ),
+          )
+        );
+      }
+    );
+  }
+
+  void confirmExit() {
+    showDialog(
+      context: context, 
+      builder: (context) {
+        return Dialog(
+          child: Container(
+            width: 468,
+            height: 293,
+            decoration: BoxDecoration(
+              image: DecorationImage(
+                image: AssetImage('lib/assets/background.jpg'),
+                fit: BoxFit.cover,
+              ),
+              borderRadius: BorderRadius.circular(30),
+              border: Border.all(color: grey3A3A3AColor, width: 0.1),
+            ),
+            child:
+              Container(
+                width: 468,
+                height: 293,
+                decoration: BoxDecoration(
+                  color: backInvisColor,
+                  borderRadius: BorderRadius.circular(30),
+                  border: Border.all(color: grey3A3A3AColor, width: 0.1),
+                ),
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Expanded(flex: 1, child: Text(""),),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Text("Are you sure you want to exit?\nYou will not be able to return to\nthe game", style: confirmExitStyle, textAlign: TextAlign.center,),
+                      ],
+                    ),
+                    Expanded(flex: 1, child: Text(""),),
+                    SizedBox(
+                      width: 114,
+                      height: 114,
+                      child: ElevatedButton(
+                        style: ButtonStyle(
+                            backgroundColor: WidgetStateProperty.all<Color>(
+                            buttonColor,
+                          ),
+                          textStyle: WidgetStateProperty.all<TextStyle>(
+                            buttonTextStyle,
+                          ),
+                          foregroundColor: WidgetStateProperty.all<Color>(
+                            grey3A3A3AColor,
+                          ),
+                          shape:
+                            WidgetStateProperty.all<RoundedRectangleBorder>(
+                              RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(7),
+                              ),
+                            ),
+                          side: WidgetStateProperty.all<BorderSide>(
+                            BorderSide(color: grey3A3A3AColor, width: 1),
+                          ),
+                        ),
+                        onPressed: () {
+                          _turnTimer!.cancel();
+                          _webSocket.disconnect();
+                          Navigator.pushNamed(context, '/mainmenu');
+                        },
+                        child: Column(
+                          children: [
+                            const Expanded(flex: 1, child: Text(""),),
+                            Icon(Icons.door_back_door_outlined, size: 70),
+                            const Expanded(flex: 1, child: Text(""),),
+                            Text("Leave the room", style: buttonTextStyle, textAlign: TextAlign.center,),
+                            const Expanded(flex: 1, child: Text(""),),
+                          ],
+                        ),
+                      ),
+                    ),
+                    Expanded(flex: 1, child: Text(""),),
+                  ],
+                ),
+              ),
+          )
+        );
+      }
+    );
   }
   
   @override
@@ -327,11 +566,9 @@ class _GameRoomPageState extends State<GameRoomPage> {
                     height: 80,
                     child: IconButton(
                       onPressed: () {
-                        // do alert
-                        // send http-request
-                        // delete data
-                        // pass to main menu
-                        _submitTurnTimeout();
+                        // _turnTimer?.cancel();
+                        //TODO: подтверждение выхода функция
+                        confirmExit();                        
                         Navigator.pushNamed(context, '/mainmenu');
                       },
                       icon: const Icon(Icons.door_back_door_outlined, size: 60),
@@ -349,7 +586,7 @@ class _GameRoomPageState extends State<GameRoomPage> {
                       Padding(padding: const EdgeInsets.only(top: 40)),
                       Row(
                         children: [
-                          Icon(Icons.filter_7, size: 24, color: grey3A3A3AColor,),
+                          Icon(playerUp != null ? getNumOfCardsIcon(playerUp!.numOfCards) : Icons.filter_7, size: 24, color: grey3A3A3AColor,),
                           Padding(padding: const EdgeInsets.only(right: 5),),
                           Text(playerUp?.name ?? "Waiting...", style: buttonTextStyle),
                         ],
@@ -630,9 +867,8 @@ class _GameRoomPageState extends State<GameRoomPage> {
                       SizedBox(
                         height: 100,
                         width: 50,
-                        child: Text(youLose ? 'You LOSE' : 'WAIT Opponent...', style: buttonTextStyle,),
+                        child: Text(''),
                       ),
-
                   ],
                 ),
               )

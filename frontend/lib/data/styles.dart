@@ -69,6 +69,32 @@ TextStyle buttonInvisTextStyle = const TextStyle(
   color: Color.fromARGB(0, 255, 255, 255)
 );
 
+TextStyle resLoseStyleBig = const TextStyle(
+  fontFamily: 'Awesome5',
+  fontSize: 96,
+  fontWeight: FontWeight.w500,
+  color: Color.fromARGB(255, 58, 58, 58),
+  letterSpacing: 1,
+  height: 1
+);
+
+TextStyle resLoseStyle = const TextStyle(
+  fontFamily: 'Awesome5',
+  fontSize: 48,
+  fontWeight: FontWeight.w500,
+  color: Color.fromARGB(255, 58, 58, 58),
+  letterSpacing: 1,
+);
+
+TextStyle confirmExitStyle = const TextStyle(
+  fontFamily: 'Awesome5',
+  fontSize: 24,
+  fontWeight: FontWeight.w600,
+  color: Color.fromARGB(255, 58, 58, 58),
+  letterSpacing: 1,
+);
+
+
 Color backInvisColor = const Color.fromARGB(125, 218, 209, 193);
 
 Color grey3A3A3AColor = const Color.fromARGB(255, 58, 58, 58);
