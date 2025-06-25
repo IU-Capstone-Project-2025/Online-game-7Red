@@ -1,5 +1,5 @@
 import os
-from sqlalchemy import MetaData, Table, Column, Integer, String, create_engine, TIMESTAMP, ForeignKey, Boolean
+from sqlalchemy import MetaData, Table, Column, Integer, String, create_engine, TIMESTAMP, ForeignKey, Boolean, select
 from databases import Database
 from dotenv import load_dotenv
 from datetime import datetime
@@ -67,8 +67,9 @@ async def search_game_room(assigned_id: str):
     query = games.select().where(games.c.assigned_id == assigned_id)
     return await database.fetch_one(query)
 
+# for searching room by assigned_id and returning room_id
 async def return_room_id_using_assigned_id(assigned_id: str):
-    query = games.select().with_only_columns([games.c.room_id]).where(games.c.assigned_id == assigned_id)
+    query = games.select().with_only_columns(games.c.room_id).where(games.c.assigned_id == assigned_id)
     result = await database.fetch_one(query)
     return result.room_id
 
@@ -176,13 +177,13 @@ async def get_room_players_ids_and_names(assigned_id: str):
         raise Exception("Room not found")
     room_id = room["room_id"]
 
-    players = (user_room.join(profiles, user_room.c.user_id == profiles.c.user_id))
+    players_join = user_room.join(profiles, user_room.c.user_id == profiles.c.user_id)
     query = (
-        user_room.select()
-        .with_only_columns([profiles.c.name, user_room.c.user_id])
-        .select_from(players)
+        select(profiles.c.name, user_room.c.user_id)
+        .select_from(players_join)
         .where(user_room.c.room_id == room_id)
     )
+    
     rows = await database.fetch_all(query)
     players = [row["name"] for row in rows]
     ids = [row["user_id"] for row in rows]

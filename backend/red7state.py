@@ -29,8 +29,8 @@ PALETTE_RULES = [
 ]
 
 class Red7GameState:
-    def __init__(self, room_id: int):
-        self.room_id = room_id
+    def __init__(self, assigned_id: str):
+        self.assigned_id = assigned_id
         self.players = {}  # player_id: {hand: [], palette: [], name: str}
         self.players_name_list = []
         self.players_id_list = []
@@ -46,7 +46,8 @@ class Red7GameState:
         self.round = 1
 
     async def get_room_players_info_from_db(self):
-        self.players_name_list, self.players_id_list = await get_room_players_ids_and_names(self.room_id)
+        self.players_name_list, self.players_id_list = await get_room_players_ids_and_names(str(self.assigned_id))
+        #self.players_name_list, self.players_id_list = ["q", "d"], [1, 2]
     
     def card_to_tuple(self, card: str) -> tuple[int, int]:
         """Convert card string (e.g., 'R7') to (color_index, value) tuple.
@@ -249,7 +250,12 @@ class Red7GameState:
         # 3. Apply proposed changes temporarily
         self.players[player_id]["hand"] = new_hand
         self.players[player_id]["palette"] = new_palette
-        self.current_rule = self.rule_to_int(new_rule)
+        print(f'rule: {new_rule} hand: {new_hand} pallete: {new_palette}', flush=True)
+        if new_rule != None:
+            self.current_rule = self.rule_to_int(new_rule)
+        else:
+            self.current_rule = "R"
+        print(self.current_rule, flush=True)
 
         opponent_ids = [pid for pid in self.players.keys() if pid != player_id]
         
