@@ -345,17 +345,6 @@ class _WaitingRoomPageState extends State<WaitingRoomPage> {
                 child: ready ? const Text('UNREADY') : const Text('GET READY'),
                 ),
               ),
-              SizedBox(
-                width: 60,
-                height: 60,
-                child: IconButton(
-                  onPressed: () {
-                    _pollingTimer?.cancel();
-                    Navigator.pushNamed(context, '/gameroom');
-                  },
-                  icon: const Icon(Icons.skip_next, size: 44),
-                ),
-              ),
               const Expanded(flex: 3, child: Text("")),
             ],
           ),
