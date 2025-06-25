@@ -30,7 +30,6 @@ jobs:
           cd tests
           pytest -v tests.py
 
-
   build-and-push:
     needs: test
     runs-on: ubuntu-latest
@@ -69,15 +68,17 @@ jobs:
           key: ${{ secrets.VPS_SSH_KEY }}
           known_hosts: 'just-a-placeholder-so-we-dont-get-errors'
 
-      - name: Copy docker-compose.yml to VPS
+      - name: Create deploy directory on VPS
         run: |
-          scp -o StrictHostKeyChecking=no ./docker-compose.yml ${{ secrets.VPS_USERNAME }}@${{ secrets.VPS_IP }}:/root/app/   
+          ssh -o StrictHostKeyChecking=no ${{ secrets.VPS_USERNAME }}@${{ secrets.VPS_IP }} "mkdir -p /deploy/database"
       
       - name: Deploy to VPS
         run: |
           ssh -o StrictHostKeyChecking=no ${{ secrets.VPS_USERNAME }}@${{ secrets.VPS_IP }} << 'EOF'
+            # Create necessary directories
             mkdir -p /deploy/database
             
+            # Create docker-compose.yml
             cat > /deploy/docker-compose.yml << 'COMPOSE'
             version: "3.9"
             services:
@@ -98,18 +99,22 @@ jobs:
                 restart: unless-stopped
             COMPOSE
 
+            # Create .env file with secrets
             cat > /deploy/database/.env << 'ENV'
-            PROJECT_ID=small-frog-40177030
-            DB_USER=neondb_owner
-            DB_PASS=npg_gCvztMWnb3G7
-            BRANCH_ID=br-falling-paper-a8xmzet9
-            DATABASE_URL=postgresql+asyncpg://neondb_owner:npg_gCvztMWnb3G7@ep-rapid-water-a86zpa0x-pooler.eastus2.azure.neon.tech/red7_db?sslmode=require
+            PROJECT_ID=${{ secrets.PROJECT_ID }}
+            DB_USER=${{ secrets.DB_USER }}
+            DB_PASS=${{ secrets.DB_PASS }}
+            BRANCH_ID=${{ secrets.BRANCH_ID }}
+            DATABASE_URL=${{ secrets.DATABASE_URL }}
             ENV
 
+            # Set permissions
             chmod 600 /deploy/database/.env
             chown -R root:root /deploy
 
+            # Deploy containers
             cd /deploy
-            docker-compose down
+            docker-compose down || true  # Ignore error if no containers are running
+            docker-compose pull
             docker-compose up -d
           EOF
