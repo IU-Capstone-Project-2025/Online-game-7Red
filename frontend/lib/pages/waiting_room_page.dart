@@ -75,7 +75,9 @@ class _WaitingRoomPageState extends State<WaitingRoomPage> {
         players = List<String>.from(responseBody['players']);
         ready_players = List<String>.from(responseBody['ready_players']);
         if (ready_players.length == players.length && ready_players.length >= 2) {
-          startGame(room_id);
+          // startGame(room_id);
+          Navigator.pushNamed(context, '/gameroom');
+          _pollingTimer?.cancel();
         }
       });
     } else {
