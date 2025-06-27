@@ -29,7 +29,7 @@ class _SignUpPageState extends State<SignUpPage> {
   int ID = -1;
 
   Future<void> signUp(String nickname, String email, String password, String repeatedPassword) async {
-    final url = Uri.parse('http://localhost:8000/auth/signup');
+    final url = Uri.parse('http://192.145.30.253:8000/auth/signup');
     final response = await http.post(
       url,
       headers: {'Content-Type': 'application/json', 'accept': 'application/json'},

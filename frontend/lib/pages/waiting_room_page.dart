@@ -60,7 +60,7 @@ class _WaitingRoomPageState extends State<WaitingRoomPage> {
   }
 
   Future<void> _fetchPlayers() async {
-    final url = Uri.parse('http://localhost:8000/rooms/state');
+    final url = Uri.parse('http://192.145.30.253:8000/rooms/state');
     final response = await http.post(
       url,
       headers: {'Content-Type': 'application/json', 'accept': 'application/json'},
@@ -89,7 +89,7 @@ class _WaitingRoomPageState extends State<WaitingRoomPage> {
   }
 
   Future<void> sendReady(int my_id, String room_id) async {
-    final url = Uri.parse('http://localhost:8000/rooms/ready');
+    final url = Uri.parse('http://192.145.30.253:8000/rooms/ready');
     final response = await http.post(
       url,
       headers: {'Content-Type': 'application/json', 'accept': 'application/json'},
@@ -113,7 +113,7 @@ class _WaitingRoomPageState extends State<WaitingRoomPage> {
   }
 
   Future<void> sendNotReady(int my_id, String room_id) async {
-    final url = Uri.parse('http://localhost:8000/rooms/not_ready');
+    final url = Uri.parse('http://192.145.30.253:8000/rooms/not_ready');
     final response = await http.post(
       url,
       headers: {'Content-Type': 'application/json', 'accept': 'application/json'},
@@ -137,7 +137,7 @@ class _WaitingRoomPageState extends State<WaitingRoomPage> {
   }
 
   Future<void> startGame(String room_id) async {
-    final url = Uri.parse('http://localhost:8000/game/start');
+    final url = Uri.parse('http://192.145.30.253:8000/game/start');
     final response = await http.post(
       url,
       headers: {'Content-Type': 'application/json', 'accept': 'application/json'},
@@ -158,7 +158,7 @@ class _WaitingRoomPageState extends State<WaitingRoomPage> {
   }
 
   Future<void> leaveRoom(int id, String room_id) async {
-    final url = Uri.parse('http://localhost:8000/rooms/leave');
+    final url = Uri.parse('http://192.145.30.253:8000/rooms/leave');
     final response = await http.post(
       url,
       headers: {'Content-Type': 'application/json', 'accept': 'application/json'},
