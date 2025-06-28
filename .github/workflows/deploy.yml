@@ -83,12 +83,12 @@ jobs:
       
       - name: Deploy application
         run: |
-          ssh -o StrictHostKeyChecking=no ${{ secrets.VPS_USERNAME }}@${{ secrets.VPS_IP }} << 'DEPLOY_EOF'
+          ssh -o StrictHostKeyChecking=no ${{ secrets.VPS_USERNAME }}@${{ secrets.VPS_IP }} << DEPLOY_EOF
             # Login to Docker Hub
             echo "$DOCKER_HUB_TOKEN" | docker login -u "$DOCKER_HUB_USERNAME" --password-stdin
             
             # Create docker-compose.yml with resource limits
-            cat > /deploy/docker-compose.yml << 'COMPOSE_EOF'
+            cat > /deploy/docker-compose.yml << COMPOSE_EOF
             version: "3.9"
             services:
               backend:
@@ -119,7 +119,7 @@ jobs:
             COMPOSE_EOF
 
             # Create .env file
-            cat > /deploy/database/.env << 'ENV_EOF'
+            cat > /deploy/database/.env << ENV_EOF
             PROJECT_ID=$PROJECT_ID
             DB_USER=$DB_USER
             DB_PASS=$DB_PASS
