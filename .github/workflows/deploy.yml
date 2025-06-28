@@ -43,12 +43,40 @@ jobs:
           key: ${{ secrets.VPS_SSH_KEY }}
           known_hosts: ${{ secrets.KNOWN_HOSTS }}
 
-      - name: Prepare server environment
+      - name: Debug - Check SSH connection
         run: |
+          echo "Проверяем подключение к серверу..."
           ssh -o StrictHostKeyChecking=no \
               -o UserKnownHostsFile=/dev/null \
-              ${{ secrets.VPS_USERNAME }}@${{ secrets.VPS_IP }} << 'PREPARE_EOF'
-            mkdir -p /deploy/database
-          PREPARE_EOF
+              ${{ secrets.VPS_USERNAME }}@${{ secrets.VPS_IP }} "echo 'SSH подключение успешно!'"
+
+      - name: Debug - Check current folders on server
+        run: |
+          echo "Смотрим содержимое корневой директории сервера:"
+          ssh -o StrictHostKeyChecking=no \
+              -o UserKnownHostsFile=/dev/null \
+              ${{ secrets.VPS_USERNAME }}@${{ secrets.VPS_IP }} "ls -la /"
+
+      - name: Prepare server environment
+        run: |
+          echo "Пытаемся создать папку /deploy/database..."
+          ssh -o StrictHostKeyChecking=no \
+              -o UserKnownHostsFile=/dev/null \
+              ${{ secrets.VPS_USERNAME }}@${{ secrets.VPS_IP }} <<EOF
+            set -x  # Включим вывод выполняемых команд для отладки
+            mkdir -p /deploy/database || {
+              echo "Ошибка при создании папки! Проверьте права доступа."
+              exit 1
+            }
+            echo "Проверяем, что папка создана:"
+            ls -la /deploy
+          EOF
+
+      - name: Verify folder creation
+        run: |
+          echo "Проверяем результат создания папки:"
+          ssh -o StrictHostKeyChecking=no \
+              -o UserKnownHostsFile=/dev/null \
+              ${{ secrets.VPS_USERNAME }}@${{ secrets.VPS_IP }} "ls -la /deploy"
       
       
