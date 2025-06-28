@@ -30,36 +30,9 @@ jobs:
           cd tests
           pytest -v tests.py
 
-  build-and-push:
-    needs: test
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v3
-      
-      - name: Login to Docker Hub
-        uses: docker/login-action@v2
-        with:
-          username: ${{ secrets.DOCKER_HUB_USERNAME }}
-          password: ${{ secrets.DOCKER_HUB_TOKEN }}
-          
-      - name: Build and push backend
-        uses: docker/build-push-action@v4
-        with:
-          context: ./backend
-          push: true
-          tags: ${{ env.DOCKER_HUB_REPO }}:${{ env.BACKEND_TAG }}
-          platforms: linux/amd64
-          
-      - name: Build and push frontend
-        uses: docker/build-push-action@v4
-        with:
-          context: ./frontend
-          push: true
-          tags: ${{ env.DOCKER_HUB_REPO }}:${{ env.FRONTEND_TAG }}
-          platforms: linux/amd64
 
   deploy:
-    needs: build-and-push
+    needs: test
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
