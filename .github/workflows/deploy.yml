@@ -84,48 +84,39 @@ jobs:
               ${{ secrets.VPS_USERNAME }}@${{ secrets.VPS_IP }} <<EOF
             set -x  
             mkdir -p ~/deploy/database 
-            docker-compose -f /deploy/docker-compose.yml down || true
+            docker-compose -f ~/deploy/docker-compose.yml down || true
             docker system prune -a -f || true
           EOF
-      
+      - name: Copy docker-compose.yml
+        run: |
+          scp -o StrictHostKeyChecking=no \
+              -o UserKnownHostsFile=/dev/null \
+              ./docker-compose.yml \
+              ${{ secrets.VPS_USERNAME }}@${{ secrets.VPS_IP }}:~/deploy/docker-compose.yml
+      - name: Prepare Deploy
+        run: |
+          ssh -o StrictHostKeyChecking=no \
+              -o UserKnownHostsFile=/dev/null \
+              ${{ secrets.VPS_USERNAME }}@${{ secrets.VPS_IP }} <<EOF
+            set -x  
+            cat > ~/deploy/database/.env << ENV
+              PROJECT_ID=${{ secrets.PROJECT_ID }}
+              DB_USER=${{ secrets.DB_USER }}
+              DB_PASS=${{ secrets.DB_PASS }}
+              BRANCH_ID=${{ secrets.BRANCH_ID }}
+              DATABASE_URL=${{ secrets.DATABASE_URL }}
+            ENV
+
+            chmod 600 ~/deploy/database/.env
+          EOF     
       - name: Deploy to VPS
         run: |
           ssh -o StrictHostKeyChecking=no \
               -o UserKnownHostsFile=/dev/null \
-              ${{ secrets.VPS_USERNAME }}@${{ secrets.VPS_IP }} << 'EOF'
-            
-            cat > /deploy/docker-compose.yml << COMPOSE
-            version: "3.9"
-            services:
-              backend:
-                image: ${{ env.DOCKER_HUB_REPO }}:${{ env.BACKEND_TAG }}
-                ports:
-                  - "8000:8000"
-                env_file:
-                  - ./database/.env
-                restart: unless-stopped
-              frontend:
-                image: ${{ env.DOCKER_HUB_REPO }}:${{ env.FRONTEND_TAG }}
-                ports:
-                  - "8080:80"
-                depends_on:
-                  - backend
-                restart: unless-stopped
-            COMPOSE
+              ${{ secrets.VPS_USERNAME }}@${{ secrets.VPS_IP }} << EOF
 
-            cat > /deploy/database/.env << ENV
-            PROJECT_ID=${{ secrets.PROJECT_ID }}
-            DB_USER=${{ secrets.DB_USER }}
-            DB_PASS=${{ secrets.DB_PASS }}
-            BRANCH_ID=${{ secrets.BRANCH_ID }}
-            DATABASE_URL=${{ secrets.DATABASE_URL }}
-            ENV
-
-            chmod 600 /deploy/database/.env
-            chown -R root:root /deploy
-
-            cd /deploy
-            docker-compose down || true  # Ignore error if no containers are running
+            cd ~/deploy
+            docker-compose down || true
             docker-compose pull
             docker-compose up -d
           EOF
