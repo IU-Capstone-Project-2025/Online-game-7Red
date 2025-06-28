@@ -42,8 +42,8 @@ class _WelkomePageState extends State<WelkomePage> {
                     crossAxisAlignment: CrossAxisAlignment.center,
                     children: [
                       SizedBox(
-                        width: 335,
-                        height: 48,
+                        width: 295,
+                        height: 45,
                         child: ElevatedButton(
                           style: ButtonStyle(
                             backgroundColor: WidgetStateProperty.all<Color>(
@@ -58,7 +58,7 @@ class _WelkomePageState extends State<WelkomePage> {
                             shape:
                                 WidgetStateProperty.all<RoundedRectangleBorder>(
                                   RoundedRectangleBorder(
-                                    borderRadius: BorderRadius.circular(10),
+                                    borderRadius: BorderRadius.circular(7),
                                   ),
                                 ),
                             side: WidgetStateProperty.all<BorderSide>(
@@ -79,14 +79,14 @@ class _WelkomePageState extends State<WelkomePage> {
                     ],
                   ),
                   Padding(padding: EdgeInsets.only(left: 80)),
-                  Container(width: 1, height: 150, color: Colors.black),
+                  Container(width: 1, height: 130, color: Colors.black),
                   Padding(padding: EdgeInsets.only(left: 80)),
                   Column(
                     crossAxisAlignment: CrossAxisAlignment.center,
                     children: [
                       SizedBox(
-                        width: 335,
-                        height: 50,
+                        width: 295,
+                        height: 45,
                         child: ElevatedButton(
                           style: ButtonStyle(
                             backgroundColor: WidgetStateProperty.all<Color>(

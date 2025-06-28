@@ -583,7 +583,7 @@ class _GameRoomPageState extends State<GameRoomPage> {
                         // _turnTimer?.cancel();
                         //TODO: подтверждение выхода функция
                         confirmExit();                        
-                        Navigator.pushNamed(context, '/mainmenu');
+                        // Navigator.pushNamed(context, '/mainmenu');
                       },
                       icon: const Icon(Icons.door_back_door_outlined, size: 60),
                     ),

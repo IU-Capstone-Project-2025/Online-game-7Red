@@ -124,13 +124,13 @@ class _MainMenuPageState extends State<MainMenuPage> {
               Expanded(flex: 1, child: Text("")),
               Image(
                 image: AssetImage('lib/assets/logo.png'),
-                width: 200,
-                height: 200,
+                width: 216,
+                height: 216,
               ),
               Expanded(flex: 1, child: Text("")),
               SizedBox(
-                width: 321,
-                height: 64,
+                width: 300,
+                height: 60,
                 child: ElevatedButton(
                   style: ButtonStyle(
                     backgroundColor: WidgetStateProperty.all<Color>(
@@ -157,8 +157,8 @@ class _MainMenuPageState extends State<MainMenuPage> {
                     return Dialog(
                       child:
                         Container(
-                          width: 1000,
-                          height: 336,
+                          width: 930,
+                          height: 312,
                           decoration: BoxDecoration(
                             image: DecorationImage(
                               image: AssetImage('lib/assets/background.jpg'),
@@ -169,8 +169,8 @@ class _MainMenuPageState extends State<MainMenuPage> {
                           ),
                           child:
                             Container(
-                              width: 1000,
-                              height: 336,
+                              width: 930,
+                              height: 312,
                               decoration: BoxDecoration(
                                 color: backInvisColor,
                                 borderRadius: BorderRadius.circular(20),
@@ -180,8 +180,8 @@ class _MainMenuPageState extends State<MainMenuPage> {
                                 children: [
                                   const Expanded(flex: 1, child: Text(""),),
                                   SizedBox(
-                                    width: 155,
-                                    height: 155,
+                                    width: 150,
+                                    height: 150,
                                     child: ElevatedButton(
                                       style: ButtonStyle(
                                           backgroundColor: WidgetStateProperty.all<Color>(
@@ -229,8 +229,8 @@ class _MainMenuPageState extends State<MainMenuPage> {
                                   ),
                                   const Expanded(flex: 1, child: Text(""),),
                                   SizedBox(
-                                    width: 155,
-                                    height: 155,
+                                    width: 150,
+                                    height: 150,
                                     child: ElevatedButton(
                                       style: ButtonStyle(
                                           backgroundColor: WidgetStateProperty.all<Color>(
@@ -402,8 +402,8 @@ class _MainMenuPageState extends State<MainMenuPage> {
                                   ),
                                   const Expanded(flex: 1, child: Text(""),),
                                   SizedBox(
-                                    width: 155,
-                                    height: 155,
+                                    width: 150,
+                                    height: 150,
                                     child: ElevatedButton(
                                       style: ButtonStyle(
                                           backgroundColor: WidgetStateProperty.all<Color>(
@@ -442,8 +442,8 @@ class _MainMenuPageState extends State<MainMenuPage> {
                                   ),
                                   const Expanded(flex: 1, child: Text(""),),
                                   SizedBox(
-                                    width: 155,
-                                    height: 155,
+                                    width: 150,
+                                    height: 150,
                                     child: ElevatedButton(
                                       style: ButtonStyle(
                                           backgroundColor: WidgetStateProperty.all<Color>(

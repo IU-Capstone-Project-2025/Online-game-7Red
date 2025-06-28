@@ -2,16 +2,17 @@ import 'package:flutter/material.dart';
 
 TextStyle titleStyle = const TextStyle(
   fontFamily: 'Poppins',
-  fontSize: 28,
-  fontWeight: FontWeight.w700,
+  fontSize: 23,
+  fontWeight: FontWeight.w800,
   color: Color.fromARGB(255, 58, 58, 58)
 );
 
 TextStyle buttonTextStyle = const TextStyle(
   fontFamily: 'Awesome5',
-  fontSize: 14,
+  fontSize: 13,
   fontWeight: FontWeight.w600,
-  color: Color.fromARGB(255, 58, 58, 58)
+  color: Color.fromARGB(255, 58, 58, 58),
+  letterSpacing: 1.0,
 );
 
 TextStyle buttonTextStyleBig = const TextStyle(
@@ -19,17 +20,17 @@ TextStyle buttonTextStyleBig = const TextStyle(
   fontSize: 17,
   fontWeight: FontWeight.w600,
   color: Color.fromARGB(255, 58, 58, 58),
-  letterSpacing: 1,
+  letterSpacing: 0.9,
 );
 
 TextStyle basicTextStyle = const TextStyle(
-  fontSize: 17,
+  fontSize: 15,
   fontWeight: FontWeight.w500,
   color: Color.fromARGB(255, 58, 58, 58)
 );
 
 TextStyle errorTextStyle = const TextStyle(
-  fontSize: 17,
+  fontSize: 15,
   fontWeight: FontWeight.w500,
   color: Color.fromARGB(255, 249, 61, 61)
 );
