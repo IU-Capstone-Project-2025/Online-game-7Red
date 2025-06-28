@@ -59,7 +59,7 @@ jobs:
           platforms: linux/amd64
 
   deploy:
-    needs: test
+    needs: build-and-push
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
