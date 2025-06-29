@@ -58,22 +58,35 @@ class Red7Env:
         mask = np.zeros((50, 50), dtype=np.float32)
         if self._current_player == 0:
             hand = self.player1_hand
+            pallete = self.player1_palette
+            opp_pallete = self.player2_palette
         else:
             hand = self.player2_hand
+            pallete = self.player2_palette
+            opp_pallete = self.player1_palette
         hand_set = set(hand)
+        mask[0][0] = 1
 
         # Ход с добавлением карты в палитку (i > 0, j == 0)
         for i in range(1, 50):
             if i in hand_set:
                 mask[i][0] = 1.0
+                if not check_win(pallete.copy() + [i], [opp_pallete], self.rule):
+                    mask[i][0] = 0
                 # Двойной ход: добавить карту в палитку + сменить правило
                 for j in range(1, 50):
                     if j in hand_set and i != j:
-                        mask[i][j] = 1.0
+                        if not check_win(pallete.copy() + [i], [opp_pallete], (j - 1) // 7):
+                            mask[i][j] = 0
+                        else:
+                            mask[i][j] = 1.0
         # Смена правила (i == 0, j > 0)
         for j in range(1, 50):
             if j in hand_set:
                 mask[0][j] = 1.0
+                if not check_win(pallete, [opp_pallete], (j - 1) // 7):
+                        mask[0][j] = 0
+            
 
         return mask
 
@@ -168,6 +181,7 @@ class Red7Env:
 
         play_card, rule_card = action
 
+
         if self._current_player == 0:
             hand = self.player1_hand
             palette = self.player1_palette
@@ -186,19 +200,19 @@ class Red7Env:
         if valid_card(play_card):
             hand.remove(play_card)
             palette.append(play_card)
-            reward += 0.2
+            reward += 0.1
 
         if valid_card(rule_card) and rule_card != play_card:
             hand.remove(rule_card)
             self.rule = (rule_card - 1) // 7
-            reward += 0.1
-        reward += float(min(len(hand)-len(opponent_hand),0)*0.3)
+            reward += 0.05
+        reward += float(min(len(hand)-len(opponent_hand),0)*1.2)
         if not check_win(palette, [opponent_palette], self.rule):
             self.done = True
             reward = -10.0 if self._current_player == 0 else 10.0
             self.winner = 1 - self._current_player 
             return self._get_obs(), reward, self.done, {}
-        reward += 0.5
+        reward += 0.3
         has_winning_move = any(
             check_win(opponent_palette + [rc], [palette], card_color(rc))
             for rc in opponent_hand
