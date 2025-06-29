@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flame/game.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:circular_countdown_timer/circular_countdown_timer.dart';
 
 import '../data/styles.dart';
 import '../providers/provider.dart';
@@ -17,12 +18,19 @@ class GameRoomPage extends StatefulWidget {
   State<GameRoomPage> createState() => _GameRoomPageState();
 }
 
+final _countDownControllerDown = CountDownController();
+final _countDownControllerRight = CountDownController();
+final _countDownControllerUp = CountDownController();
+final _countDownControllerLeft = CountDownController();
+
+
 class _GameRoomPageState extends State<GameRoomPage> {
   String? roomID;
   int? userID;
   String serverUrl = '?';
 
   int gamemode = 2;
+  // int gamemode = 4;
 
   late GameWebSocket _webSocket;
   List<String> _myHand = [];
@@ -40,6 +48,8 @@ class _GameRoomPageState extends State<GameRoomPage> {
   Player? playerLeft;
   Player? playerRight;
 
+//  bool myTurn = true;
+//   bool myAllTurn = true;
   bool myTurn = false;
   bool myAllTurn = false;
   bool ruleChanged = true;
@@ -47,6 +57,10 @@ class _GameRoomPageState extends State<GameRoomPage> {
 
   bool youLose = false;
   bool youWin = false;
+
+  List<CountDownController> timers = [];
+  int currTimerIndex = 0;
+  List<CountDownController> timersDied = [];
 
   @override
   void initState() {
@@ -121,8 +135,10 @@ class _GameRoomPageState extends State<GameRoomPage> {
         } else {
           if (player.isMe == false ) {
             playerUp = player;
+            timers = [_countDownControllerDown, _countDownControllerUp];
           } else {
             playerUp = _players.firstWhere((p) => p.id == _activePlayers[1]);
+            timers = [_countDownControllerUp, _countDownControllerDown];
           }
         }
       }
@@ -168,6 +184,7 @@ class _GameRoomPageState extends State<GameRoomPage> {
           }
         }
         _activePlayers.remove(message['id_did']);
+        timersDied.add(timers[_players.indexOf(player)]);
       } else {
         if (message['his_pallete_ch'] != null) {
           if (gamemode == 2) {
@@ -195,6 +212,9 @@ class _GameRoomPageState extends State<GameRoomPage> {
           _myHand = [];
           youLose = true;
           youWin = false;
+          for (var timer in timers) {
+            timer.reset();
+          }
           loosingWinning();
           return;
           
@@ -212,6 +232,9 @@ class _GameRoomPageState extends State<GameRoomPage> {
         youLose = false;
         _pallete = [];
         _myHand = [];
+        for (var timer in timers) {
+          timer.reset();
+        }
         loosingWinning();
         return;
       }
@@ -224,6 +247,7 @@ class _GameRoomPageState extends State<GameRoomPage> {
 
   void _startTurnTimer() {
     _turnTimer?.cancel();
+    nextTimer();
     setState(() => _timeLeft = 60);
     _turnTimer = Timer.periodic(Duration(seconds: 1), (timer) {
       if (_timeLeft > 0) {
@@ -235,6 +259,21 @@ class _GameRoomPageState extends State<GameRoomPage> {
         }
       }
     });
+  }
+
+  void nextTimer() {
+    timers[currTimerIndex].reset();
+    currTimerIndex = (currTimerIndex + 1) % timers.length;
+    if (timers.length != timersDied.length) {
+      while (true) {
+        if (timersDied.contains(timers[currTimerIndex]) == false) {
+          timers[currTimerIndex].restart();
+          break;
+        } else {
+          currTimerIndex = (currTimerIndex + 1) % timers.length;
+        }
+      }
+    }
   }
 
   void _submitTurn() {
@@ -272,6 +311,9 @@ class _GameRoomPageState extends State<GameRoomPage> {
       myTurn = false;
       myAllTurn = false;
       youLose = true;
+      for (var timer in timers) {
+        timer.reset();
+      }
       loosingWinning();
     });
 
@@ -580,19 +622,34 @@ class _GameRoomPageState extends State<GameRoomPage> {
                     height: 80,
                     child: IconButton(
                       onPressed: () {
-                        // _turnTimer?.cancel();
-                        //TODO: подтверждение выхода функция
                         confirmExit();                        
-                        // Navigator.pushNamed(context, '/mainmenu');
                       },
                       icon: const Icon(Icons.door_back_door_outlined, size: 60),
                     ),
                   ),
                   const Expanded(flex: 1, child: Text("")),
-                  SizedBox(
-                    width: 80,
-                    height: 80,
-                    child: Icon(Icons.account_circle, size: 90, color: grey3A3A3AColor,),
+                  Stack(
+                    alignment: Alignment.center,
+                    children: [
+                      CircularCountDownTimer(
+                      controller: _countDownControllerUp,
+                      duration: 60,
+                      isReverse: true,
+                      fillColor: greenTimerColor,
+                      height: 74,
+                      width: 74,
+                      strokeWidth: 8,
+                      onComplete: () {
+                        // later
+                      },
+                      strokeCap: StrokeCap.round,
+                      isReverseAnimation: true,
+                      ringColor: greyTimerColor,
+                      autoStart: false,
+                      textStyle: invisTextStyle,
+                      ),
+                      Icon(Icons.account_circle, size: 80, color: grey3A3A3AColor,),
+                    ],
                   ),
                   Padding(padding: const EdgeInsets.only(right: 15),),
                   Column(
@@ -620,7 +677,29 @@ class _GameRoomPageState extends State<GameRoomPage> {
                   Column(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      Icon(Icons.account_circle, size: 90, color: grey3A3A3AColor,),
+                      Stack(
+                        alignment: Alignment.center,
+                        children: [
+                          CircularCountDownTimer(
+                          controller: _countDownControllerLeft,
+                          duration: 60,
+                          isReverse: true,
+                          fillColor: greenTimerColor,
+                          height: 74,
+                          width: 74,
+                          strokeWidth: 8,
+                          onComplete: () {
+                            // later
+                          },
+                          strokeCap: StrokeCap.round,
+                          isReverseAnimation: true,
+                          ringColor: greyTimerColor,
+                          autoStart: false,
+                          textStyle: invisTextStyle,
+                          ),
+                          Icon(Icons.account_circle, size: 80, color: grey3A3A3AColor,),
+                        ],
+                      ),
                       Padding(padding: const EdgeInsets.only(top: 5)),
                       Row(
                         children: [
@@ -792,7 +871,29 @@ class _GameRoomPageState extends State<GameRoomPage> {
                   Column(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      Icon(Icons.account_circle, size: 90, color: grey3A3A3AColor,),
+                      Stack(
+                        alignment: Alignment.center,
+                        children: [
+                          CircularCountDownTimer(
+                          controller: _countDownControllerRight,
+                          duration: 60,
+                          isReverse: true,
+                          fillColor: greenTimerColor,
+                          height: 74,
+                          width: 74,
+                          strokeWidth: 8,
+                          onComplete: () {
+                            // later
+                          },
+                          strokeCap: StrokeCap.round,
+                          isReverseAnimation: true,
+                          ringColor: greyTimerColor,
+                          autoStart: false,
+                          textStyle: invisTextStyle,
+                          ),
+                          Icon(Icons.account_circle, size: 80, color: grey3A3A3AColor,),
+                        ],
+                      ),
                       Padding(padding: const EdgeInsets.only(top: 5)),
                       Row(
                         children: [
@@ -814,10 +915,28 @@ class _GameRoomPageState extends State<GameRoomPage> {
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    SizedBox(
-                      width: 80,
-                      height: 80,
-                      child: Icon(Icons.account_circle, size: 90, color: grey3A3A3AColor,),
+                    Stack(
+                      alignment: Alignment.center,
+                      children: [
+                        CircularCountDownTimer(
+                        controller: _countDownControllerDown,
+                        duration: 60,
+                        isReverse: true,
+                        fillColor: greenTimerColor,
+                        height: 74,
+                        width: 74,
+                        strokeWidth: 8,
+                        onComplete: () {
+                          // later
+                        },
+                        strokeCap: StrokeCap.round,
+                        isReverseAnimation: true,
+                        ringColor: greyTimerColor,
+                        autoStart: false,
+                        textStyle: invisTextStyle,
+                        ),
+                        Icon(Icons.account_circle, size: 80, color: grey3A3A3AColor,),
+                      ],
                     ),
                     Padding(padding: const EdgeInsets.only(left: 29)),
                     for (int i = 0; i < _myHand.length; i++)
@@ -858,7 +977,7 @@ class _GameRoomPageState extends State<GameRoomPage> {
                     Padding(padding: const EdgeInsets.only(left: 11)),
                     if (myAllTurn)
                       SizedBox(
-                        width: 100,
+                        width: 105,
                         height: 50,
                         child: 
                         ElevatedButton(

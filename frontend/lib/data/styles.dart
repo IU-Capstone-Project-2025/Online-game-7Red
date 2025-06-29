@@ -95,6 +95,12 @@ TextStyle confirmExitStyle = const TextStyle(
   letterSpacing: 1,
 );
 
+TextStyle invisTextStyle = const TextStyle(
+  fontSize: 5,
+  fontWeight: FontWeight.w500,
+  color: Color.fromARGB(0, 58, 58, 58)
+);
+
 
 Color backInvisColor = const Color.fromARGB(125, 218, 209, 193);
 
@@ -125,3 +131,7 @@ Color violetCard = const Color.fromARGB(255, 202, 75, 253);
 Color handInvisColor = const Color.fromARGB(58, 212, 197, 172);
 
 Color greyButtonColor = const Color.fromARGB(255, 186, 180, 170);
+
+const greenTimerColor = Color(0xFF87B25A);
+
+const greyTimerColor = Color(0xFFD9D9D9);
