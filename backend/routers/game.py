@@ -1,6 +1,7 @@
 from fastapi import APIRouter, Query, WebSocket, WebSocketDisconnect
 from typing import Dict
 from backend.red7state import Red7GameState
+from backend.database import update_room_state
 
 router = APIRouter(prefix="/game", tags=["game"])
 
@@ -8,6 +9,7 @@ class GameManager:
     def __init__(self):
         self.active_games: Dict[str, Red7GameState] = {}  # room_id: Red7GameState
         self.connections: Dict[str, WebSocket] = {}  # player_id: websocket
+        self.exited_id = []
 
     async def create_game(self, room_id: int) -> Red7GameState:
         """Initialize a new game instance"""
@@ -32,6 +34,7 @@ async def game_websocket(
     print(f"Room ID: {room_id}", flush=True)  # Debug room ID lookup
     try:
         # Initialize or join game
+        await update_room_state(str(assigned_id), "playing")
         game = await manager.create_game(room_id)
         
         print(f"names: {game.players_name_list}, ids: {game.players_id_list}, my_hand: {game.players[player_id]}", flush=True) 
@@ -46,6 +49,11 @@ async def game_websocket(
         while True:
 
             data = await websocket.receive_json()
+
+            if data["type"] == "exit":
+                print(f'Player {data["my_id"]} requested exit', flush=True)
+                manager.exited_id.append(data["my_id"])
+                break
 
             type_cur = data["type"] #my_turn or time_out
             player_id = data["my_id"]
@@ -94,7 +102,12 @@ async def game_websocket(
             # print(f'Cur player befor {game.current_player}')
             game.next_player()
             # print(f'Cur player after {game.current_player}')
-            next_lose = not game.check_winning_at_beginning(game.current_player)
+            if game.current_player in manager.exited_id:
+                next_lose = True
+                manager.exited_id.remove(game.current_player)
+
+            else:
+                next_lose = not game.check_winning_at_beginning(game.current_player)
             # print("SSSSSSS", flush=True)
             # print(f"Next lose out loop {next_lose}")
             await broadcast_game_state(game, player_id, is_winning, my_palette_ch, new_rule, next_lose)
@@ -108,7 +121,13 @@ async def game_websocket(
                 game.next_player()
                 next_player = game.current_player
                 if game.players[next_player]["active"]:
-                    next_lose = not game.check_winning_at_beginning(next_player)
+                    if next_player in manager.exited_id:
+                        next_lose = True
+                        manager.exited_id.remove(next_player)
+
+                    else:
+                        next_lose = not game.check_winning_at_beginning(next_player)
+
                     try:
                         print("SSSHHH", flush=True)
                         print(f"Next lose in loop {next_lose}", flush=True)
@@ -116,7 +135,7 @@ async def game_websocket(
                         print(f"CRASH BETWEEN PRINTS: {e}", flush=True)
                     await broadcast_game_state(game, cur_player, False, None, None, next_lose)
                 else:
-                    print(game.players)
+                    print(game.players, flush=True)
             
 
     except WebSocketDisconnect:
@@ -131,11 +150,15 @@ async def game_websocket(
             #delete_game_room(room_id)
         print(f"{manager.connections}", flush=True)
         print(f"{manager.active_games}", flush=True)
+        if len(manager.connections) == 0:
+            await update_room_state(str(assigned_id), "finished")
     except Exception as e:
         print("heeerre", flush=True)
         print(e, flush=True)
         print(str(e), flush=True)
         await websocket.close(code=1011, reason=str(e))
+    
+    update_room_state(str(assigned_id), "finished")
 
 async def broadcast_game_state(game: Red7GameState, cur_player_id: int, is_winning: bool, my_palette_ch: str, new_rule: str, next_lose: bool):
     """Send updated game state to all players in room"""

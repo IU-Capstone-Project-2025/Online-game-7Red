@@ -84,6 +84,14 @@ async def password_exist(password: str) -> bool:
     result = await database.fetch_one(query)
     return result is not None
 
+async def update_room_state(assigned_id: str, state: str):
+    query = (
+        games.update()
+        .where(games.c.assigned_id == assigned_id)
+        .values(game_state=state)
+    )
+    await database.execute(query)
+
 
 #-------------------------USERS----------------------------------------------------------------------------------------------------------------------------------------------
 
