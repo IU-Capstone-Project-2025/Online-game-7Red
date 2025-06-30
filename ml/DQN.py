@@ -66,10 +66,10 @@ class DQNAgent:
         self.optimizer = optim.AdamW(self.model.parameters(), lr=3e-4, weight_decay=1e-5)
         self.memory = deque(maxlen=200000)
         self.batch_size = 256
-        self.gamma = 0.85
-        self.epsilon = 0.5
+        self.gamma = 0.9
+        self.epsilon = 1
         self.epsilon_min = 0.05
-        self.epsilon_decay = 0.995
+        self.epsilon_decay = 0.999
         self.steps_done = 0
         self.target_update = 75
         self.warmup_steps = 1500
@@ -85,6 +85,8 @@ class DQNAgent:
             obs_device = {k: v.to(self.device) for k, v in obs.items()}
             q_values = self.model(obs_device)[0].cpu().numpy()
         q_values[legal_mask == 0] = -np.inf
+        if np.sum(legal_mask) == 0:
+            return (0, 0)
         return np.unravel_index(np.argmax(q_values), q_values.shape)
 
     def store_transition(self, obs, action, reward, next_obs, done, legal_mask):
@@ -114,9 +116,11 @@ class DQNAgent:
 
         with torch.no_grad():
             # Double DQN модификация:
-            # 1. Выбираем действие через online-сеть
+            # 1. Выбираем действие через online-сеть с учетом легал маски
             next_q_values_online = self.model(next_obs_t)
-            next_q_values_online[legal_mask_t == 0] = -float('inf')
+            next_q_values_online[legal_mask_t == 0] = -float('inf')  # Маскируем нелегальные действия
+            
+            # Находим лучшее легальное действие
             best_actions = next_q_values_online.view(self.batch_size, -1).argmax(dim=1)
             
             # 2. Оцениваем выбранное действие через target-сеть
@@ -128,6 +132,10 @@ class DQNAgent:
 
         self.optimizer.zero_grad()
         loss.backward()
+        
+        # Gradient clipping для стабильности обучения
+        torch.nn.utils.clip_grad_norm_(self.model.parameters(), 10.0)
+        
         self.optimizer.step()
 
         if self.epsilon > self.epsilon_min:
@@ -220,7 +228,7 @@ def train(env, agent_0, agent_1=None, num_episodes=5000, mode='random'):
                 next_obs, _, done, _ = env.step(action)
 
                 # Reward за каждый шаг (живой)
-                step_reward = 0.1  # выжил = +0.1
+                step_reward = 0  # выжил = +0.1
                 if done:
                     step_reward = -10.0 if env.get_winner() != current_player else 10.0
 
@@ -369,7 +377,7 @@ def train_mcts(env, agent_0, agent_1=None, num_episodes=5000, mode='mcts'):
             next_obs, _, done, _ = env.step(action)
 
             # Награда
-            step_reward = 0.1  # выжил
+            step_reward = 0  # выжил
             if done:
                 step_reward = 10.0 if env.get_winner() == current_player else -10.0
 
@@ -423,7 +431,7 @@ def play_single_game():
     agent = DQNAgent(device=device)
     
     try:
-        agent.load("red7_agent_try_2.pth")
+        agent.load("medium.pth")
         print("Model loaded successfully!")
     except Exception as e:
         print(f"\nError loading model: {e}")
