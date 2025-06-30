@@ -28,7 +28,6 @@ async def game_websocket(
     await websocket.accept()
     print(f"Connected: assigned_id={assigned_id}, player_id={player_id}", flush=True)
     manager.connections[player_id] = websocket
-    #room_id = await return_room_id_using_assigned_id(str(assigned_id))
     room_id = assigned_id
     print(f"Room ID: {room_id}", flush=True)  # Debug room ID lookup
     try:
@@ -88,27 +87,41 @@ async def game_websocket(
             elif type_cur == "time_out":
                 is_winning = False
 
-            print(f'Cur player befor {game.current_player}')
+            else:
+                print("something else happened...", flush=True)
+                continue 
+
+            # print(f'Cur player befor {game.current_player}')
             game.next_player()
-            print(f'Cur player after {game.current_player}')
+            # print(f'Cur player after {game.current_player}')
             next_lose = not game.check_winning_at_beginning(game.current_player)
-            print("SSSSSSS", flush=True)
-            print(f"Next lose out loop {next_lose}")
+            # print("SSSSSSS", flush=True)
+            # print(f"Next lose out loop {next_lose}")
             await broadcast_game_state(game, player_id, is_winning, my_palette_ch, new_rule, next_lose)
-            print("SSSSSSS", flush=True)
-            print(f"Next lose out loop {next_lose}")
+            # print("SSSSSSS", flush=True)
+            # print(f"Next lose out loop {next_lose}")
             max_checks = len(game.players_id_list)
             while next_lose and max_checks > 0:
+                print(max_checks)
                 max_checks -= 1
                 cur_player = game.current_player
                 game.next_player()
-                next_lose = not game.check_winning_at_beginning(game.current_player)
-                print(f"Next lose in loop {next_lose}")
-                await broadcast_game_state(game, cur_player, 0, None, None, next_lose)
+                next_player = game.current_player
+                if game.players[next_player]["active"]:
+                    next_lose = not game.check_winning_at_beginning(next_player)
+                    try:
+                        print("SSSHHH", flush=True)
+                        print(f"Next lose in loop {next_lose}", flush=True)
+                    except Exception as e:
+                        print(f"CRASH BETWEEN PRINTS: {e}", flush=True)
+                    await broadcast_game_state(game, cur_player, False, None, None, next_lose)
+                else:
+                    print(game.players)
             
 
     except WebSocketDisconnect:
-        print("hrre", flush=True)
+        print(f"{manager.connections}", flush=True)
+        print(f"{manager.active_games}", flush=True)
         del manager.connections[player_id]
         # Check if room is now empty
         game = manager.active_games.get(room_id)
@@ -116,6 +129,8 @@ async def game_websocket(
             del manager.active_games[room_id]
             print("hrre", flush=True)
             #delete_game_room(room_id)
+        print(f"{manager.connections}", flush=True)
+        print(f"{manager.active_games}", flush=True)
     except Exception as e:
         print("heeerre", flush=True)
         print(e, flush=True)
@@ -127,7 +142,10 @@ async def broadcast_game_state(game: Red7GameState, cur_player_id: int, is_winni
     if not game:
         return
 
-    print(f"is_win {is_winning}, cur_player {cur_player_id}, pal_ch {my_palette_ch}, rule {new_rule}, next_lose {next_lose}")
+    print(f"is_win {is_winning}, cur_player {cur_player_id}, pal_ch {my_palette_ch}, rule {new_rule}, next_lose {next_lose}", flush=True)
+    if not is_winning:
+        game.players[cur_player_id]["active"] = False
+
     for player_id in game.players_id_list:
         if player_id in manager.connections:
             await manager.connections[player_id].send_json({
