@@ -93,38 +93,21 @@ jobs:
               -o UserKnownHostsFile=/dev/null \
               ./docker-compose.yml \
               ${{ secrets.VPS_USERNAME }}@${{ secrets.VPS_IP }}:~/deploy/docker-compose.yml
-      - name: Generate .env file
-        uses: c-py/action-template-file@v1
-        with:
-          template_file: .env.template
-          output_file: .env.generated
-          variables: |
-            {
-              "PROJECT_ID": "${{ secrets.PROJECT_ID }}",
-              "DB_USER": "${{ secrets.DB_USER }}",
-              "DB_PASS": "${{ secrets.DB_PASS }}",
-              "BRANCH_ID": "${{ secrets.BRANCH_ID }}",
-              "DATABASE_URL": "${{ secrets.DATABASE_URL }}"
-            }
-      - name: Copy .env to server
-        run: |
-          scp -o StrictHostKeyChecking=no \
-              .env.generated \
-              ${{ secrets.VPS_USERNAME }}@${{ secrets.VPS_IP }}:~/deploy/database/.env
-
-          ssh -o StrictHostKeyChecking=no \
-              ${{ secrets.VPS_USERNAME }}@${{ secrets.VPS_IP }} "chmod 600 ~/deploy/database/.env"
       - name: Deploy to VPS
         run: |
           ssh -o StrictHostKeyChecking=no \
               -o UserKnownHostsFile=/dev/null \
               ${{ secrets.VPS_USERNAME }}@${{ secrets.VPS_IP }} << EOF
-
             cd ~/deploy
+            
+            if [ ! -f .env ]; then
+              echo "Ошибка: .env файл не найден в папке ~/deploy!"
+              exit 1
+            fi
+            
             docker-compose down || true
             docker-compose pull
             docker-compose up -d
           EOF
-
       
       
