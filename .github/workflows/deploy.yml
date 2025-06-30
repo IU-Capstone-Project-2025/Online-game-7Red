@@ -97,13 +97,7 @@ jobs:
         run: |
           ssh -o StrictHostKeyChecking=no \
               -o UserKnownHostsFile=/dev/null \
-              ${{ secrets.VPS_USERNAME }}@${{ secrets.VPS_IP }} << EOF
-            cd ~/deploy
-            
-            if [ ! -f .env ]; then
-              echo "Ошибка: .env файл не найден в папке ~/deploy!"
-              exit 1
-            fi
+              ${{ secrets.VPS_USERNAME }}@${{ secrets.VPS_IP }} <<EOF
             
             docker-compose down || true
             docker-compose pull
