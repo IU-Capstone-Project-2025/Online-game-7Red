@@ -116,6 +116,21 @@ class Red7GameState:
             self.players[self.players_id_list[i]]["name"] = self.players_name_list[i]
             self.players[self.players_id_list[i]]["active"] = True
             self.players[self.players_id_list[i]]["possible_moves"] = {}
+    
+    def deal_cards_bot_game(self, player_id: int, hand_human: List[str], name: str):
+        self.players[player_id] = {}
+        self.players[player_id]["hand"] = hand_human
+        self.players[player_id]["palette"] = []
+        self.players[player_id]["name"] = name
+        self.players[player_id]["active"] = True
+        self.players[player_id]["possible_moves"] = {}
+
+        self.players[-1] = {}      
+        self.players[-1]["hand"] = []
+        self.players[-1]["palette"] = []
+        self.players[-1]["name"] = "bot"
+        self.players[-1]["active"] = True
+        self.players[-1]["possible_moves"] = {}
 
     def start_game(self):
         """Initialize the game state"""

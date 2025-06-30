@@ -115,10 +115,18 @@ async def create_profile(user_id: int, name: str, avatar: str = None):
     query = profiles.insert().values(user_id=user_id, name=name, avatar=avatar)
     return await database.execute(query)
 
-
 async def get_profile_by_user_id(user_id: int):
     query = profiles.select().where(profiles.c.user_id == user_id)
     return await database.fetch_one(query)
+
+async def get_profile_name_by_user_id(user_id: int):
+    query = profiles.select().where(profiles.c.user_id == user_id)
+    res = await database.fetch_one(query)
+
+    if not res:
+        raise Exception("Profile not found")
+    
+    return res["name"]
 
 # adding user to the room
 async def add_user_to_room(user_id: int, assigned_id: str):
