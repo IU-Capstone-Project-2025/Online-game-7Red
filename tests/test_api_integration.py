@@ -107,4 +107,41 @@ def test_leave_room():
         response = client.post("/rooms/leave", json=leave)
         assert response.status_code == 200
         assert f"User {user_id} left room {assigned_id}" in response.json()["message"]
-        
+
+def test_signin():
+    with TestClient(app) as client:
+        unique_email = f"testuser_{int(time.time() * 1000)}@example.com"
+        signup_data = {
+            "email": unique_email,
+            "password": "testpass",
+            "repeated_password": "testpass",
+            "nickname": "TestUser"
+        }
+        response = client.post("/auth/signup", json=signup_data)
+        assert response.status_code == 200
+        user_id = response.json()["user_id"]
+
+        signin_data = {
+            "email": unique_email,
+            "password": "testpass"
+        }
+        response = client.post("/auth/signin", json=signin_data)
+        assert response.status_code == 200
+        data = response.json()
+        assert data["message"] == "Sign in succesfully"
+        assert data["user_id"] == user_id
+        assert data["nickname"] == "TestUser"
+
+        response = client.post("/auth/signin", json={
+            "email": unique_email,
+            "password": "wrongpass"
+        })
+        assert response.status_code == 401
+        assert response.json()["detail"] == "Invalid email or password"
+
+        response = client.post("/auth/signin", json={
+            "email": "notfound@example.com",
+            "password": "testpass"
+        })
+        assert response.status_code == 401
+        assert response.json()["detail"] == "Invalid email or password"
