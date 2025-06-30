@@ -1,8 +1,9 @@
 from fastapi import FastAPI
+from contextlib import asynccontextmanager
 from backend.routers.auth import router as auth_router
 from backend.routers.rooms import router as rooms_router
 from backend.routers.game import router as game_router
-from backend.routers.bot import router as bot_router
+#from backend.routers.bot import router as bot_router
 from backend.database import database
 from fastapi.middleware.cors import CORSMiddleware
 
@@ -16,18 +17,20 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-@app.on_event("startup")
-async def startup():
-    await database.connect()
 
-@app.on_event("shutdown")
-async def shutdown():
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    await database.connect()
+    yield
     await database.disconnect()
+
+app = FastAPI(lifespan=lifespan)
 
 app.include_router(auth_router)
 app.include_router(rooms_router)
 app.include_router(game_router)
-app.include_router(bot_router)
+#app.include_router(bot_router)
 
 
 @app.get("/")

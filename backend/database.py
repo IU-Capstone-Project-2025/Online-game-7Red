@@ -2,7 +2,7 @@ import os
 from sqlalchemy import MetaData, Table, Column, Integer, String, create_engine, TIMESTAMP, ForeignKey, Boolean, select
 from databases import Database
 from dotenv import load_dotenv
-from datetime import datetime
+from datetime import datetime, UTC
 
 # load environment variables
 load_dotenv(os.path.join(os.path.dirname(__file__), '../database/.env'))
@@ -89,7 +89,12 @@ async def password_exist(password: str) -> bool:
 
 # for creating user
 async def create_user(login: str, password: str, created_at: datetime | None = None, last_visited: datetime | None = None ):
-    query = people.insert().values(login = login, password=password, created_at=created_at or datetime.utcnow(), last_visited = last_visited or datetime.utcnow())
+    query = people.insert().values(
+        login=login,
+        password=password,
+        created_at=created_at or datetime.now(UTC),
+        last_visited=last_visited or datetime.now(UTC)
+    )
     return await database.execute(query)
 
 # for deleting user
