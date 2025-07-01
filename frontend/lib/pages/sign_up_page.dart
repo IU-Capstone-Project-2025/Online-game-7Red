@@ -275,9 +275,9 @@ class _SignUpPageState extends State<SignUpPage> {
                               });
                               return;
                             }
-                            else if (controller3.text.length > 12 || controller3.text.length < 6) {
+                            else if (controller3.text.length > 16 || controller3.text.length < 6) {
                               setState(() {
-                                errPassword = '6-12 symbols';
+                                errPassword = '6-16 symbols';
                               });
                               return;
                             } 

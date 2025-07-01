@@ -227,10 +227,10 @@ class _WaitingRoomPageState extends State<WaitingRoomPage> {
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
                       Text("Room", style: boldTextStyle),
-                      Text(room_id, style: bigNumberStyle),
+                      SelectableText(room_id, style: bigNumberStyle),
                       Padding(padding: const EdgeInsets.only(top: 10)),
                       Text("Password", style: boldTextStyle),
-                      Text(gameProvider.roomPassword, style: bigNumberStyle),
+                      SelectableText(gameProvider.roomPassword, style: bigNumberStyle),
                     ],
                   )
                 ],

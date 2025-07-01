@@ -48,6 +48,9 @@ class _GameRoomPageState extends State<GameRoomPage> {
   Player? playerLeft;
   Player? playerRight;
 
+  Timer? _allTimeTimer;
+  int _allTime = 0;
+
 //  bool myTurn = true;
 //   bool myAllTurn = true;
   bool myTurn = false;
@@ -61,6 +64,8 @@ class _GameRoomPageState extends State<GameRoomPage> {
   List<CountDownController> timers = [];
   int currTimerIndex = 0;
   List<CountDownController> timersDied = [];
+
+  int myPlace = 0;
 
   @override
   void initState() {
@@ -143,6 +148,9 @@ class _GameRoomPageState extends State<GameRoomPage> {
         }
       }
       
+      _allTimeTimer = Timer.periodic(Duration(seconds: 1), (timer) {
+        _allTime++;
+      });
       _startTurnTimer();
     });
   }
@@ -165,6 +173,7 @@ class _GameRoomPageState extends State<GameRoomPage> {
   }
 
   void _handleRightTurn() {
+    _turnTimer?.cancel();
     setState(() {
       myTurn = false;
       ruleChanged = true;
@@ -183,6 +192,7 @@ class _GameRoomPageState extends State<GameRoomPage> {
             playerUp!.pallete = [];
           }
         }
+        _players[_players.indexOf(player)].place = _activePlayers.length;
         _activePlayers.remove(message['id_did']);
         timersDied.add(timers[_players.indexOf(player)]);
       } else {
@@ -215,6 +225,9 @@ class _GameRoomPageState extends State<GameRoomPage> {
           for (var timer in timers) {
             timer.reset();
           }
+          _allTimeTimer?.cancel();
+          myPlace = _activePlayers.length;
+          _players[_players.indexOf(_players.firstWhere((p) => p.id == _currentPlayerId))].place = _activePlayers.length;
           loosingWinning();
           return;
           
@@ -235,6 +248,9 @@ class _GameRoomPageState extends State<GameRoomPage> {
         for (var timer in timers) {
           timer.reset();
         }
+        myPlace = 1;
+        _players[_players.indexOf(_players.firstWhere((p) => p.id == _currentPlayerId))].place = 1;
+        _allTimeTimer?.cancel();
         loosingWinning();
         return;
       }
@@ -277,7 +293,7 @@ class _GameRoomPageState extends State<GameRoomPage> {
   }
 
   void _submitTurn() {
-    _turnTimer?.cancel();
+    // _turnTimer?.cancel();
 
     setState(() {
       myTurn = false;
@@ -314,6 +330,9 @@ class _GameRoomPageState extends State<GameRoomPage> {
       for (var timer in timers) {
         timer.reset();
       }
+      _allTimeTimer?.cancel();
+      myPlace = _activePlayers.length;
+      _players[_players.indexOf(_players.firstWhere((p) => p.id == _currentPlayerId))].place = _activePlayers.length;
       loosingWinning();
     });
 
@@ -411,7 +430,8 @@ class _GameRoomPageState extends State<GameRoomPage> {
                   children: [
                     Expanded(flex: 1, child: Text(""),),
                     if (gamemode == 2) 
-                      Text(youWin ? "1st" : "2nd", style: resLoseStyleBig),
+                      // Text(youWin ? "1st" : "2nd", style: resLoseStyleBig),
+                      Text(myPlace == 1 ? "1st" : (myPlace == 2 ? "2nd" : (myPlace == 3 ? "3rd" : "4th") ), style: resLoseStyleBig),
                     Text("place", style: resLoseStyle,),
                     Expanded(flex: 1, child: Text(""),),
                     Row(
@@ -481,6 +501,7 @@ class _GameRoomPageState extends State<GameRoomPage> {
                               ),
                             ),
                             onPressed: () {
+                              //
                               _webSocket.disconnect();
                               Navigator.of(context).pop();
                               Navigator.pushNamed(context, '/mainmenu');
