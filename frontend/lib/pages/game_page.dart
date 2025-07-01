@@ -78,7 +78,7 @@ class _GameRoomPageState extends State<GameRoomPage> {
       SharedPreferences prefs = await SharedPreferences.getInstance();
       roomID = await prefs.getString('roomId');
       userID = await prefs.getInt('myID');
-      serverUrl = 'ws://localhost:8000/game/$roomID/ws?player_id=$userID';
+      serverUrl = 'ws://192.145.30.253:8000/game/$roomID/ws?player_id=$userID';
       _webSocket = GameWebSocket(
         serverUrl: serverUrl,
         onMessageReceived: _handleMessage,
