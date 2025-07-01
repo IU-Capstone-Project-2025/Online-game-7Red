@@ -629,7 +629,7 @@ class _GameRoomPageState extends State<GameRoomPage> {
   }
 
   Future<void> leaveRoom(int id, String room_id) async {
-    final url = Uri.parse('http://localhost:8000/rooms/leave');
+    final url = Uri.parse('http://192.145.30.253:8000/rooms/leave');
     final response = await http.post(
       url,
       headers: {'Content-Type': 'application/json', 'accept': 'application/json'},
