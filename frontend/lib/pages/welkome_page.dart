@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
 import '../data/styles.dart';
 
-
+import 'package:circular_countdown_timer/circular_countdown_timer.dart';
+final _countDownController = CountDownController();
 
 class WelkomePage extends StatefulWidget {
   const WelkomePage({super.key});
@@ -42,8 +43,8 @@ class _WelkomePageState extends State<WelkomePage> {
                     crossAxisAlignment: CrossAxisAlignment.center,
                     children: [
                       SizedBox(
-                        width: 335,
-                        height: 48,
+                        width: 295,
+                        height: 45,
                         child: ElevatedButton(
                           style: ButtonStyle(
                             backgroundColor: WidgetStateProperty.all<Color>(
@@ -58,7 +59,7 @@ class _WelkomePageState extends State<WelkomePage> {
                             shape:
                                 WidgetStateProperty.all<RoundedRectangleBorder>(
                                   RoundedRectangleBorder(
-                                    borderRadius: BorderRadius.circular(10),
+                                    borderRadius: BorderRadius.circular(7),
                                   ),
                                 ),
                             side: WidgetStateProperty.all<BorderSide>(
@@ -79,14 +80,14 @@ class _WelkomePageState extends State<WelkomePage> {
                     ],
                   ),
                   Padding(padding: EdgeInsets.only(left: 80)),
-                  Container(width: 1, height: 150, color: Colors.black),
+                  Container(width: 1, height: 130, color: Colors.black),
                   Padding(padding: EdgeInsets.only(left: 80)),
                   Column(
                     crossAxisAlignment: CrossAxisAlignment.center,
                     children: [
                       SizedBox(
-                        width: 335,
-                        height: 50,
+                        width: 295,
+                        height: 45,
                         child: ElevatedButton(
                           style: ButtonStyle(
                             backgroundColor: WidgetStateProperty.all<Color>(
@@ -124,6 +125,50 @@ class _WelkomePageState extends State<WelkomePage> {
                 ],
               ),
               const Expanded(flex: 6, child: Text("")),
+              // const Expanded(flex: 2, child: Text("")),
+              // Stack(
+              //   alignment: Alignment.center,
+              //   children: [
+              //     CircularCountDownTimer(
+              //     controller: _countDownController,
+              //     duration: 60,
+              //     isReverse: true,
+              //     fillColor: greenTimerColor,
+              //     height: 74,
+              //     width: 74,
+              //     strokeWidth: 8,
+              //     onComplete: () {
+              //       // later
+              //     },
+              //     strokeCap: StrokeCap.round,
+              //     isReverseAnimation: true,
+              //     ringColor: greyTimerColor,
+              //     autoStart: false,
+              //     textStyle: invisTextStyle,
+              //     ),
+              //     Icon(Icons.account_circle, size: 80, color: grey3A3A3AColor,),
+              //   ],
+              // ),
+              // Row(
+              //   mainAxisAlignment: MainAxisAlignment.center,
+              //   crossAxisAlignment: CrossAxisAlignment.center,
+              //   children: [
+              //     IconButton(
+              //       onPressed: () {
+              //         _countDownController.restart();
+              //       },
+              //       icon: Icon(Icons.refresh, size: 50, color: grey3A3A3AColor,),
+              //     ),
+              //     Padding(padding: EdgeInsets.only(left: 30)),
+              //     IconButton(
+              //       onPressed: () {
+              //         _countDownController.reset();
+              //       },
+              //       icon: Icon(Icons.stop, size: 50, color: grey3A3A3AColor,),
+              //     )
+              //   ],
+              // ),
+              // const Expanded(flex: 2, child: Text("")),
             ],
           ),
         ),
