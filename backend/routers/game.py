@@ -5,6 +5,7 @@ from backend.database import update_room_state
 
 router = APIRouter(prefix="/game", tags=["game"])
 
+
 class GameManager:
     def __init__(self):
         self.active_games: Dict[str, Red7GameState] = {}  # room_id: Red7GameState
