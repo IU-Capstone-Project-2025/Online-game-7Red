@@ -99,9 +99,11 @@ jobs:
               -o UserKnownHostsFile=/dev/null \
               ${{ secrets.VPS_USERNAME }}@${{ secrets.VPS_IP }} <<EOF
             
-            docker-compose down || true
-            docker-compose pull
-            docker-compose up -d
+            cd ~/deploy 
+
+            docker-compose -f docker-compose.yml down || true
+            docker-compose -f docker-compose.yml pull
+            docker-compose -f docker-compose.yml up -d
           EOF
       
       
