@@ -47,7 +47,9 @@ jobs:
         with:
           context: ./backend
           push: true
-          tags: ${{ env.DOCKER_HUB_REPO }}:${{ env.BACKEND_TAG }}
+          tags: |
+            ${{ env.DOCKER_HUB_REPO }}:${{ env.BACKEND_TAG }}
+            ${{ env.DOCKER_HUB_REPO }}:backend-latest
           platforms: linux/amd64
           
       - name: Build and push frontend
@@ -55,8 +57,14 @@ jobs:
         with:
           context: ./frontend
           push: true
-          tags: ${{ env.DOCKER_HUB_REPO }}:${{ env.FRONTEND_TAG }}
+          tags: |
+            ${{ env.DOCKER_HUB_REPO }}:${{ env.FRONTEND_TAG }}
+            ${{ env.DOCKER_HUB_REPO }}:frontend-latest
           platforms: linux/amd64
+      - name: Verify images were pushed
+        run: |
+          docker pull ${{ env.DOCKER_HUB_REPO }}:${{ env.BACKEND_TAG }}
+          docker pull ${{ env.DOCKER_HUB_REPO }}:${{ env.FRONTEND_TAG }}
 
   deploy:
     needs: build-and-push
