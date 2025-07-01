@@ -1,5 +1,11 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+import 'package:http/http.dart' as http;
+import 'dart:convert';
+
 import '../data/styles.dart';
+import '../providers/provider.dart';
+import '../data/connectDialog.dart';
 
 class MainMenuPage extends StatefulWidget {
   const MainMenuPage({super.key});
@@ -11,8 +17,69 @@ class MainMenuPage extends StatefulWidget {
 class _MainMenuPageState extends State<MainMenuPage> {
   final TextEditingController controller = TextEditingController();
   final TextEditingController controller2 = TextEditingController();
+
+  String postText = '';
+  bool logSuccess = false;
+  String nickname = '';
+  int ID = -1;
+
+  String room_id = '';
+  String room_password = '';
+
+  Future<void> createRoom(int id) async {
+    final url = Uri.parse('http://localhost:8000/rooms/create');
+    final response = await http.post(
+      url,
+      headers: {'Content-Type': 'application/json', 'accept': 'application/json'},
+      body: jsonEncode({
+        'user_id': id,
+      }),
+    );
+
+    final responseBody = json.decode(response.body);
+
+    if (response.statusCode == 200) {
+      setState(() {
+        room_id = responseBody['assigned_id'];
+        room_password = responseBody['password'];
+        logSuccess = true;
+      });
+    } else {
+      setState(() {
+        logSuccess = false;
+      });
+    }
+  }
+
+  Future<void> connectToRoom(int id, String room_id, String password) async {
+    final url = Uri.parse('http://localhost:8000/rooms/join');
+    final response = await http.post(
+      url,
+      headers: {'Content-Type': 'application/json', 'accept': 'application/json'},
+      body: jsonEncode({
+        'assigned_id': room_id,
+        'password': password,
+        'user_id': id,
+      }),
+    );
+
+    if (response.statusCode == 200) {
+      setState(() {
+        logSuccess = true;
+      });
+    } else {
+      setState(() {
+        logSuccess = false;
+        postText = 'Invalid ID or Password';
+      });
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
+    final gameProvider = Provider.of<GameProvider>(context);
+    gameProvider.loadIdAndName();
+
     return Scaffold(
       body: Container(
         decoration: BoxDecoration(
@@ -35,6 +102,7 @@ class _MainMenuPageState extends State<MainMenuPage> {
                     height: 80,
                     child: IconButton(
                       onPressed: () {
+                        gameProvider.clearMyPersonalInfo();
                         Navigator.pushNamed(context, '/');
                       },
                       icon: const Icon(Icons.door_back_door_outlined, size: 60),
@@ -57,13 +125,13 @@ class _MainMenuPageState extends State<MainMenuPage> {
               Expanded(flex: 1, child: Text("")),
               Image(
                 image: AssetImage('lib/assets/logo.png'),
-                width: 200,
-                height: 200,
+                width: 216,
+                height: 216,
               ),
               Expanded(flex: 1, child: Text("")),
               SizedBox(
-                width: 321,
-                height: 64,
+                width: 300,
+                height: 60,
                 child: ElevatedButton(
                   style: ButtonStyle(
                     backgroundColor: WidgetStateProperty.all<Color>(
@@ -90,8 +158,8 @@ class _MainMenuPageState extends State<MainMenuPage> {
                     return Dialog(
                       child:
                         Container(
-                          width: 1000,
-                          height: 336,
+                          width: 930,
+                          height: 312,
                           decoration: BoxDecoration(
                             image: DecorationImage(
                               image: AssetImage('lib/assets/background.jpg'),
@@ -102,8 +170,8 @@ class _MainMenuPageState extends State<MainMenuPage> {
                           ),
                           child:
                             Container(
-                              width: 1000,
-                              height: 336,
+                              width: 930,
+                              height: 312,
                               decoration: BoxDecoration(
                                 color: backInvisColor,
                                 borderRadius: BorderRadius.circular(20),
@@ -113,8 +181,8 @@ class _MainMenuPageState extends State<MainMenuPage> {
                                 children: [
                                   const Expanded(flex: 1, child: Text(""),),
                                   SizedBox(
-                                    width: 155,
-                                    height: 155,
+                                    width: 150,
+                                    height: 150,
                                     child: ElevatedButton(
                                       style: ButtonStyle(
                                           backgroundColor: WidgetStateProperty.all<Color>(
@@ -136,9 +204,18 @@ class _MainMenuPageState extends State<MainMenuPage> {
                                           BorderSide(color: grey3A3A3AColor, width: 1),
                                         ),
                                       ),
-                                      onPressed: () {
-                                        Navigator.of(context).pop();
-                                        //pass;
+                                      onPressed: () async{
+                                        setState(() {
+                                          logSuccess = false;
+                                        });
+                                        await createRoom(gameProvider.myID);
+                                        if (logSuccess) {
+                                          gameProvider.roomId = room_id;
+                                          gameProvider.roomPassword = room_password;
+                                          gameProvider.saveRoomInfo();
+                                          Navigator.of(context).pop();
+                                          Navigator.pushNamed(context, '/waitingroom');
+                                        }
                                       },
                                       child: Column(
                                         children: [
@@ -153,8 +230,8 @@ class _MainMenuPageState extends State<MainMenuPage> {
                                   ),
                                   const Expanded(flex: 1, child: Text(""),),
                                   SizedBox(
-                                    width: 155,
-                                    height: 155,
+                                    width: 150,
+                                    height: 150,
                                     child: ElevatedButton(
                                       style: ButtonStyle(
                                           backgroundColor: WidgetStateProperty.all<Color>(
@@ -178,125 +255,10 @@ class _MainMenuPageState extends State<MainMenuPage> {
                                       ),
                                       onPressed: () {
                                         Navigator.of(context).pop();
-                                        showDialog(context: context, builder: (context) {
-                                          return Dialog(
-                                            child:
-                                              Container(
-                                                width: 420,
-                                                height: 308,
-                                                decoration: BoxDecoration(
-                                                  image: DecorationImage(
-                                                    image: AssetImage('lib/assets/background.jpg'),
-                                                    fit: BoxFit.cover,
-                                                  ),
-                                                  borderRadius: BorderRadius.circular(20),
-                                                  border: Border.all(color: grey3A3A3AColor, width: 0.1),
-                                                ),
-                                                child:
-                                                  Container(
-                                                    width: 420,
-                                                    height: 308,
-                                                    decoration: BoxDecoration(
-                                                      color: backInvisColor,
-                                                      borderRadius: BorderRadius.circular(20),
-                                                      border: Border.all(color: grey3A3A3AColor, width: 0.1),
-                                                    ),
-                                                    child: Column(
-                                                      children: [
-                                                        Padding(padding: const EdgeInsets.only(top: 30)),
-                                                        Row(
-                                                          mainAxisAlignment: MainAxisAlignment.center,
-                                                          children: [
-                                                            Padding(padding: const EdgeInsets.only(left: 47)),
-                                                            Text("ID of the game-room", style: basicTextStyle,),
-                                                            const Expanded(flex: 1, child: Text("")),
-                                                          ]
-                                                        ),
-                                                        Padding(padding: const EdgeInsets.only(top: 5)),
-                                                        Container(
-                                                          width: 327,
-                                                          height: 40,
-                                                          decoration: BoxDecoration(
-                                                            color: Colors.white,
-                                                            borderRadius: BorderRadius.circular(8),
-                                                          ),
-                                                          child: TextField(
-                                                            decoration: const InputDecoration(
-                                                              border: OutlineInputBorder(
-                                                                borderSide: BorderSide.none,
-                                                              ),
-                                                            ),
-                                                            controller: controller,
-                                                          ),
-                                                        ),
-                                                        Padding(padding: const EdgeInsets.only(top: 30)),
-                                                        Row(
-                                                          mainAxisAlignment: MainAxisAlignment.center,
-                                                          children: [
-                                                            Padding(padding: const EdgeInsets.only(left: 47)),
-                                                            Text("Password", style: basicTextStyle),
-                                                            const Expanded(flex: 1, child: Text("")),
-                                                          ]
-                                                        ),
-                                                        Padding(padding: const EdgeInsets.only(top: 5)),
-                                                        Container(
-                                                          width: 327,
-                                                          height: 40,
-                                                          decoration: BoxDecoration(
-                                                            color: Colors.white,
-                                                            borderRadius: BorderRadius.circular(8),
-                                                          ),
-                                                          child: TextField(
-                                                            decoration: const InputDecoration(
-                                                              border: OutlineInputBorder(
-                                                                borderSide: BorderSide.none,
-                                                              ),
-                                                            ),
-                                                            controller: controller2,
-                                                          ),
-                                                        ),
-                                                        Padding(padding: const EdgeInsets.only(top: 30)),
-                                                        SizedBox(
-                                                            width: 327,
-                                                            height: 40,
-                                                            child: ElevatedButton(
-                                                              style: ButtonStyle(
-                                                                backgroundColor: WidgetStateProperty.all<Color>(
-                                                                  buttonColor,
-                                                                ),
-                                                                textStyle: WidgetStateProperty.all<TextStyle>(
-                                                                  buttonTextStyle,
-                                                                ),
-                                                                foregroundColor: WidgetStateProperty.all<Color>(
-                                                                  grey3A3A3AColor,
-                                                                ),
-                                                                shape:
-                                                                    WidgetStateProperty.all<RoundedRectangleBorder>(
-                                                                      RoundedRectangleBorder(
-                                                                        borderRadius: BorderRadius.circular(10),
-                                                                      ),
-                                                                    ),
-                                                                side: WidgetStateProperty.all<BorderSide>(
-                                                                  BorderSide(color: grey3A3A3AColor, width: 1),
-                                                                ),
-                                                              ),
-                                                              onPressed: () {
-                                                                if (controller.text.isEmpty || controller2.text.isEmpty) {
-                                                                  return;
-                                                                } else {
-                                                                  Navigator.of(context).pushNamed('/');
-                                                                }
-                                                              },
-                                                              child: const Text('SIGN  IN'),
-                                                            ),
-                                                          ),
-
-                                                      ],
-                                                    ),
-                                                  ),
-                                              )
-                                          );
-                                        });
+                                        showDialog(
+                                          context: context,
+                                          builder: (context) => ConnectDialog(gameProvider: gameProvider),
+                                        );
                                       },
                                       child: Column(
                                         children: [
@@ -311,8 +273,8 @@ class _MainMenuPageState extends State<MainMenuPage> {
                                   ),
                                   const Expanded(flex: 1, child: Text(""),),
                                   SizedBox(
-                                    width: 155,
-                                    height: 155,
+                                    width: 150,
+                                    height: 150,
                                     child: ElevatedButton(
                                       style: ButtonStyle(
                                           backgroundColor: WidgetStateProperty.all<Color>(
@@ -351,8 +313,8 @@ class _MainMenuPageState extends State<MainMenuPage> {
                                   ),
                                   const Expanded(flex: 1, child: Text(""),),
                                   SizedBox(
-                                    width: 155,
-                                    height: 155,
+                                    width: 150,
+                                    height: 150,
                                     child: ElevatedButton(
                                       style: ButtonStyle(
                                           backgroundColor: WidgetStateProperty.all<Color>(
