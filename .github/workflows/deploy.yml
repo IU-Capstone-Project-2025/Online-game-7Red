@@ -90,9 +90,9 @@ jobs:
           ssh -o StrictHostKeyChecking=no \
               -o UserKnownHostsFile=/dev/null \
               ${{ secrets.VPS_USERNAME }}@${{ secrets.VPS_IP }} <<EOF
-            set -x  
-            mkdir -p ~/deploy/database 
+            set -x   
             docker-compose -f ~/deploy/docker-compose.yml down || true
+            docker network rm deploy_default || true
             docker system prune -a -f || true
           EOF
       - name: Copy docker-compose.yml
