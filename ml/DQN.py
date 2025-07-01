@@ -6,13 +6,11 @@ import random
 import numpy as np
 import matplotlib.pyplot as plt
 from collections import deque
-from enviroment import Red7Env, get_winning_moves
+from ml.enviroment import Red7Env, get_winning_moves
 
 
 class SafeDQNModel(nn.Module):
-    """Neural network model for Red7 DQN agent with card embeddings."""
     def __init__(self, card_vocab_size=51, embed_dim=64, hidden_dim=128, max_hand_size=7):
-        """Initializes embedding layers and fully connected networks."""
         super().__init__()
         self.embed = nn.Embedding(card_vocab_size, embed_dim, padding_idx=0)
 
@@ -27,8 +25,7 @@ class SafeDQNModel(nn.Module):
         self.fc2 = nn.Linear(hidden_dim, 256)
         self.fc_out = nn.Linear(256, 50 * 50)
 
-    def forward(self, obs):
-        """Processes game observation into Q-values for all possible actions."""
+    def forward(self, obs, legal_mask=None):
         hand_emb = self.embed(obs['hand'])
         my_pal_emb = self.embed(obs['my_palette'])
         opp_pal_emb = self.embed(obs['opp_palette'])
@@ -61,24 +58,23 @@ class SafeDQNModel(nn.Module):
 
 
 class DQNAgent:
-    """Deep Q-Network agent for Red7 game with experience replay."""
-    def __init__(self, model=None, device='cpu'):
-        """Initializes DQN agent with model, target network and memory buffer."""
+    def __init__(self, model=None, device='cuda' if torch.cuda.is_available() else 'cpu'):
         self.device = device
         self.model = model.to(device) if model else SafeDQNModel().to(device)
         self.target_model = SafeDQNModel().to(device)
         self.target_model.load_state_dict(self.model.state_dict())
-        self.optimizer = optim.Adam(self.model.parameters(), lr=1e-2)
-        self.memory = deque(maxlen=100000)
-        self.batch_size = 128
-        self.gamma = 0.9999
-        self.epsilon = 1.0
+        self.optimizer = optim.AdamW(self.model.parameters(), lr=3e-4, weight_decay=1e-5)
+        self.memory = deque(maxlen=200000)
+        self.batch_size = 256
+        self.gamma = 0.9
+        self.epsilon = 1
         self.epsilon_min = 0.05
-        self.epsilon_decay = 0.9999
+        self.epsilon_decay = 0.999
         self.steps_done = 0
+        self.target_update = 75
+        self.warmup_steps = 1500
 
     def select_action(self, obs, legal_mask):
-        """Selects action using epsilon-greedy policy based on legal moves."""
         self.steps_done += 1
         if random.random() < self.epsilon:
             legal_positions = np.argwhere(legal_mask > 0)
@@ -89,14 +85,14 @@ class DQNAgent:
             obs_device = {k: v.to(self.device) for k, v in obs.items()}
             q_values = self.model(obs_device)[0].cpu().numpy()
         q_values[legal_mask == 0] = -np.inf
+        if np.sum(legal_mask) == 0:
+            return (0, 0)
         return np.unravel_index(np.argmax(q_values), q_values.shape)
 
     def store_transition(self, obs, action, reward, next_obs, done, legal_mask):
-        """Stores experience in replay memory buffer."""
         self.memory.append((obs, action, reward, next_obs, done, legal_mask))
 
     def update(self):
-        """Performs DQN update using random batch from memory."""
         if len(self.memory) < self.batch_size:
             return
 
@@ -119,39 +115,71 @@ class DQNAgent:
         q_value = q_values[range(self.batch_size), actions_t[:, 0], actions_t[:, 1]]
 
         with torch.no_grad():
-            next_q_values = self.target_model(next_obs_t)
-            next_q_values[legal_mask_t == 0] = -float('inf')
-            next_q_value = next_q_values.view(self.batch_size, -1).max(dim=1)[0]
+            # Double DQN модификация:
+            # 1. Выбираем действие через online-сеть с учетом легал маски
+            next_q_values_online = self.model(next_obs_t)
+            next_q_values_online[legal_mask_t == 0] = -float('inf')  # Маскируем нелегальные действия
+            
+            # Находим лучшее легальное действие
+            best_actions = next_q_values_online.view(self.batch_size, -1).argmax(dim=1)
+            
+            # 2. Оцениваем выбранное действие через target-сеть
+            next_q_values_target = self.target_model(next_obs_t)
+            next_q_value = next_q_values_target.view(self.batch_size, -1).gather(1, best_actions.unsqueeze(1)).squeeze(1)
 
         expected_q_value = rewards_t + self.gamma * next_q_value * (1 - done_t)
         loss = F.mse_loss(q_value, expected_q_value)
 
         self.optimizer.zero_grad()
         loss.backward()
+        
+        # Gradient clipping для стабильности обучения
+        torch.nn.utils.clip_grad_norm_(self.model.parameters(), 10.0)
+        
         self.optimizer.step()
 
         if self.epsilon > self.epsilon_min:
             self.epsilon *= self.epsilon_decay
 
     def update_target(self):
-        """Updates target network with current model weights."""
         self.target_model.load_state_dict(self.model.state_dict())
 
     def save(self, path):
-        """Saves model weights to file."""
-        torch.save(self.model.state_dict(), path)
+    # Сохраняем полное состояние агента
+        torch.save({
+            'model_state_dict': self.model.state_dict(),
+            'target_state_dict': self.target_model.state_dict(),
+            'optimizer_state_dict': self.optimizer.state_dict(),
+            'epsilon': 0,
+            'steps_done': self.steps_done
+        }, path)
 
     def load(self, path):
-        """Loads model weights from file."""
-        checkpoint = torch.load(path, map_location=self.device)
-        self.model.load_state_dict(checkpoint['model_state'])
-        self.target_model.load_state_dict(checkpoint['target_state'])
-        self.optimizer.load_state_dict(checkpoint['optimizer_state'])
-        self.epsilon = checkpoint.get('epsilon', 1.0)
+        try:
+            checkpoint = torch.load(path, map_location=self.device)
+            # Проверяем наличие всех необходимых ключей
+            required_keys = ['model_state_dict', 'target_state_dict', 'optimizer_state_dict']
+            if not all(key in checkpoint for key in required_keys):
+                raise ValueError("Checkpoint file is missing required keys")
+                
+            self.model.load_state_dict(checkpoint['model_state_dict'])
+            self.target_model.load_state_dict(checkpoint['target_state_dict'])
+            self.optimizer.load_state_dict(checkpoint['optimizer_state_dict'])
+            self.epsilon = checkpoint.get('epsilon', 1.0)
+            self.steps_done = checkpoint.get('steps_done', 0)
+        
+            # Обновляем target модель
+            self.update_target()
+        except Exception as e:
+            print(f"Error loading model: {e}")
+            # Инициализируем модель с нуля при ошибке загрузки
+            self.model = SafeDQNModel().to(self.device)
+            self.target_model = SafeDQNModel().to(self.device)
+            self.optimizer = optim.Adam(self.model.parameters(), lr=1e-2)
+
 
 
 def train(env, agent_0, agent_1=None, num_episodes=5000, mode='random'):
-    """Trains DQN agent against different opponents (random/self-play)."""
     win_history = []
 
     for episode in range(num_episodes):
@@ -166,6 +194,7 @@ def train(env, agent_0, agent_1=None, num_episodes=5000, mode='random'):
             legal_mask = env.legal_actions_mask()
 
             if mode == 'random' and current_player == 1:
+                # Random opponent logic
                 rule_card = env.rule
                 hand = env.player2_hand
                 my_palette = env.player2_palette
@@ -184,6 +213,7 @@ def train(env, agent_0, agent_1=None, num_episodes=5000, mode='random'):
                     break
 
             else:
+                # Self-play or vs fixed opponent
                 if mode == 'self':
                     agent = agent_0
                 elif mode == 'self_frozen':
@@ -197,7 +227,8 @@ def train(env, agent_0, agent_1=None, num_episodes=5000, mode='random'):
                 action = agent.select_action(obs, legal_mask)
                 next_obs, _, done, _ = env.step(action)
 
-                step_reward = 0.1
+                # Reward за каждый шаг (живой)
+                step_reward = 0  # выжил = +0.1
                 if done:
                     step_reward = -10.0 if env.get_winner() != current_player else 10.0
 
@@ -208,6 +239,7 @@ def train(env, agent_0, agent_1=None, num_episodes=5000, mode='random'):
 
                 obs = next_obs
 
+        # Финальная запись опыта
         for obs_mem, action_mem, reward_mem, next_obs_mem, done_mem, legal_mask_mem in episode_memory_0:
             agent_0.store_transition(obs_mem, action_mem, reward_mem, next_obs_mem, done_mem, legal_mask_mem)
         agent_0.update()
@@ -222,7 +254,7 @@ def train(env, agent_0, agent_1=None, num_episodes=5000, mode='random'):
         win = int(env.get_winner() == 0)
         win_history.append(win)
 
-        if episode % 100 == 0:
+        if (episode+1) % 100 == 0:
             win_rate = np.mean(win_history[-100:]) * 100
             print(f"[Episode {episode}] Mode: {mode}, Win Rate (last 100): {win_rate:.2f}%, Epsilon: {agent_0.epsilon:.3f}")
 
@@ -230,7 +262,6 @@ def train(env, agent_0, agent_1=None, num_episodes=5000, mode='random'):
 
 
 def train_print(env, agent_0, agent_1=None, num_episodes=5000, mode='random'):
-    """Training function with verbose game state printing."""
     win_history = []
 
     for episode in range(num_episodes):
@@ -252,6 +283,7 @@ def train_print(env, agent_0, agent_1=None, num_episodes=5000, mode='random'):
             legal_mask = env.legal_actions_mask()
 
             if mode == 'random' and current_player == 1:
+                # Случайный противник
                 rule_card = env.rule
                 hand = env.player2_hand
                 my_palette = env.player2_palette
@@ -261,7 +293,7 @@ def train_print(env, agent_0, agent_1=None, num_episodes=5000, mode='random'):
                 if winning_moves:
                     move = random.choice(winning_moves)
                     env.apply_move(current_player, move)
-                    env.render()
+                    env.render()  # рендер случайного хода
                 else:
                     env.done = True
                     print("Random lose")
@@ -272,6 +304,7 @@ def train_print(env, agent_0, agent_1=None, num_episodes=5000, mode='random'):
                     break
 
             else:
+                # Выбираем агента в зависимости от игрока
                 agent = agent_0 if current_player == 0 else agent_1
 
                 if agent is None:
@@ -279,8 +312,9 @@ def train_print(env, agent_0, agent_1=None, num_episodes=5000, mode='random'):
 
                 action = agent.select_action(obs, legal_mask)
                 next_obs, _, done, _ = env.step(action)
-                env.render()
+                env.render()  # рендер действия агента
 
+                # Записываем переходы в память соответствующего агента
                 if current_player == 0:
                     episode_memory_0.append((obs, action, next_obs, done, legal_mask))
                 else:
@@ -288,6 +322,7 @@ def train_print(env, agent_0, agent_1=None, num_episodes=5000, mode='random'):
 
                 obs = next_obs
 
+        # По окончании эпизода даём награды и обновляем агентов
         winner = env.get_winner()
 
         final_reward_0 = 10.0 if winner == 0 else -10.0
@@ -307,15 +342,76 @@ def train_print(env, agent_0, agent_1=None, num_episodes=5000, mode='random'):
         win = int(winner == 0)
         win_history.append(win)
 
-        if episode % 10 == 0:
-            win_rate = np.mean(win_history[-100:]) * 100
+        if (episode+1) % 10 == 0:
+            win_rate = np.mean(win_history[-10:]) * 10
             print(f"[Episode {episode}] Mode: {mode}, Win Rate (last 100): {win_rate:.2f}%, Epsilon Agent0: {agent_0.epsilon:.3f}")
+
+    return win_history
+
+def train_mcts(env, agent_0, agent_1=None, num_episodes=5000, mode='mcts'):
+    win_history = []
+
+    for episode in range(num_episodes):
+        obs = env.reset()
+        done = False
+
+        episode_memory_0 = []
+        episode_memory_1 = []
+
+        while not done:
+            current_player = env.current_player()
+            legal_mask = env.legal_actions_mask()
+
+            # Выбор агента
+            if current_player == 0:
+                agent = agent_0
+                action = agent.select_action(obs, legal_mask)
+            else:
+                if mode == 'mcts' and agent_1 is not None:
+                    action = agent_1.get_action(env)
+                elif agent_1 is not None:
+                    action = agent_1.select_action(obs, legal_mask)
+                else:
+                    raise ValueError("agent_1 must be provided for non-self mode")
+
+            next_obs, _, done, _ = env.step(action)
+
+            # Награда
+            step_reward = 0  # выжил
+            if done:
+                step_reward = 10.0 if env.get_winner() == current_player else -10.0
+
+            # Запись перехода
+            if current_player == 0:
+                episode_memory_0.append((obs, action, step_reward, next_obs, done, legal_mask))
+            else:
+                episode_memory_1.append((obs, action, step_reward, next_obs, done, legal_mask))
+
+            obs = next_obs
+
+        # Финальные записи
+        for obs_mem, action_mem, reward_mem, next_obs_mem, done_mem, legal_mask_mem in episode_memory_0:
+            agent_0.store_transition(obs_mem, action_mem, reward_mem, next_obs_mem, done_mem, legal_mask_mem)
+        agent_0.update()
+        agent_0.update_target()
+
+        if mode in ['self', 'self_frozen'] and agent_1 is not None:
+            for obs_mem, action_mem, reward_mem, next_obs_mem, done_mem, legal_mask_mem in episode_memory_1:
+                agent_1.store_transition(obs_mem, action_mem, reward_mem, next_obs_mem, done_mem, legal_mask_mem)
+            agent_1.update()
+            agent_1.update_target()
+
+        win = int(env.get_winner() == 0)
+        win_history.append(win)
+
+        if (episode + 1) % 100 == 0:
+            win_rate = np.mean(win_history[-100:]) * 100
+            print(f"[Episode {episode}] Mode: {mode}, Win Rate (last 100): {win_rate:.2f}%, Epsilon: {agent_0.epsilon:.3f}")
 
     return win_history
 
 
 def plot_winrate(win_history, title="Win Rate"):
-    """Plots win rate over training episodes."""
     win_rate_curve = np.convolve(win_history, np.ones(50)/50, mode='valid') * 100
     plt.figure(figsize=(10, 5))
     plt.plot(win_rate_curve, label=f"{title} (avg over 50 games)")
@@ -327,24 +423,22 @@ def plot_winrate(win_history, title="Win Rate"):
     plt.tight_layout()
     plt.show()
 
-
 def play_single_game():
-    """Plays one interactive game between human and trained AI."""
-    device = torch.device('cpu')
+    device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
     print(f"\n=== Using device: {device} ===")
     
     env = Red7Env(verbose=True)
     agent = DQNAgent(device=device)
     
     try:
-        agent.load("final_agent_try_1.pth")
+        agent.load("medium.pth")
         print("Model loaded successfully!")
     except Exception as e:
         print(f"\nError loading model: {e}")
         return
     
     def parse_card_input(card_str):
-        """Converts card string (e.g. 'R3') to card number (1-49)."""
+        """Конвертирует строку вида 'R3' в номер карты (1-49)"""
         if card_str == '0':
             return 0
         try:
@@ -401,7 +495,6 @@ def play_single_game():
     
     print("\n=== Game Over ===")
     print("You won!" if env.get_winner() == 0 else "AI won!")
-
 
 if __name__ == "__main__":
     print("=== Red7 Game vs AI ===")
