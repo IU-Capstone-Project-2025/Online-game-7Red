@@ -31,7 +31,7 @@ class _WaitingRoomPageState extends State<WaitingRoomPage> {
   Timer? _pollingTimer;
 
   bool ready = false;
-  bool allReady = false;
+  // bool allReady = false;
 
   @override
   void initState() {
@@ -71,11 +71,14 @@ class _WaitingRoomPageState extends State<WaitingRoomPage> {
 
     if (response.statusCode == 200) {
       final responseBody = json.decode(response.body);
-      setState(() {
+      setState(() async {
         players = List<String>.from(responseBody['players']);
         ready_players = List<String>.from(responseBody['ready_players']);
         if (ready_players.length == players.length && ready_players.length >= 2) {
           // startGame(room_id);
+          // allReady = true;
+          SharedPreferences prefs = await SharedPreferences.getInstance();
+          await prefs.remove('ready');
           Navigator.pushNamed(context, '/gameroom');
           _pollingTimer?.cancel();
         }
@@ -136,27 +139,6 @@ class _WaitingRoomPageState extends State<WaitingRoomPage> {
     }
   }
 
-  Future<void> startGame(String room_id) async {
-    final url = Uri.parse('http://192.145.30.253:8000/game/start');
-    final response = await http.post(
-      url,
-      headers: {'Content-Type': 'application/json', 'accept': 'application/json'},
-      body: jsonEncode({
-        'room_id': room_id,
-      }),
-    );
-
-    if (response.statusCode == 200) {
-      setState(() {
-        allReady = true;
-      });
-    } else {
-      setState(() {
-        allReady = false;
-      });
-    }
-  }
-
   Future<void> leaveRoom(int id, String room_id) async {
     final url = Uri.parse('http://192.145.30.253:8000/rooms/leave');
     final response = await http.post(
@@ -186,10 +168,11 @@ class _WaitingRoomPageState extends State<WaitingRoomPage> {
     final gameProvider = Provider.of<GameProvider>(context);
     gameProvider.loadRoomInfo();
 
-    if (allReady) {
-      Navigator.pushNamed(context, '/');
-      gameProvider.clearReady();
-    }
+    // if (allReady) {
+    //   gameProvider.clearReady();
+    //   Navigator.pushNamed(context, '/gameroom');
+    //   _pollingTimer?.cancel();
+    // }
 
     return Scaffold(
       body: Container(
@@ -244,10 +227,10 @@ class _WaitingRoomPageState extends State<WaitingRoomPage> {
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
                       Text("Room", style: boldTextStyle),
-                      Text(room_id, style: bigNumberStyle),
+                      SelectableText(room_id, style: bigNumberStyle),
                       Padding(padding: const EdgeInsets.only(top: 10)),
                       Text("Password", style: boldTextStyle),
-                      Text(gameProvider.roomPassword, style: bigNumberStyle),
+                      SelectableText(gameProvider.roomPassword, style: bigNumberStyle),
                     ],
                   )
                 ],
