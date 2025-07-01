@@ -4,6 +4,8 @@ import 'package:flame/game.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:circular_countdown_timer/circular_countdown_timer.dart';
+import 'package:http/http.dart' as http;
+import 'dart:convert';
 
 import '../data/styles.dart';
 import '../providers/provider.dart';
@@ -51,8 +53,6 @@ class _GameRoomPageState extends State<GameRoomPage> {
   Timer? _allTimeTimer;
   int _allTime = 0;
 
-//  bool myTurn = true;
-//   bool myAllTurn = true;
   bool myTurn = false;
   bool myAllTurn = false;
   bool ruleChanged = true;
@@ -500,8 +500,11 @@ class _GameRoomPageState extends State<GameRoomPage> {
                                 BorderSide(color: grey3A3A3AColor, width: 1),
                               ),
                             ),
-                            onPressed: () {
-                              //
+                            onPressed: () async {
+                              await leaveRoom(userID!, roomID!);
+                              SharedPreferences prefs = await SharedPreferences.getInstance();
+                              await prefs.remove('roomId');
+                              await prefs.remove('roomPassword');
                               _webSocket.disconnect();
                               Navigator.of(context).pop();
                               Navigator.pushNamed(context, '/mainmenu');
@@ -589,9 +592,18 @@ class _GameRoomPageState extends State<GameRoomPage> {
                             BorderSide(color: grey3A3A3AColor, width: 1),
                           ),
                         ),
-                        onPressed: () {
+                        onPressed: () async {
                           _turnTimer!.cancel();
+                          if (myAllTurn) {
+                            _submitTurnTimeout();
+                          } else {
+                            _exit();
+                          }
                           _webSocket.disconnect();
+                          await leaveRoom(userID!, roomID!);
+                          SharedPreferences prefs = await SharedPreferences.getInstance();
+                          await prefs.remove('roomId');
+                          await prefs.remove('roomPassword');
                           Navigator.of(context).pop();
                           Navigator.pushNamed(context, '/mainmenu');
                         },
@@ -615,6 +627,37 @@ class _GameRoomPageState extends State<GameRoomPage> {
       }
     );
   }
+
+  Future<void> leaveRoom(int id, String room_id) async {
+    final url = Uri.parse('http://localhost:8000/rooms/leave');
+    final response = await http.post(
+      url,
+      headers: {'Content-Type': 'application/json', 'accept': 'application/json'},
+      body: jsonEncode({
+        'user_id': id,
+        'assigned_id': room_id,
+      })
+    );
+    // if (response.statusCode == 200) {
+    //   setState(() {
+    //     logSuccess = true;
+    //   });
+    // } else {
+    //   setState(() {
+    //     logSuccess = false;
+    //   });
+    // }
+  }
+
+   void _exit() {
+    final message = {
+      'type': 'exit',
+      'my_id': userID,
+    };
+    _webSocket.sendMessage(message);
+  }
+
+
   
   @override
   Widget build(BuildContext context) {
