@@ -2,7 +2,7 @@
 import asyncio
 from database import database, create_game_room, delete_game_room, search_game_room, create_user, delete_user, search_user_by_id, search_user_by_login
 
-async def test_create_and_delete():
+async def create_and_delete():
     await database.connect()
 
     # create a game room
@@ -43,4 +43,4 @@ async def test_create_and_delete():
     await database.disconnect()
 
 if __name__ == "__main__":
-    asyncio.run(test_create_and_delete())
+    asyncio.run(create_and_delete())

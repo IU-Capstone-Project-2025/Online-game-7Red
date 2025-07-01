@@ -2,7 +2,7 @@ import os
 from sqlalchemy import MetaData, Table, Column, Integer, String, create_engine, TIMESTAMP, ForeignKey, Boolean, select
 from databases import Database
 from dotenv import load_dotenv
-from datetime import datetime
+from datetime import datetime, UTC
 
 # load environment variables
 load_dotenv(os.path.join(os.path.dirname(__file__), '../database/.env'))
@@ -84,12 +84,25 @@ async def password_exist(password: str) -> bool:
     result = await database.fetch_one(query)
     return result is not None
 
+async def update_room_state(assigned_id: str, state: str):
+    query = (
+        games.update()
+        .where(games.c.assigned_id == assigned_id)
+        .values(game_state=state)
+    )
+    await database.execute(query)
+
 
 #-------------------------USERS----------------------------------------------------------------------------------------------------------------------------------------------
 
 # for creating user
 async def create_user(login: str, password: str, created_at: datetime | None = None, last_visited: datetime | None = None ):
-    query = people.insert().values(login = login, password=password, created_at=created_at or datetime.utcnow(), last_visited = last_visited or datetime.utcnow())
+    query = people.insert().values(
+        login=login,
+        password=password,
+        created_at=created_at or datetime.now(UTC),
+        last_visited=last_visited or datetime.now(UTC)
+    )
     return await database.execute(query)
 
 # for deleting user
@@ -110,10 +123,18 @@ async def create_profile(user_id: int, name: str, avatar: str = None):
     query = profiles.insert().values(user_id=user_id, name=name, avatar=avatar)
     return await database.execute(query)
 
-
 async def get_profile_by_user_id(user_id: int):
     query = profiles.select().where(profiles.c.user_id == user_id)
     return await database.fetch_one(query)
+
+async def get_profile_name_by_user_id(user_id: int):
+    query = profiles.select().where(profiles.c.user_id == user_id)
+    res = await database.fetch_one(query)
+
+    if not res:
+        raise Exception("Profile not found")
+    
+    return res["name"]
 
 # adding user to the room
 async def add_user_to_room(user_id: int, assigned_id: str):
