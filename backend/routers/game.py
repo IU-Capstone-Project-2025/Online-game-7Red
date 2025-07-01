@@ -105,7 +105,12 @@ async def game_websocket(
                 # print(f'Cur player befor {game.current_player}')
                 game.next_player()
                 # print(f'Cur player after {game.current_player}')
-                if game.current_player in manager.exited_id:
+                print(f'ids that exited: {manager.exited_id}', flush=True)
+                if game.current_player in manager.exited_id and type_cur == "my_turn":
+                    next_lose = True
+                    manager.exited_id.remove(game.current_player)
+
+                elif game.current_player in manager.exited_id and type_cur == "time_out":
                     next_lose = True
                     manager.exited_id.remove(game.current_player)
 
