@@ -10,8 +10,14 @@ env:
   FRONTEND_TAG: frontend-${{ github.sha }}
 
 jobs:
-  test:
+  backend_test:
     runs-on: ubuntu-latest
+    env:
+      DATABASE_URL: ${{ secrets.DATABASE_URL }}
+      PROJECT_ID: ${{ secrets.PROJECT_ID }}
+      DB_USER: ${{ secrets.DB_USER }}
+      DB_PASS: ${{ secrets.DB_PASS }}
+      BRANCH_ID=: ${{ secrets.BRANCH_ID }}
     steps:
       - uses: actions/checkout@v3
       
@@ -23,15 +29,43 @@ jobs:
       - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
-          pip install pytest
+          pip install -r requirements.txt
           
-      - name: Run tests
+      - name: Run Unit and Api tests
         run: |
+          export PYTHONPATH=$PYTHONPATH:$GITHUB_WORKSPACE
           cd tests
-          pytest -v tests.py
+          pytest -v test_unit.py
+          pytest -v test_api_integration.py
+
+  frontend_test:
+    needs: backend_test
+    runs-on: ubuntu-latest
+    env:
+      DATABASE_URL: ${{ secrets.DATABASE_URL }}
+      PROJECT_ID: ${{ secrets.PROJECT_ID }}
+      DB_USER: ${{ secrets.DB_USER }}
+      DB_PASS: ${{ secrets.DB_PASS }}
+      BRANCH_ID=: ${{ secrets.BRANCH_ID }}
+    steps:
+      - uses: actions/checkout@v3
+      
+      - name: Set up Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          flutter-version: '3.32.1'  
+          channel: 'stable'
+          
+      - name: Install dependencies
+        working-directory: ./frontend
+        run: flutter pub get
+
+      - name: Run Flutter widget tests
+        working-directory: ./frontend
+        run: flutter test test/widget_test.dart
 
   build-and-push:
-    needs: test
+    needs: frontend_test
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
@@ -90,9 +124,9 @@ jobs:
           ssh -o StrictHostKeyChecking=no \
               -o UserKnownHostsFile=/dev/null \
               ${{ secrets.VPS_USERNAME }}@${{ secrets.VPS_IP }} <<EOF
-            set -x  
-            mkdir -p ~/deploy/database 
+            set -x   
             docker-compose -f ~/deploy/docker-compose.yml down || true
+            docker network rm deploy_default || true
             docker system prune -a -f || true
           EOF
       - name: Copy docker-compose.yml

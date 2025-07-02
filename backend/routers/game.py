@@ -1,10 +1,8 @@
 from fastapi import APIRouter, Query, WebSocket, WebSocketDisconnect
 from typing import Dict, List
 from backend.red7state import Red7GameState
-from backend.database import update_room_state
 
 router = APIRouter(prefix="/game", tags=["game"])
-
 
 class GameManager:
     def __init__(self):
@@ -34,13 +32,15 @@ async def game_websocket(
     assigned_id: str,
     player_id: int = Query(...)):
     await websocket.accept()
-    connection_active = True
     print(f"Connected: assigned_id={assigned_id}, player_id={player_id}", flush=True)
     manager.connections[player_id] = websocket
+
+    #room_id = await return_room_id_using_assigned_id(str(assigned_id))
     # exit_was = False
     # type_cur = None
     room_id = assigned_id
     print(f"Room ID: {room_id}", flush=True)  # Debug room ID lookup
+    try:
         # Initialize or join game
     while connection_active:
         try:

@@ -25,6 +25,7 @@ class _ConnectDialogState extends State<ConnectDialog> {
   bool obscure = true;
 
   Future<void> connectToRoom(int id, String room_id, String password) async {
+
     final url = Uri.parse('$joinRoomUrl');
     final response = await http.post(
       url,
