@@ -6,7 +6,7 @@ import random
 import numpy as np
 import matplotlib.pyplot as plt
 from collections import deque
-from enviroment import Red7Env, get_winning_moves
+from ml.enviroment import Red7Env, get_winning_moves
 
 
 class SafeDQNModel(nn.Module):

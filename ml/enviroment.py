@@ -634,4 +634,3 @@ def print_legal_moves(mask, hand):
                 row.append(f"{'':>3}")
         print(" ".join(row))
     print("\nYour hand:", [c for c in hand if c != 0])
-
