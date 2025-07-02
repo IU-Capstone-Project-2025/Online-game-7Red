@@ -150,12 +150,14 @@ class Red7GameState:
     def next_player(self):
         """Move to the next active player"""
         players = [pid for pid, p in self.players.items() if p["active"]]
+        print(f"Active players {players}", flush=True)
         if not players:
             return False
             
         current_index = players.index(self.current_player)
         next_index = (current_index + 1) % len(players)
         self.current_player = players[next_index]
+        print("All is well isnside next_player()", flush=True)
         return True
 
     def check_winning_at_beginning(self, player_id: int) -> List[Dict]:
