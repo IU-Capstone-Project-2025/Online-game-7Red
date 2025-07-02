@@ -601,11 +601,11 @@ class _GameRoomPageState extends State<GameRoomPage> {
                           } else {
                             _exit();
                           }
-                          _webSocket.disconnect();
                           await leaveRoom(userID!, roomID!);
                           SharedPreferences prefs = await SharedPreferences.getInstance();
                           await prefs.remove('roomId');
                           await prefs.remove('roomPassword');
+                          _webSocket.disconnect();
                           Navigator.of(context).pop();
                           Navigator.pushNamed(context, '/mainmenu');
                         },

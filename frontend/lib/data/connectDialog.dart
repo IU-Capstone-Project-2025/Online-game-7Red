@@ -45,6 +45,11 @@ class _ConnectDialogState extends State<ConnectDialog> {
         logSuccess = false;
         postText = 'Game already started';
       });
+    } else if (responseBody['detail'] == 'User already in the room') {
+      setState(() {
+        logSuccess = false;
+        postText = 'User already in the room';
+      });
     } else {
       setState(() {
         logSuccess = false;
