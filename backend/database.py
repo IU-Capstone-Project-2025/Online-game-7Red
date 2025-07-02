@@ -368,6 +368,6 @@ async def check_and_award_bot_wins(user_id: int):
     query = statistics.select().where(statistics.c.user_id == user_id)
     stats = await database.fetch_one(query)
     if stats and stats.get("bot_wins", 0) >= 3:
-        achievement_id = await get_achievement_id_by_name("3_wins_of_bot")
+        achievement_id = await get_achievement_id_by_name("3_wins_over_the_bot")
         if achievement_id:
             await award_achievement_if_needed(user_id, achievement_id)
