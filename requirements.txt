@@ -1,0 +1,6 @@
+fastapi
+httpx
+sqlalchemy
+databases
+pytest
+psycopg2-binary
