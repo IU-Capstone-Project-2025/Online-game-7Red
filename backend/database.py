@@ -1,8 +1,9 @@
 import os
-from sqlalchemy import MetaData, Table, Column, Integer, String, create_engine, TIMESTAMP, ForeignKey, Boolean, select
+from sqlalchemy import (MetaData, Table, Text, Column, Date, Integer, String, 
+                        create_engine, TIMESTAMP, ForeignKey, Boolean, select)
 from databases import Database
 from dotenv import load_dotenv
-from datetime import datetime, UTC
+from datetime import datetime, UTC, date, timedelta
 
 # load environment variables
 load_dotenv(os.path.join(os.path.dirname(__file__), '../database/.env'))
@@ -29,7 +30,7 @@ user_room = Table(
     Column("ready", Boolean, default=False),
 )
 
-people = Table(
+users = Table(
     "users",
     metadata,
     Column("id", Integer, primary_key=True),
@@ -45,6 +46,28 @@ profiles = Table(
     Column("user_id", Integer, ForeignKey("users.id", ondelete="CASCADE"), primary_key=True),
     Column("name", String(100), nullable=False),
     Column("avatar", String(255)),
+)
+
+user_achievements = Table(
+    "user_achievements",
+    metadata,
+    Column("user_id", Integer, ForeignKey("users.id", ondelete="CASCADE"), primary_key=True),
+    Column("achievement_id", Integer, ForeignKey("achievements.id", ondelete="CASCADE"), primary_key=True),
+)
+
+visit_history = Table(
+    "visit_history",
+    metadata,
+    Column("user_id", Integer, ForeignKey("users.id", ondelete="CASCADE"), primary_key=True),
+    Column("visit_date", Date, primary_key=True),
+)
+
+achievements = Table(
+    "achievements",
+    metadata,
+    Column("id", Integer, primary_key=True, autoincrement=True),
+    Column("name", String(100), nullable=False),
+    Column("description", Text),
 )
 
 database = Database(DATABASE_URL)
@@ -97,7 +120,7 @@ async def update_room_state(assigned_id: str, state: str):
 
 # for creating user
 async def create_user(login: str, password: str, created_at: datetime | None = None, last_visited: datetime | None = None ):
-    query = people.insert().values(
+    query = users.insert().values(
         login=login,
         password=password,
         created_at=created_at or datetime.now(UTC),
@@ -107,16 +130,16 @@ async def create_user(login: str, password: str, created_at: datetime | None = N
 
 # for deleting user
 async def delete_user(user_id: int):
-    query = people.delete().where(people.c.id == user_id)
+    query = users.delete().where(users.c.id == user_id)
     return await database.execute(query)
 
 # for searching user
 async def search_user_by_id(user_id: int):
-    query = people.select().where(people.c.id == user_id)
+    query = users.select().where(users.c.id == user_id)
     return await database.fetch_one(query)
 
 async def search_user_by_login(login: str):
-    query = people.select().where(people.c.login == login)
+    query = users.select().where(users.c.login == login)
     return await database.fetch_one(query)
 
 async def create_profile(user_id: int, name: str, avatar: str = None):
@@ -209,3 +232,50 @@ async def get_room_players_ids_and_names(assigned_id: str):
     players = [row["name"] for row in rows]
     ids = [row["user_id"] for row in rows]
     return players, ids
+
+async def update_last_visited(user_id: int):
+    query = users.update().where(users.c.user_id == user_id).values(last_visited=datetime.now(UTC))
+    await database.execute(query)
+
+
+#--------------------------achievements--------------------------------------------------------------    
+async def add_visit(user_id: int):
+    today = date.today()
+    query = visit_history.insert().values(user_id=user_id, visit_date=today)
+    try:
+        await database.execute(query)
+    except Exception:
+        pass
+    
+    
+async def get_streak(user_id: int):
+    query = visit_history.select().where(visit_history.c.user_id == user_id)
+    visits = await database.fetch_all(query)
+    dates = sorted([v["visit_date"] for v in visits], reverse=True)
+    streak = 0
+    prev = None
+    for d in dates:
+        if prev is None or prev == d + timedelta(days=1):
+            streak += 1
+        else:
+            break
+    return streak
+
+async def award_achievement_if_needed(user_id: int, achievement_id: int):
+    query = user_achievements.select().where(
+        (user_achievements.c.user_id == user_id) &
+        (user_achievements.c.achievement_id == achievement_id)
+    )
+    exist = await database.fetch_one(query)
+    if not exist:
+        insert = user_achievements.insert().values(
+            user_id=user_id, achievement_id=achievement_id
+        )
+        await database.execute(insert)
+        
+async def get_achievement_id_by_name(name: str):
+    query = achievements.select().where(achievements.c.name == name)
+    achievement = await database.fetch_one(query)
+    if achievement:
+        return achievement["id"]
+    return None
