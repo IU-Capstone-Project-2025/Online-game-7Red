@@ -43,7 +43,12 @@ async def join_room(request: JoinRoomRequest):
         raise HTTPException(status_code=403, detail="Incorrect password")
     if room["game_state"] != "waiting":
         raise HTTPException(status_code=403, detail="Game already started")
-    await add_user_to_room(request.user_id, request.assigned_id)
+    try:
+        await add_user_to_room(request.user_id, request.assigned_id)
+    except Exception as e:
+        if "User already in the room" in str(e):
+            raise HTTPException(status_code=409, detail="User already in the room")
+        raise
     return {"message": "User added to the room"}
 
 

@@ -78,7 +78,9 @@ statistics = Table(
     Column("wins", Integer, default=0),
     Column("cur_straight_wins", Integer, default=0),
     Column("max_straight_wins", Integer, default=0),
+    Column("bot_wins", Integer, default=0), 
 )
+
 database = Database(DATABASE_URL)
 engine = create_engine(DATABASE_URL)
 
@@ -176,6 +178,13 @@ async def add_user_to_room(user_id: int, assigned_id: str):
     if not room:
         raise Exception("Room not found")
     room_id = room["room_id"]
+    check_query = user_room.select().where(
+        (user_room.c.user_id == user_id) & (user_room.c.room_id == room_id)
+    )
+    exists = await database.fetch_one(check_query)
+    if exists:
+        raise Exception("User already in the room")
+    
     insert_query = user_room.insert().values(user_id=user_id, room_id=room_id)
     await database.execute(insert_query)
     
@@ -333,5 +342,32 @@ async def check_and_award_win_streak(user_id: int):
     streak = await get_win_streak(user_id)
     if streak >= 5:
         achievement_id = await get_achievement_id_by_name("5_wins_streak")
+        if achievement_id:
+            await award_achievement_if_needed(user_id, achievement_id)
+            
+async def increment_bot_wins(user_id: int):
+    query = statistics.select().where(statistics.c.user_id == user_id)
+    stats = await database.fetch_one(query)
+    if not stats:
+        await database.execute(statistics.insert().values(
+            user_id=user_id,
+            total_played=0,
+            wins=0,
+            cur_straight_wins=0,
+            max_straight_wins=0,
+            bot_wins=1
+        ))
+        return 1
+    
+    bot_wins = stats.get("bot_wins", 0) + 1
+    upd = statistics.update().where(statistics.c.user_id == user_id).values(bot_wins=bot_wins)
+    await database.execute(upd)
+    return bot_wins
+
+async def check_and_award_bot_wins(user_id: int):
+    query = statistics.select().where(statistics.c.user_id == user_id)
+    stats = await database.fetch_one(query)
+    if stats and stats.get("bot_wins", 0) >= 3:
+        achievement_id = await get_achievement_id_by_name("3_wins_of_bot")
         if achievement_id:
             await award_achievement_if_needed(user_id, achievement_id)
