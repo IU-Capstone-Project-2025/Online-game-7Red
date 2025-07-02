@@ -40,7 +40,7 @@ class _ConnectDialogState extends State<ConnectDialog> {
       setState(() {
         logSuccess = true;
       });
-    } else if (responseBody['message'] == 'Game already started') {
+    } else if (responseBody['detail'] == 'Game already started') {
       setState(() {
         logSuccess = false;
         postText = 'Game already started';
