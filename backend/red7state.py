@@ -3,6 +3,7 @@ from typing import List, Dict
 from backend.database import get_room_players_ids_and_names
 import random
 from collections import defaultdict
+import random
 
 
 # Card colors and values
@@ -48,7 +49,11 @@ class Red7GameState:
 
     async def get_room_players_info_from_db(self):
         self.players_name_list, self.players_id_list = await get_room_players_ids_and_names(str(self.assigned_id))
-        #self.players_name_list, self.players_id_list = ["q", "d"], [1, 2]
+        combined = list(zip(self.players_name_list, self.players_id_list))
+        random.shuffle(combined)
+        self.players_name_list, self.players_id_list = zip(*combined)
+        self.players_name_list = list(self.players_name_list)
+        self.players_id_list = list(self.players_id_list)
     
     def card_to_tuple(self, card: str) -> tuple[int, int]:
         """Convert card string (e.g., 'R7') to (color_index, value) tuple.
@@ -126,12 +131,14 @@ class Red7GameState:
     def next_player(self):
         """Move to the next active player"""
         players = [pid for pid, p in self.players.items() if p["active"]]
+        print(f"Active players {players}", flush=True)
         if not players:
             return False
             
         current_index = players.index(self.current_player)
         next_index = (current_index + 1) % len(players)
         self.current_player = players[next_index]
+        print("All is well isnside next_player()", flush=True)
         return True
 
     def check_winning_at_beginning(self, player_id: int) -> List[Dict]:
@@ -209,7 +216,7 @@ class Red7GameState:
         self.cur_rule_card = original_state['rule_card']
 
         self.players[player_id]["possible_moves"] = winning_moves
-        print(self.players[player_id]["possible_moves"], flush=True)
+        #print(self.players[player_id]["possible_moves"], flush=True)
         print("Win at beg!!!", flush=True)
         print(len(winning_moves), flush=True)
         return len(winning_moves) > 0

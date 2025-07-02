@@ -4,6 +4,7 @@ import 'dart:convert';
 
 import '../data/styles.dart';
 import '../providers/provider.dart';
+import '../data/urls.dart';
 
 class ConnectDialog extends StatefulWidget {
   final GameProvider gameProvider;
@@ -21,8 +22,11 @@ class _ConnectDialogState extends State<ConnectDialog> {
   String postText = '';
   bool logSuccess = false;
 
+  bool obscure = true;
+
   Future<void> connectToRoom(int id, String room_id, String password) async {
-    final url = Uri.parse('http://192.145.30.253:8000/rooms/join');
+
+    final url = Uri.parse('$joinRoomUrl');
     final response = await http.post(
       url,
       headers: {'Content-Type': 'application/json', 'accept': 'application/json'},
@@ -33,9 +37,21 @@ class _ConnectDialogState extends State<ConnectDialog> {
       }),
     );
 
+    final responseBody = json.decode(response.body);
+
     if (response.statusCode == 200) {
       setState(() {
         logSuccess = true;
+      });
+    } else if (responseBody['detail'] == 'Game already started') {
+      setState(() {
+        logSuccess = false;
+        postText = 'Game already started';
+      });
+    } else if (responseBody['detail'] == 'User already in the room') {
+      setState(() {
+        logSuccess = false;
+        postText = 'User already in the room';
       });
     } else {
       setState(() {
@@ -113,9 +129,21 @@ class _ConnectDialogState extends State<ConnectDialog> {
                   borderRadius: BorderRadius.circular(8),
                 ),
                 child: TextField(
-                  decoration: const InputDecoration(
+                  obscureText: obscure,
+                  decoration: InputDecoration(
                     border: OutlineInputBorder(
                       borderSide: BorderSide.none,
+                    ),
+                    suffixIcon: IconButton(
+                      icon: Icon(
+                        obscure ? Icons.visibility : Icons.visibility_off,
+                        color: grey3A3A3AColor,
+                      ),
+                      onPressed: () {
+                        setState(() {
+                          obscure = !obscure;
+                        });
+                      },
                     ),
                   ),
                   controller: controller2,

@@ -6,6 +6,7 @@ import 'dart:convert';
 import '../data/styles.dart';
 import '../providers/provider.dart';
 import '../data/connectDialog.dart';
+import '../data/urls.dart';
 
 class MainMenuPage extends StatefulWidget {
   const MainMenuPage({super.key});
@@ -27,7 +28,7 @@ class _MainMenuPageState extends State<MainMenuPage> {
   String room_password = '';
 
   Future<void> createRoom(int id) async {
-    final url = Uri.parse('http://192.145.30.253:8000/rooms/create');
+    final url = Uri.parse('$createRoomUrl');
     final response = await http.post(
       url,
       headers: {'Content-Type': 'application/json', 'accept': 'application/json'},
@@ -52,7 +53,7 @@ class _MainMenuPageState extends State<MainMenuPage> {
   }
 
   Future<void> connectToRoom(int id, String room_id, String password) async {
-    final url = Uri.parse('http://192.145.30.253:8000/rooms/join');
+    final url = Uri.parse('$joinRoomUrl');
     final response = await http.post(
       url,
       headers: {'Content-Type': 'application/json', 'accept': 'application/json'},
@@ -63,9 +64,15 @@ class _MainMenuPageState extends State<MainMenuPage> {
       }),
     );
 
+    final responseBody = json.decode(response.body);
+
     if (response.statusCode == 200) {
       setState(() {
         logSuccess = true;
+      });
+    } else if (responseBody['message'] == 'Game already started') {
+      setState(() {
+        postText = 'Game already started';
       });
     } else {
       setState(() {

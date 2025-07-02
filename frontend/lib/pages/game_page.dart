@@ -12,6 +12,7 @@ import '../providers/provider.dart';
 import '../data/cards.dart';
 import '../socket/web_socket.dart';
 import '../data/player.dart';
+import '../data/urls.dart';
 
 class GameRoomPage extends StatefulWidget {
   const GameRoomPage({super.key});
@@ -78,7 +79,8 @@ class _GameRoomPageState extends State<GameRoomPage> {
       SharedPreferences prefs = await SharedPreferences.getInstance();
       roomID = await prefs.getString('roomId');
       userID = await prefs.getInt('myID');
-      serverUrl = 'ws://192.145.30.253:8000/game/$roomID/ws?player_id=$userID';
+      serverUrl = '$serverUrlPartUrl/game/$roomID/ws?player_id=$userID';
+      print(serverUrl);
       _webSocket = GameWebSocket(
         serverUrl: serverUrl,
         onMessageReceived: _handleMessage,
@@ -599,11 +601,11 @@ class _GameRoomPageState extends State<GameRoomPage> {
                           } else {
                             _exit();
                           }
-                          _webSocket.disconnect();
                           await leaveRoom(userID!, roomID!);
                           SharedPreferences prefs = await SharedPreferences.getInstance();
                           await prefs.remove('roomId');
                           await prefs.remove('roomPassword');
+                          _webSocket.disconnect();
                           Navigator.of(context).pop();
                           Navigator.pushNamed(context, '/mainmenu');
                         },
@@ -629,7 +631,7 @@ class _GameRoomPageState extends State<GameRoomPage> {
   }
 
   Future<void> leaveRoom(int id, String room_id) async {
-    final url = Uri.parse('http://192.145.30.253:8000/rooms/leave');
+    final url = Uri.parse('$leaveRoomUrl');
     final response = await http.post(
       url,
       headers: {'Content-Type': 'application/json', 'accept': 'application/json'},

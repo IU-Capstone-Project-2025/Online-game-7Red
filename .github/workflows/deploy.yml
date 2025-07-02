@@ -2,7 +2,7 @@ name: CI/CD Pipeline
 
 on:
   push:
-    branches: [ deploy ]
+    branches: [ main ]
 
 env:
   DOCKER_HUB_REPO: ${{ secrets.DOCKER_HUB_USERNAME }}/7red
