@@ -12,6 +12,12 @@ env:
 jobs:
   test:
     runs-on: ubuntu-latest
+    env:
+      DATABASE_URL: ${{ secrets.DATABASE_URL }}
+      PROJECT_ID: ${{ secrets.PROJECT_ID }}
+      DB_USER: ${{ secrets.DB_USER }}
+      DB_PASS: ${{ secrets.DB_PASS }}
+      BRANCH_ID=: ${{ secrets.BRANCH_ID }}
     steps:
       - uses: actions/checkout@v3
       
