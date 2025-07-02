@@ -48,6 +48,7 @@ class Red7GameState:
 
     async def get_room_players_info_from_db(self):
         self.players_name_list, self.players_id_list = await get_room_players_ids_and_names(str(self.assigned_id))
+        #self.players_name_list, self.players_id_list = ["q", "d"], [1, 2]
     
     def card_to_tuple(self, card: str) -> tuple[int, int]:
         """Convert card string (e.g., 'R7') to (color_index, value) tuple.
@@ -108,29 +109,10 @@ class Red7GameState:
             self.players[self.players_id_list[i]] = {}
             # Each player gets 7 cards in hand and 1 in palette
             self.players[self.players_id_list[i]]["hand"] = [self.deck.pop() for _ in range(7)]
-            # if i == 0:
-            #     self.players[self.players_id_list[i]]["hand"] = ['B4', 'V5', 'G3', 'V2', 'R1', 'I4', 'G1']
-            # else: 
-            #     self.players[self.players_id_list[i]]["hand"] = ['R4', 'B5', 'B3', 'R2', 'O1', 'I1', 'B7']
             self.players[self.players_id_list[i]]["palette"] = []
             self.players[self.players_id_list[i]]["name"] = self.players_name_list[i]
             self.players[self.players_id_list[i]]["active"] = True
             self.players[self.players_id_list[i]]["possible_moves"] = {}
-    
-    def deal_cards_bot_game(self, player_id: int, hand_human: List[str], name: str):
-        self.players[player_id] = {}
-        self.players[player_id]["hand"] = hand_human
-        self.players[player_id]["palette"] = []
-        self.players[player_id]["name"] = name
-        self.players[player_id]["active"] = True
-        self.players[player_id]["possible_moves"] = {}
-
-        self.players[-1] = {}      
-        self.players[-1]["hand"] = []
-        self.players[-1]["palette"] = []
-        self.players[-1]["name"] = "bot"
-        self.players[-1]["active"] = True
-        self.players[-1]["possible_moves"] = {}
 
     def start_game(self):
         """Initialize the game state"""
@@ -223,7 +205,7 @@ class Red7GameState:
         self.players[player_id]["hand"] = original_state['hand']
         self.players[player_id]["palette"] = original_state['palette']
         self.current_rule = original_state['rule']
-        #print(f"before {self.cur_rule_card} after {original_state['rule_card']}")
+        print(f"before {self.cur_rule_card} after {original_state['rule_card']}")
         self.cur_rule_card = original_state['rule_card']
 
         self.players[player_id]["possible_moves"] = winning_moves
@@ -300,7 +282,7 @@ class Red7GameState:
 
         #print(self.current_rule, flush=True)
 
-        opponent_ids = [pid for pid in self.players.keys() if pid != player_id and self.players[pid]["active"]]
+        opponent_ids = [pid for pid in self.players.keys() if pid != player_id]
         
         # 4. Check winning condition
         is_winning = all(self.evaluate_winning_condition(player_id, opponent_ids))
@@ -564,9 +546,9 @@ class Red7GameState:
                 continue
 
             def longest_sequence_info(cards):
-                numbers = sorted({num for (_, num) in cards})  # unique numbers
+                numbers = sorted({num for (_, num) in cards})  #unique numbers
                 if not numbers:
-                    return (0, 0, 0)  # (length, max_num, best_color)
+                    return (0, 0, 0)  #(length, max_num, best_color)
                 
                 max_len = 1
                 current_len = 1
@@ -575,24 +557,18 @@ class Red7GameState:
                 for i in range(1, len(numbers)):
                     if numbers[i] == numbers[i-1] + 1:
                         current_len += 1
-                        if current_len > max_len or (current_len == max_len and numbers[i] > best_max_num):
+                        if current_len >= max_len:
                             max_len = current_len
-                            best_max_num = numbers[i]  # tracking the highest num in the longest seq
+                            best_max_num = numbers[i]  #tracking the highest num in the longest seq
                     else:
                         current_len = 1
                 
-                # Find all cards that are part of the longest sequence
+                #getting all cards in the longest sequence
                 seq_cards = [(color, num) for (color, num) in cards 
                             if num >= best_max_num - max_len + 1 and num <= best_max_num]
                 
-                # Find the color of the maximum card in the sequence
-                max_card_in_seq = best_max_num
-                # Get all cards with the maximum number in the sequence
-                max_cards = [(color, num) for (color, num) in seq_cards if num == max_card_in_seq]
-                
-                # Among these, return the color of the first one (or use min() if you want highest priority)
-                best_color = max_cards[0][0] if max_cards else 0
-                
+                #highest priority color in the sequence
+                best_color = min([color for (color, num) in seq_cards])
                 return (max_len, best_max_num, best_color)
             
             my_len, my_max_num, my_color = longest_sequence_info(palette)
