@@ -160,7 +160,8 @@ async def game_websocket(
                 
 
         except WebSocketDisconnect:
-            game.players[player_id]["active"] = False
+            if type_cur == "time_out":
+                game.players[player_id]["active"] = False
             connection_active = False
             break
             # print(f"{manager.connections}", flush=True)
