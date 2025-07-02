@@ -10,7 +10,7 @@ env:
   FRONTEND_TAG: frontend-${{ github.sha }}
 
 jobs:
-  test:
+  backend_test:
     runs-on: ubuntu-latest
     env:
       DATABASE_URL: ${{ secrets.DATABASE_URL }}
@@ -31,15 +31,43 @@ jobs:
           python -m pip install --upgrade pip
           pip install -r requirements.txt
           
-      - name: Run Unit tests
+      - name: Run Unit and Api tests
         run: |
           export PYTHONPATH=$PYTHONPATH:$GITHUB_WORKSPACE
           cd tests
           pytest -v test_unit.py
           pytest -v test_api_integration.py
 
+  frontend_test:
+    needs: backend_test
+    runs-on: ubuntu-latest
+    env:
+      DATABASE_URL: ${{ secrets.DATABASE_URL }}
+      PROJECT_ID: ${{ secrets.PROJECT_ID }}
+      DB_USER: ${{ secrets.DB_USER }}
+      DB_PASS: ${{ secrets.DB_PASS }}
+      BRANCH_ID=: ${{ secrets.BRANCH_ID }}
+    steps:
+      - uses: actions/checkout@v3
+      
+      - name: Set up Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          flutter-version: '3.32.1'  
+          channel: 'stable'
+      
+      - name: Install dependencies
+        run: |
+          flutter pub get
+          flutter doctor
+      
+      - name: Run Flutter widget tests
+        run: |
+          cd frontend
+          flutter test test/widget_test.dart
+
   build-and-push:
-    needs: test
+    needs: frontend_test
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
