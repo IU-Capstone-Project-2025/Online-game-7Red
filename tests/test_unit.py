@@ -1,5 +1,5 @@
 import pytest
-from backend.red7state import Red7GameState, CardColor, CARD_VALUES
+from ..backend.red7state import Red7GameState, CardColor, CARD_VALUES
 
 def test_initialize_deck_unique_cards():
     game = Red7GameState("test_room")
