@@ -5,6 +5,7 @@ import 'dart:convert';
 
 import '../providers/provider.dart';
 import '../data/styles.dart';
+import '../data/urls.dart';
 
 class SignUpPage extends StatefulWidget {
   const SignUpPage({super.key});
@@ -29,7 +30,7 @@ class _SignUpPageState extends State<SignUpPage> {
   int ID = -1;
 
   Future<void> signUp(String nickname, String email, String password, String repeatedPassword) async {
-    final url = Uri.parse('http://localhost:8000/auth/signup');
+    final url = Uri.parse('$signUpUrl');
     final response = await http.post(
       url,
       headers: {'Content-Type': 'application/json', 'accept': 'application/json'},

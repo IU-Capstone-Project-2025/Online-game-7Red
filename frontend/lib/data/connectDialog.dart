@@ -4,6 +4,7 @@ import 'dart:convert';
 
 import '../data/styles.dart';
 import '../providers/provider.dart';
+import '../data/urls.dart';
 
 class ConnectDialog extends StatefulWidget {
   final GameProvider gameProvider;
@@ -22,7 +23,7 @@ class _ConnectDialogState extends State<ConnectDialog> {
   bool logSuccess = false;
 
   Future<void> connectToRoom(int id, String room_id, String password) async {
-    final url = Uri.parse('http://localhost:8000/rooms/join');
+    final url = Uri.parse('$joinRoomUrl');
     final response = await http.post(
       url,
       headers: {'Content-Type': 'application/json', 'accept': 'application/json'},

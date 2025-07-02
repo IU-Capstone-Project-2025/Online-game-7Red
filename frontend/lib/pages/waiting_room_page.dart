@@ -7,6 +7,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 import '../data/styles.dart';
 import 'package:frontend/providers/provider.dart';
+import '../data/urls.dart';
 
 
 class WaitingRoomPage extends StatefulWidget {
@@ -60,7 +61,7 @@ class _WaitingRoomPageState extends State<WaitingRoomPage> {
   }
 
   Future<void> _fetchPlayers() async {
-    final url = Uri.parse('http://localhost:8000/rooms/state');
+    final url = Uri.parse('$roomStateUrl');
     final response = await http.post(
       url,
       headers: {'Content-Type': 'application/json', 'accept': 'application/json'},
@@ -92,7 +93,7 @@ class _WaitingRoomPageState extends State<WaitingRoomPage> {
   }
 
   Future<void> sendReady(int my_id, String room_id) async {
-    final url = Uri.parse('http://localhost:8000/rooms/ready');
+    final url = Uri.parse('$roomReadyUrl');
     final response = await http.post(
       url,
       headers: {'Content-Type': 'application/json', 'accept': 'application/json'},
@@ -116,7 +117,7 @@ class _WaitingRoomPageState extends State<WaitingRoomPage> {
   }
 
   Future<void> sendNotReady(int my_id, String room_id) async {
-    final url = Uri.parse('http://localhost:8000/rooms/not_ready');
+    final url = Uri.parse('$roomNotReadyUrl');
     final response = await http.post(
       url,
       headers: {'Content-Type': 'application/json', 'accept': 'application/json'},
@@ -140,7 +141,7 @@ class _WaitingRoomPageState extends State<WaitingRoomPage> {
   }
 
   Future<void> leaveRoom(int id, String room_id) async {
-    final url = Uri.parse('http://localhost:8000/rooms/leave');
+    final url = Uri.parse('$leaveRoomUrl');
     final response = await http.post(
       url,
       headers: {'Content-Type': 'application/json', 'accept': 'application/json'},

@@ -5,6 +5,7 @@ import 'dart:convert';
 
 import '../providers/provider.dart';
 import '../data/styles.dart';
+import '../data/urls.dart';
 
 class SignInPage extends StatefulWidget {
   const SignInPage({super.key});
@@ -25,7 +26,7 @@ class _SignInPageState extends State<SignInPage> {
   int ID = -1;
 
   Future<void> signIn(String email, String password) async {
-    final url = Uri.parse('http://localhost:8000/auth/signin');
+    final url = Uri.parse('$signInUrl');
     final response = await http.post(
       url,
       headers: {'Content-Type': 'application/json', 'accept': 'application/json'},
