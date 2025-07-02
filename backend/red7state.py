@@ -227,7 +227,7 @@ class Red7GameState:
         self.cur_rule_card = original_state['rule_card']
 
         self.players[player_id]["possible_moves"] = winning_moves
-        print(self.players[player_id]["possible_moves"], flush=True)
+        #print(self.players[player_id]["possible_moves"], flush=True)
         print("Win at beg!!!", flush=True)
         print(len(winning_moves), flush=True)
         return len(winning_moves) > 0

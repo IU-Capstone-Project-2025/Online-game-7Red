@@ -105,7 +105,8 @@ async def game_websocket(
                 # print(f'Cur player befor {game.current_player}')
                 game.next_player()
                 # print(f'Cur player after {game.current_player}')
-                if game.current_player in manager.exited_id:
+                print(f'ids that exited: {manager.exited_id}', flush=True)
+                if game.current_player in manager.exited_id and type_cur == "my_turn":
                     next_lose = True
                     manager.exited_id.remove(game.current_player)
 
@@ -193,16 +194,34 @@ async def broadcast_game_state(game: Red7GameState, cur_player_id: int, is_winni
         return
 
     print(f"is_win {is_winning}, cur_player {cur_player_id}, pal_ch {my_palette_ch}, rule {new_rule}, next_lose {next_lose}", flush=True)
+
+    print("NO PRINT WHYY", flush=True)
+    active_players = [pid for pid in game.players_id_list if game.players[pid]["active"]]
+    if len(active_players) == 1:
+        print(f'active players now {active_players}', flush=True)
+        for player_id in game.players_id_list:
+            if player_id in manager.connections:
+                await manager.connections[player_id].send_json({
+                    "type": "change_turn",
+                    "lose": False,
+                    "id_did": cur_player_id, #imp (check)
+                    "his_pallete_ch": my_palette_ch,
+                    "rule_ch": new_rule,
+                    "next_lose": False
+                })
+
+    else:
+        for player_id in game.players_id_list:
+            if player_id in manager.connections:
+                await manager.connections[player_id].send_json({
+                    "type": "change_turn",
+                    "lose": 0 if is_winning else 1, #imp several 2 if "next_lose" is 1
+                    "id_did": cur_player_id, #imp (check)
+                    "his_pallete_ch": my_palette_ch,
+                    "rule_ch": new_rule,
+                    "next_lose": 1 if next_lose else 0
+                })
     if not is_winning:
         game.players[cur_player_id]["active"] = False
-
-    for player_id in game.players_id_list:
-        if player_id in manager.connections:
-            await manager.connections[player_id].send_json({
-                "type": "change_turn",
-                "lose": 0 if is_winning else 1, #imp several 2 if "next_lose" is 1
-                "id_did": cur_player_id, #imp (check)
-                "his_pallete_ch": my_palette_ch,
-                "rule_ch": new_rule,
-                "next_lose": 1 if next_lose else 0
-            })
+    print("NO PRINT WHYY", flush=True)
+    print(active_players, flush=True)
