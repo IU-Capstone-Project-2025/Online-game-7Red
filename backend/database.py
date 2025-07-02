@@ -1,8 +1,9 @@
 import os
-from sqlalchemy import MetaData, Table, Column, Integer, String, create_engine, TIMESTAMP, ForeignKey, Boolean, select
+from sqlalchemy import (MetaData, Table, Text, Column, Date, Integer, String, 
+                        create_engine, TIMESTAMP, ForeignKey, Boolean, select)
 from databases import Database
 from dotenv import load_dotenv
-from datetime import datetime, UTC
+from datetime import datetime, UTC, date, timedelta
 
 # load environment variables
 load_dotenv(os.path.join(os.path.dirname(__file__), '../database/.env'))
@@ -29,7 +30,7 @@ user_room = Table(
     Column("ready", Boolean, default=False),
 )
 
-people = Table(
+users = Table(
     "users",
     metadata,
     Column("id", Integer, primary_key=True),
@@ -45,6 +46,39 @@ profiles = Table(
     Column("user_id", Integer, ForeignKey("users.id", ondelete="CASCADE"), primary_key=True),
     Column("name", String(100), nullable=False),
     Column("avatar", String(255)),
+)
+
+user_achievements = Table(
+    "user_achievements",
+    metadata,
+    Column("user_id", Integer, ForeignKey("users.id", ondelete="CASCADE"), primary_key=True),
+    Column("achievement_id", Integer, ForeignKey("achievements.id", ondelete="CASCADE"), primary_key=True),
+)
+
+visit_history = Table(
+    "visit_history",
+    metadata,
+    Column("user_id", Integer, ForeignKey("users.id", ondelete="CASCADE"), primary_key=True),
+    Column("visit_date", Date, primary_key=True),
+)
+
+achievements = Table(
+    "achievements",
+    metadata,
+    Column("id", Integer, primary_key=True, autoincrement=True),
+    Column("name", String(100), nullable=False),
+    Column("description", Text),
+)
+
+statistics = Table(
+    "statistics",
+    metadata,
+    Column("user_id", Integer, ForeignKey("users.id", ondelete="CASCADE"), primary_key=True),
+    Column("total_played", Integer, default=0),
+    Column("wins", Integer, default=0),
+    Column("cur_straight_wins", Integer, default=0),
+    Column("max_straight_wins", Integer, default=0),
+    Column("bot_wins", Integer, default=0), 
 )
 
 database = Database(DATABASE_URL)
@@ -97,7 +131,7 @@ async def update_room_state(assigned_id: str, state: str):
 
 # for creating user
 async def create_user(login: str, password: str, created_at: datetime | None = None, last_visited: datetime | None = None ):
-    query = people.insert().values(
+    query = users.insert().values(
         login=login,
         password=password,
         created_at=created_at or datetime.now(UTC),
@@ -107,16 +141,16 @@ async def create_user(login: str, password: str, created_at: datetime | None = N
 
 # for deleting user
 async def delete_user(user_id: int):
-    query = people.delete().where(people.c.id == user_id)
+    query = users.delete().where(users.c.id == user_id)
     return await database.execute(query)
 
 # for searching user
 async def search_user_by_id(user_id: int):
-    query = people.select().where(people.c.id == user_id)
+    query = users.select().where(users.c.id == user_id)
     return await database.fetch_one(query)
 
 async def search_user_by_login(login: str):
-    query = people.select().where(people.c.login == login)
+    query = users.select().where(users.c.login == login)
     return await database.fetch_one(query)
 
 async def create_profile(user_id: int, name: str, avatar: str = None):
@@ -144,6 +178,13 @@ async def add_user_to_room(user_id: int, assigned_id: str):
     if not room:
         raise Exception("Room not found")
     room_id = room["room_id"]
+    check_query = user_room.select().where(
+        (user_room.c.user_id == user_id) & (user_room.c.room_id == room_id)
+    )
+    exists = await database.fetch_one(check_query)
+    if exists:
+        raise Exception("User already in the room")
+    
     insert_query = user_room.insert().values(user_id=user_id, room_id=room_id)
     await database.execute(insert_query)
     
@@ -209,3 +250,124 @@ async def get_room_players_ids_and_names(assigned_id: str):
     players = [row["name"] for row in rows]
     ids = [row["user_id"] for row in rows]
     return players, ids
+
+async def update_last_visited(user_id: int):
+    query = users.update().where(users.c.user_id == user_id).values(last_visited=datetime.now(UTC))
+    await database.execute(query)
+
+
+#--------------------------achievements--------------------------------------------------------------    
+async def add_visit(user_id: int):
+    today = date.today()
+    query = visit_history.insert().values(user_id=user_id, visit_date=today)
+    try:
+        await database.execute(query)
+    except Exception:
+        pass
+    
+    
+async def get_visit_streak(user_id: int):
+    query = visit_history.select().where(visit_history.c.user_id == user_id)
+    visits = await database.fetch_all(query)
+    dates = sorted([v["visit_date"] for v in visits], reverse=True)
+    streak = 0
+    prev = None
+    for d in dates:
+        if prev is None or prev == d + timedelta(days=1):
+            streak += 1
+        else:
+            break
+    return streak
+
+async def award_achievement_if_needed(user_id: int, achievement_id: int):
+    query = user_achievements.select().where(
+        (user_achievements.c.user_id == user_id) &
+        (user_achievements.c.achievement_id == achievement_id)
+    )
+    exist = await database.fetch_one(query)
+    if not exist:
+        insert = user_achievements.insert().values(
+            user_id=user_id, achievement_id=achievement_id
+        )
+        await database.execute(insert)
+        
+async def get_achievement_id_by_name(name: str):
+    query = achievements.select().where(achievements.c.name == name)
+    achievement = await database.fetch_one(query)
+    if achievement:
+        return achievement["id"]
+    return None
+
+async def get_win_streak(user_id: int):
+    query = statistics.select().where(statistics.c.user_id == user_id)
+    stats = await database.fetch_one(query)
+    if stats:
+        return stats["cur_straight_wins"]
+    return 0
+
+async def update_win_streak(user_id: int, is_win: bool):
+    query = statistics.select().where(statistics.c.user_id == user_id)
+    stats = await database.fetch_one(query)
+    if not stats:
+        await database.execute(statistics.insert().values(
+            user_id=user_id,
+            total_played=1,
+            wins=1 if is_win else 0,
+            cur_straight_wins=1 if is_win else 0,
+            max_straight_wins=1 if is_win else 0
+        ))
+        return
+    cur_streak = stats["cur_straight_wins"]
+    max_streak = stats["max_straight_wins"]
+    total_played = stats["total_played"] + 1
+    wins = stats["wins"] + (1 if is_win else 0)
+
+    if is_win:
+        cur_streak += 1
+        if cur_streak > max_streak:
+            max_streak = cur_streak
+    else:
+        cur_streak = 0
+    
+    upd = statistics.update().where(statistics.c.user_id == user_id).values(
+        cur_straight_wins=cur_streak,
+        max_straight_wins=max_streak,
+        total_played=total_played,
+        wins=wins
+    ) 
+    await database.execute(upd) 
+    
+
+async def check_and_award_win_streak(user_id: int):
+    streak = await get_win_streak(user_id)
+    if streak >= 5:
+        achievement_id = await get_achievement_id_by_name("5_wins_streak")
+        if achievement_id:
+            await award_achievement_if_needed(user_id, achievement_id)
+            
+async def increment_bot_wins(user_id: int):
+    query = statistics.select().where(statistics.c.user_id == user_id)
+    stats = await database.fetch_one(query)
+    if not stats:
+        await database.execute(statistics.insert().values(
+            user_id=user_id,
+            total_played=0,
+            wins=0,
+            cur_straight_wins=0,
+            max_straight_wins=0,
+            bot_wins=1
+        ))
+        return 1
+    
+    bot_wins = stats.get("bot_wins", 0) + 1
+    upd = statistics.update().where(statistics.c.user_id == user_id).values(bot_wins=bot_wins)
+    await database.execute(upd)
+    return bot_wins
+
+async def check_and_award_bot_wins(user_id: int):
+    query = statistics.select().where(statistics.c.user_id == user_id)
+    stats = await database.fetch_one(query)
+    if stats and stats.get("bot_wins", 0) >= 3:
+        achievement_id = await get_achievement_id_by_name("3_wins_over_the_bot")
+        if achievement_id:
+            await award_achievement_if_needed(user_id, achievement_id)
