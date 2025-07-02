@@ -3,6 +3,7 @@ from typing import List, Dict
 from backend.database import get_room_players_ids_and_names
 import random
 from collections import defaultdict
+import random
 
 
 # Card colors and values
@@ -48,6 +49,11 @@ class Red7GameState:
 
     async def get_room_players_info_from_db(self):
         self.players_name_list, self.players_id_list = await get_room_players_ids_and_names(str(self.assigned_id))
+        combined = list(zip(self.players_name_list, self.players_id_list))
+        random.shuffle(combined)
+        self.players_name_list, self.players_id_list = zip(*combined)
+        self.players_name_list = list(self.players_name_list)
+        self.players_id_list = list(self.players_id_list)
     
     def card_to_tuple(self, card: str) -> tuple[int, int]:
         """Convert card string (e.g., 'R7') to (color_index, value) tuple.
