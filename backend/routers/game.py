@@ -11,6 +11,7 @@ class GameManager:
         self.active_games: Dict[str, Red7GameState] = {}  # room_id: Red7GameState
         self.connections: Dict[str, WebSocket] = {}  # player_id: websocket
         self.exited_id: Dict[str, List] = {}
+        self.commonVar: Dict[str, List] = {}
 
     async def create_game(self, room_id: int) -> Red7GameState:
         """Initialize a new game instance"""
@@ -20,6 +21,8 @@ class GameManager:
             self.active_games[room_id] = game
             if room_id not in self.exited_id:
                 self.exited_id[room_id] = []
+            if room_id not in self.commonVar:
+                self.commonVar[room_id] = {"exit_was": False, "type_cur": None, "ex_player": None}
             game.start_game()
         return self.active_games[room_id]
 
@@ -34,6 +37,8 @@ async def game_websocket(
     connection_active = True
     print(f"Connected: assigned_id={assigned_id}, player_id={player_id}", flush=True)
     manager.connections[player_id] = websocket
+    # exit_was = False
+    # type_cur = None
     room_id = assigned_id
     print(f"Room ID: {room_id}", flush=True)  # Debug room ID lookup
         # Initialize or join game
@@ -58,9 +63,12 @@ async def game_websocket(
                 if data["type"] == "exit":
                     print(f'Player {data["my_id"]} requested exit', flush=True)
                     manager.exited_id[room_id].append(data["my_id"])
+                    manager.commonVar[room_id]['exit_was'] = True
+                    manager.commonVar[room_id]['ex_player'] = data["my_id"]
                     break
 
                 type_cur = data["type"] #my_turn or time_out
+                manager.commonVar[room_id]['type_cur'] = type_cur
                 player_id = data["my_id"]
                 #room_id_from_json = data["my_room"]
                 my_palette_ch = data["my_pallete_ch"]
@@ -160,8 +168,21 @@ async def game_websocket(
                 
 
         except WebSocketDisconnect:
-            if type_cur == "time_out":
+            print(f"exit state: {manager.commonVar[room_id]['exit_was']}", flush=True)
+            if not manager.commonVar[room_id]['exit_was']:
+                print("Changed state in disconnect", flush=True)
                 game.players[player_id]["active"] = False
+                
+            elif manager.commonVar[room_id]['exit_was'] and manager.commonVar[room_id]['type_cur'] == "time_out":
+                print("Cexit_was true and type time_out", flush=True)
+                active_players = [pid for pid in game.players_id_list if game.players[pid]["active"]]
+                print(f'active players before in here: {active_players}')
+                game.players[manager.commonVar[room_id]['ex_player']]["active"] = False
+                active_players = [pid for pid in game.players_id_list if game.players[pid]["active"]]
+                print(f'active players in here: {active_players}')
+                
+            # if type_cur == "time_out":
+            #     game.players[player_id]["active"] = False
             connection_active = False
             break
             # print(f"{manager.connections}", flush=True)
@@ -200,6 +221,7 @@ async def game_websocket(
             if game and all(p not in manager.connections for p in game.players_id_list):
                 del manager.active_games[assigned_id]
                 del manager.exited_id[assigned_id]
+                del manager.commonVar[assigned_id]
                 await update_room_state(str(assigned_id), "finished")
             # elif len(manager.connections) == 0:
             #     del manager.active_games[assigned_id]
