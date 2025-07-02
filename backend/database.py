@@ -70,6 +70,15 @@ achievements = Table(
     Column("description", Text),
 )
 
+statistics = Table(
+    "statistics",
+    metadata,
+    Column("user_id", Integer, ForeignKey("users.id", ondelete="CASCADE"), primary_key=True),
+    Column("total_played", Integer, default=0),
+    Column("wins", Integer, default=0),
+    Column("cur_straight_wins", Integer, default=0),
+    Column("max_straight_wins", Integer, default=0),
+)
 database = Database(DATABASE_URL)
 engine = create_engine(DATABASE_URL)
 
@@ -248,7 +257,7 @@ async def add_visit(user_id: int):
         pass
     
     
-async def get_streak(user_id: int):
+async def get_visit_streak(user_id: int):
     query = visit_history.select().where(visit_history.c.user_id == user_id)
     visits = await database.fetch_all(query)
     dates = sorted([v["visit_date"] for v in visits], reverse=True)
@@ -279,3 +288,50 @@ async def get_achievement_id_by_name(name: str):
     if achievement:
         return achievement["id"]
     return None
+
+async def get_win_streak(user_id: int):
+    query = statistics.select().where(statistics.c.user_id == user_id)
+    stats = await database.fetch_one(query)
+    if stats:
+        return stats["cur_straight_wins"]
+    return 0
+
+async def update_win_streak(user_id: int, is_win: bool):
+    query = statistics.select().where(statistics.c.user_id == user_id)
+    stats = await database.fetch_one(query)
+    if not stats:
+        await database.execute(statistics.insert().values(
+            user_id=user_id,
+            total_played=1,
+            wins=1 if is_win else 0,
+            cur_straight_wins=1 if is_win else 0,
+            max_straight_wins=1 if is_win else 0
+        ))
+        return
+    cur_streak = stats["cur_straight_wins"]
+    max_streak = stats["max_straight_wins"]
+    total_played = stats["total_played"] + 1
+    wins = stats["wins"] + (1 if is_win else 0)
+
+    if is_win:
+        cur_streak += 1
+        if cur_streak > max_streak:
+            max_streak = cur_streak
+    else:
+        cur_streak = 0
+    
+    upd = statistics.update().where(statistics.c.user_id == user_id).values(
+        cur_straight_wins=cur_streak,
+        max_straight_wins=max_streak,
+        total_played=total_played,
+        wins=wins
+    ) 
+    await database.execute(upd) 
+    
+
+async def check_and_award_win_streak(user_id: int):
+    streak = await get_win_streak(user_id)
+    if streak >= 5:
+        achievement_id = await get_achievement_id_by_name("5_wins_streak")
+        if achievement_id:
+            await award_achievement_if_needed(user_id, achievement_id)

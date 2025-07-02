@@ -2,7 +2,7 @@ from fastapi import APIRouter, HTTPException
 from backend.models import SignInRequest, SignUpRequest
 from backend.database import create_user, search_user_by_login, create_profile, get_profile_by_user_id
 from passlib.context import CryptContext
-from backend.database import add_visit, get_streak, award_achievement_if_needed, get_achievement_id_by_name
+from backend.database import add_visit, get_visit_streak, award_achievement_if_needed, get_achievement_id_by_name
 
 router = APIRouter(prefix="/auth", tags=["auth"])
 
@@ -34,13 +34,13 @@ async def signin(request: SignInRequest):
     
     await add_visit(user["id"])
     
-    streak = await get_streak(user["id"])
+    streak = await get_visit_streak(user["id"])
     if streak >= 7:
         achievement_id = await get_achievement_id_by_name("7_days_streak")
         if achievement_id:
             awarded = await award_achievement_if_needed(user["id"], achievement_id)
-            # if awarded:
-            #     new_achievement = "7_days_streak"
+            if awarded:
+                new_achievement = "7_days_streak"
     
     profile = await get_profile_by_user_id(user["id"])
     nickname = profile["name"] if profile else None
