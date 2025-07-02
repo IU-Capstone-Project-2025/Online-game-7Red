@@ -80,6 +80,7 @@ class _GameRoomPageState extends State<GameRoomPage> {
       roomID = await prefs.getString('roomId');
       userID = await prefs.getInt('myID');
       serverUrl = '$serverUrlPartUrl/game/$roomID/ws?player_id=$userID';
+      print(serverUrl);
       _webSocket = GameWebSocket(
         serverUrl: serverUrl,
         onMessageReceived: _handleMessage,

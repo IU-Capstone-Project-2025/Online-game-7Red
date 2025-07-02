@@ -8,7 +8,7 @@ String roomStateUrl = 'http://localhost:8000/rooms/state';
 String roomReadyUrl = 'http://localhost:8000/rooms/ready';
 String roomNotReadyUrl = 'http://localhost:8000/rooms/not_ready';
 String leaveRoomUrl = 'http://localhost:8000/rooms/leave';
-String serverUrlPartUrl = 'http://localhost:8000';
+String serverUrlPartUrl = 'ws://localhost:8000';
 
 //for server
 
@@ -20,4 +20,4 @@ String serverUrlPartUrl = 'http://localhost:8000';
 // String roomReadyUrl = 'http://192.145.30.253:8000/rooms/ready';
 // String roomNotReadyUrl = 'http://192.145.30.253:8000/rooms/not_ready';
 // String leaveRoomUrl = 'http://192.145.30.253:8000/rooms/leave';
-// String serverUrlPartUrl = 'http://192.145.30.253:8000';
+// String serverUrlPartUrl = 'ws://192.145.30.253:8000';

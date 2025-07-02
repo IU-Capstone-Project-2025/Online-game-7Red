@@ -64,9 +64,15 @@ class _MainMenuPageState extends State<MainMenuPage> {
       }),
     );
 
+    final responseBody = json.decode(response.body);
+
     if (response.statusCode == 200) {
       setState(() {
         logSuccess = true;
+      });
+    } else if (responseBody['message'] == 'Game already started') {
+      setState(() {
+        postText = 'Game already started';
       });
     } else {
       setState(() {

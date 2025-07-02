@@ -34,9 +34,16 @@ class _ConnectDialogState extends State<ConnectDialog> {
       }),
     );
 
+    final responseBody = json.decode(response.body);
+
     if (response.statusCode == 200) {
       setState(() {
         logSuccess = true;
+      });
+    } else if (responseBody['message'] == 'Game already started') {
+      setState(() {
+        logSuccess = false;
+        postText = 'Game already started';
       });
     } else {
       setState(() {
