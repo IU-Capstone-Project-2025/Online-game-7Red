@@ -25,6 +25,8 @@ class _SignInPageState extends State<SignInPage> {
   String nickname = 'None';
   int ID = -1;
 
+  bool obscure = true;
+
   Future<void> signIn(String email, String password) async {
     final url = Uri.parse('$signInUrl');
     final response = await http.post(
@@ -150,9 +152,21 @@ class _SignInPageState extends State<SignInPage> {
                         borderRadius: BorderRadius.circular(6),
                       ),
                       child: TextField(
-                        decoration: const InputDecoration(
-                          border: OutlineInputBorder(
+                        obscureText: obscure,
+                        decoration: InputDecoration(
+                          border: const OutlineInputBorder(
                             borderSide: BorderSide.none,
+                          ),
+                          suffixIcon: IconButton(
+                            icon: Icon(
+                              obscure ? Icons.visibility : Icons.visibility_off,
+                              color: grey3A3A3AColor,
+                            ),
+                            onPressed: () {
+                              setState(() {
+                                obscure = !obscure;
+                              });
+                            },
                           ),
                         ),
                         controller: controller2,

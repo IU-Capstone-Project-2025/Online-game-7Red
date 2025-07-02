@@ -22,6 +22,8 @@ class _ConnectDialogState extends State<ConnectDialog> {
   String postText = '';
   bool logSuccess = false;
 
+  bool obscure = true;
+
   Future<void> connectToRoom(int id, String room_id, String password) async {
     final url = Uri.parse('$joinRoomUrl');
     final response = await http.post(
@@ -126,9 +128,21 @@ class _ConnectDialogState extends State<ConnectDialog> {
                   borderRadius: BorderRadius.circular(8),
                 ),
                 child: TextField(
-                  decoration: const InputDecoration(
+                  obscureText: obscure,
+                  decoration: InputDecoration(
                     border: OutlineInputBorder(
                       borderSide: BorderSide.none,
+                    ),
+                    suffixIcon: IconButton(
+                      icon: Icon(
+                        obscure ? Icons.visibility : Icons.visibility_off,
+                        color: grey3A3A3AColor,
+                      ),
+                      onPressed: () {
+                        setState(() {
+                          obscure = !obscure;
+                        });
+                      },
                     ),
                   ),
                   controller: controller2,
