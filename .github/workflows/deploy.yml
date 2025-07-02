@@ -55,16 +55,14 @@ jobs:
         with:
           flutter-version: '3.32.1'  
           channel: 'stable'
-      - name: Navigate to Flutter project
-        run: cd frontend
-
+          
       - name: Install dependencies
-        run: |
-          flutter pub get
-      
+        working-directory: ./frontend
+        run: flutter pub get
+
       - name: Run Flutter widget tests
-        run: |
-          flutter test test/widget_test.dart
+        working-directory: ./frontend
+        run: flutter test test/widget_test.dart
 
   build-and-push:
     needs: frontend_test
