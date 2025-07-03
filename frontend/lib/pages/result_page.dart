@@ -6,6 +6,7 @@ import 'dart:convert';
 import '../providers/provider.dart';
 import '../data/styles.dart';
 
+
 class ResultPage extends StatefulWidget {
   const ResultPage({super.key});
 

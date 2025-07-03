@@ -5,6 +5,7 @@ import 'dart:convert';
 
 import '../providers/provider.dart';
 import '../data/styles.dart';
+import '../data/urls.dart';
 
 class SignUpPage extends StatefulWidget {
   const SignUpPage({super.key});
@@ -26,10 +27,12 @@ class _SignUpPageState extends State<SignUpPage> {
   String errRepeatedPassword = '';
   bool regSuccess = false;
 
+  bool obscure = true;
+
   int ID = -1;
 
   Future<void> signUp(String nickname, String email, String password, String repeatedPassword) async {
-    final url = Uri.parse('http://localhost:8000/auth/signup');
+    final url = Uri.parse('$signUpUrl');
     final response = await http.post(
       url,
       headers: {'Content-Type': 'application/json', 'accept': 'application/json'},
@@ -185,9 +188,21 @@ class _SignUpPageState extends State<SignUpPage> {
                         borderRadius: BorderRadius.circular(6),
                       ),
                       child: TextField(
-                        decoration: const InputDecoration(
-                          border: OutlineInputBorder(
+                        obscureText: obscure,
+                        decoration: InputDecoration(
+                          border: const OutlineInputBorder(
                             borderSide: BorderSide.none,
+                          ),
+                          suffixIcon: IconButton(
+                            icon: Icon(
+                              obscure ? Icons.visibility : Icons.visibility_off,
+                              color: grey3A3A3AColor,
+                            ),
+                            onPressed: () {
+                              setState(() {
+                                obscure = !obscure;
+                              });
+                            },
                           ),
                         ),
                         controller: controller3,
@@ -214,6 +229,7 @@ class _SignUpPageState extends State<SignUpPage> {
                         borderRadius: BorderRadius.circular(6),
                       ),
                       child: TextField(
+                        obscureText: obscure,
                         decoration: const InputDecoration(
                           border: OutlineInputBorder(
                             borderSide: BorderSide.none,
