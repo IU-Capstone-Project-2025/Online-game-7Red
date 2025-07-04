@@ -431,7 +431,7 @@ def play_single_game():
     agent = DQNAgent(device=device)
     
     try:
-        agent.load("medium.pth")
+        agent.load("final_agent (4).pth")
         print("Model loaded successfully!")
     except Exception as e:
         print(f"\nError loading model: {e}")

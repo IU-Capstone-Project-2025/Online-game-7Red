@@ -30,6 +30,8 @@ COLORS = ["R", "O", "Y", "G", "B", "I", "V"]
 def decode_card(idx):
     if idx == 50:
         return "R0"
+    elif idx == 0:
+        return
     color = (idx - 1) // 7
     value = (idx - 1) % 7 + 1
     return f"{COLORS[color]}{value}"
