@@ -13,6 +13,7 @@ import '../customWidgets/cards.dart';
 import '../socket/web_socket.dart';
 import '../data/player.dart';
 import '../data/urls.dart';
+import '../customWidgets/ruleDialog.dart';
 
 class GameRoomPage extends StatefulWidget {
   const GameRoomPage({super.key});
@@ -73,7 +74,7 @@ class _GameRoomPageState extends State<GameRoomPage> {
   @override
   void initState() {
     super.initState();
-    _connectToWebSocket();
+    // _connectToWebSocket();
   }
 
   void _connectToWebSocket() async{
@@ -981,6 +982,7 @@ class _GameRoomPageState extends State<GameRoomPage> {
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
+                    Expanded(flex: 1, child: Text("")),
                     Stack(
                       alignment: Alignment.center,
                       children: [
@@ -1068,6 +1070,17 @@ class _GameRoomPageState extends State<GameRoomPage> {
                         width: 50,
                         child: Text(''),
                       ),
+                    Expanded(flex: 1, child: Text("")),
+                    IconButton(
+                      icon: Icon(Icons.help_outline, size: 40, color: grey3A3A3AColor,),
+                      onPressed: () {
+                        showDialog(
+                          context: context,
+                          builder: (context) => RuleDialog(),
+                        );
+                      },
+                    ),
+                    Padding(padding: const EdgeInsets.only(right: 15), child: Text(""),),
                   ],
                 ),
               )

@@ -95,6 +95,14 @@ TextStyle confirmExitStyle = const TextStyle(
   letterSpacing: 1,
 );
 
+TextStyle ruleStyle = const TextStyle(
+  fontFamily: 'Awesome5',
+  fontSize: 24,
+  fontWeight: FontWeight.w600,
+  color: Color.fromARGB(255, 58, 58, 58),
+  letterSpacing: 1,
+);
+
 TextStyle invisTextStyle = const TextStyle(
   fontSize: 5,
   fontWeight: FontWeight.w500,
