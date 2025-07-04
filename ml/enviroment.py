@@ -2,17 +2,17 @@ import numpy as np
 import random
 from typing import Tuple, List
 import torch
-import colorama
-from colorama import Fore, Style
+# import colorama
+# from colorama import Fore, Style
 from collections import defaultdict
 
-colorama.init(autoreset=True)
+#colorama.init(autoreset=True)
 
 class Red7Env:
     COLORS = ["R", "O", "Y", "G", "L", "B", "V"]
     COLOR_NAMES = ["Red", "Orange", "Yellow", "Green", "LightBlue", "Blue", "Violet"]
-    COLOR_CODES = [Fore.RED, Fore.LIGHTRED_EX, Fore.YELLOW, Fore.GREEN,
-                   Fore.CYAN, Fore.BLUE, Fore.MAGENTA]
+    # COLOR_CODES = [Fore.RED, Fore.LIGHTRED_EX, Fore.YELLOW, Fore.GREEN,
+    #                Fore.CYAN, Fore.BLUE, Fore.MAGENTA]
 
 
 
@@ -94,12 +94,12 @@ class Red7Env:
     def render(self):
         cp = 1 - self._current_player
         print("\n" + "="*42)
-        print(f"{Style.BRIGHT}Current Turn: Player {cp}")
+        print(f"Current Turn: Player {cp}")
         print("-" * 42)
-        print(f"{Style.BRIGHT}Player 0 (You):")
+        print(f"Player 0 (You):")
         print(f"  Hand:    {self._cards_to_str(self.player1_hand)}")
         print(f"  Palette: {self._cards_to_str(self.player1_palette)}")
-        print(f"{Style.BRIGHT}Player 1 (Opponent):")
+        print(f"Player 1 (Opponent):")
         print(f"  Hand:    {self._cards_to_str(self.player2_hand)}")
         print(f"  Palette: {self._cards_to_str(self.player2_palette)}")
         print(f"\nCurrent Rule: {self.COLOR_NAMES[self.rule]}")
@@ -112,7 +112,8 @@ class Red7Env:
             return "Invalid"
         val = (card - 1) % 7 + 1
         col = (card - 1) // 7
-        return self.COLOR_CODES[col] + f"{self.COLORS[col]}{val}" + Style.RESET_ALL
+        #return self.COLOR_CODES[col] + f"{self.COLORS[col]}{val}" + Style.RESET_ALL
+        return f"{self.COLORS[col]}{val}"
 
 
     def _cards_to_str(self, cards: List[int]) -> str:

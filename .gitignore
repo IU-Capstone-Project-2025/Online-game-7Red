@@ -3,3 +3,4 @@ database/.env
 .env
 *.env
 custom-compose.yml
+docker-compose2.yml
