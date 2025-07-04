@@ -1,18 +1,17 @@
-version: "3.9"
+# version: "3.9"
 services:
   backend:
-    build: ./backend
+    image: spalkkina/7red:backend-latest
     ports:
       - "8000:8000"
     restart: unless-stopped
     env_file:
-      - ./database/.env   # or ./backend/.env if your .env is inside backend
-
-  # frontend:
-  #   build: ./frontend
-  #   # ports:
-  #   # command:
-
-  # ml:
-  #   build: ./ml
-  #   # command:
+      - ./database/.env   
+  
+  frontend:
+    image: spalkkina/7red:frontend-latest
+    ports:
+      - "8080:80"
+    depends_on:
+      - backend
+    restart: unless-stopped

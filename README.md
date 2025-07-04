@@ -32,7 +32,48 @@ The application includes the following core components:
    docker-compose up --build
    ```
 
-2. Access the backend at:
- [http://localhost:8000](http://localhost:8000)
+2. Access to the website at:
+ [http://localhost:8080](http://localhost:8080)
 
 3. After starting the backend, you can access the interactive Swagger UI at: [http://localhost:8000/docs](http://localhost:8000/docs)
+
+## To play in a 2 player game mode using docker (on your local machine to test something), do the following:
+
+1. Build and start all services using:
+   ```sh
+   docker-compose up --build
+   ```
+
+2. Open 2 browser tabs at:
+ [http://localhost:8080](http://localhost:8080)
+
+3. Log in into 2 different accounts (using Sign In or Sign Up) from each of the browser tab respectively
+
+4. From one of the logged accounts create a private room (Start new game -> Create private room).
+
+5. From another logged account connect to the created private room using room ID and room password (Start new game -> Connect private room)
+
+6. When in a waiting room, from each of the account click "Get Ready" button
+
+7. Play a game - drag cards and submit your moves from both of the accounts
+
+## To play in a 2 player game mode online, do the following:
+1. Open browser tab at:
+ [http://192.145.30.253:8080/](http://192.145.30.253:8080/)
+
+2. Log in into account (using Sign In or Sign Up)
+
+3. Create a private room (Start new game -> Create private room) or connect to the created private room using room ID and room password (Start new game -> Connect private room)
+
+4. When in a waiting room, click "Get Ready" button
+
+5. Play a game - drag cards and submit your moves
+
+## To play with DQN
+1. Upload the file DON.py
+
+2. There should be files next to it in the same directory. enviroment.py and final_agent (4).
+
+3. Install torch
+
+4. Write in the console in the directory where the file is located DQN.py python DQN.py

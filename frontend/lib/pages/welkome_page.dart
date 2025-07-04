@@ -1,12 +1,8 @@
 import 'package:flutter/material.dart';
 import '../data/styles.dart';
-// import '../services/remote_service.dart';
-// import '../models/post.dart';
 
-import 'package:http/http.dart' as http;
-import 'dart:convert';
-
-
+import 'package:circular_countdown_timer/circular_countdown_timer.dart';
+final _countDownController = CountDownController();
 
 class WelkomePage extends StatefulWidget {
   const WelkomePage({super.key});
@@ -16,35 +12,6 @@ class WelkomePage extends StatefulWidget {
 }
 
 class _WelkomePageState extends State<WelkomePage> {
-  String postText = 'none of response';
-
-  Future<void> signUp(String nickname, String email, String password, String repeatedPassword) async {
-    final url = Uri.parse('http://localhost:8000/auth/signup');
-    final response = await http.post(
-      url,
-      headers: {'Content-Type': 'application/json', 'accept': 'application/json'},
-      body: jsonEncode({
-        'nickname': nickname,
-        'email': email,
-        'password': password,
-        'repeated_password': repeatedPassword,
-      }),
-    );
-
-    if (response.statusCode == 200 || response.statusCode == 201) {
-      print('Registration successful: ${response.body}');
-      setState(() {
-        postText = 'Registration successful: ${response.body}';
-      });
-    } else {
-      print('Registration failed: ${response.body}');
-      setState(() {
-        postText = 'Registration failed: ${response.body}';
-      });
-    }
-  }
-
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -76,8 +43,8 @@ class _WelkomePageState extends State<WelkomePage> {
                     crossAxisAlignment: CrossAxisAlignment.center,
                     children: [
                       SizedBox(
-                        width: 335,
-                        height: 48,
+                        width: 295,
+                        height: 45,
                         child: ElevatedButton(
                           style: ButtonStyle(
                             backgroundColor: WidgetStateProperty.all<Color>(
@@ -92,10 +59,10 @@ class _WelkomePageState extends State<WelkomePage> {
                             shape:
                                 WidgetStateProperty.all<RoundedRectangleBorder>(
                                   RoundedRectangleBorder(
-                                    borderRadius: BorderRadius.circular(10),
+                                    borderRadius: BorderRadius.circular(7),
                                   ),
                                 ),
-                            side: MaterialStateProperty.all<BorderSide>(
+                            side: WidgetStateProperty.all<BorderSide>(
                               BorderSide(color: grey3A3A3AColor, width: 1),
                             ),
                           ),
@@ -113,14 +80,14 @@ class _WelkomePageState extends State<WelkomePage> {
                     ],
                   ),
                   Padding(padding: EdgeInsets.only(left: 80)),
-                  Container(width: 1, height: 150, color: Colors.black),
+                  Container(width: 1, height: 130, color: Colors.black),
                   Padding(padding: EdgeInsets.only(left: 80)),
                   Column(
                     crossAxisAlignment: CrossAxisAlignment.center,
                     children: [
                       SizedBox(
-                        width: 335,
-                        height: 50,
+                        width: 295,
+                        height: 45,
                         child: ElevatedButton(
                           style: ButtonStyle(
                             backgroundColor: WidgetStateProperty.all<Color>(
@@ -138,7 +105,7 @@ class _WelkomePageState extends State<WelkomePage> {
                                     borderRadius: BorderRadius.circular(10),
                                   ),
                                 ),
-                            side: MaterialStateProperty.all<BorderSide>(
+                            side: WidgetStateProperty.all<BorderSide>(
                               BorderSide(color: grey3A3A3AColor, width: 1),
                             ),
                           ),
@@ -157,48 +124,51 @@ class _WelkomePageState extends State<WelkomePage> {
                   ),
                 ],
               ),
-              const Expanded(flex: 4, child: Text("")),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                crossAxisAlignment: CrossAxisAlignment.center,
-                children: [
-                  SizedBox(
-                    width: 200,
-                    height: 50,
-                    child: ElevatedButton(
-                      style: ButtonStyle(
-                        backgroundColor: WidgetStateProperty.all<Color>(
-                          buttonColor,
-                        ),
-                        textStyle: WidgetStateProperty.all<TextStyle>(
-                          buttonTextStyle,
-                        ),
-                        foregroundColor: WidgetStateProperty.all<Color>(
-                          grey3A3A3AColor,
-                        ),
-                        shape:
-                            WidgetStateProperty.all<RoundedRectangleBorder>(
-                              RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(10),
-                              ),
-                            ),
-                        side: MaterialStateProperty.all<BorderSide>(
-                          BorderSide(color: grey3A3A3AColor, width: 1),
-                        ),
-                      ),
-                      onPressed: () {
-                        signUp('nickname', 'anastasia.shlomov@gmail.com', 'password', 'password');
-                      },
-                      child: const Text('Test post to backend'),
-                    ),
-                  ),
-                  Padding(padding: EdgeInsets.only(left: 30)),
-                  Text(
-                    "${postText}",
-                    style: basicTextStyle,
-                  ),
-                ]
-              )
+              const Expanded(flex: 6, child: Text("")),
+              // const Expanded(flex: 2, child: Text("")),
+              // Stack(
+              //   alignment: Alignment.center,
+              //   children: [
+              //     CircularCountDownTimer(
+              //     controller: _countDownController,
+              //     duration: 60,
+              //     isReverse: true,
+              //     fillColor: greenTimerColor,
+              //     height: 74,
+              //     width: 74,
+              //     strokeWidth: 8,
+              //     onComplete: () {
+              //       // later
+              //     },
+              //     strokeCap: StrokeCap.round,
+              //     isReverseAnimation: true,
+              //     ringColor: greyTimerColor,
+              //     autoStart: false,
+              //     textStyle: invisTextStyle,
+              //     ),
+              //     Icon(Icons.account_circle, size: 80, color: grey3A3A3AColor,),
+              //   ],
+              // ),
+              // Row(
+              //   mainAxisAlignment: MainAxisAlignment.center,
+              //   crossAxisAlignment: CrossAxisAlignment.center,
+              //   children: [
+              //     IconButton(
+              //       onPressed: () {
+              //         _countDownController.restart();
+              //       },
+              //       icon: Icon(Icons.refresh, size: 50, color: grey3A3A3AColor,),
+              //     ),
+              //     Padding(padding: EdgeInsets.only(left: 30)),
+              //     IconButton(
+              //       onPressed: () {
+              //         _countDownController.reset();
+              //       },
+              //       icon: Icon(Icons.stop, size: 50, color: grey3A3A3AColor,),
+              //     )
+              //   ],
+              // ),
+              // const Expanded(flex: 2, child: Text("")),
             ],
           ),
         ),
