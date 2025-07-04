@@ -9,7 +9,7 @@ import 'dart:convert';
 
 import '../data/styles.dart';
 import '../providers/provider.dart';
-import '../data/cards.dart';
+import '../customWidgets/cards.dart';
 import '../socket/web_socket.dart';
 import '../data/player.dart';
 import '../data/urls.dart';
@@ -68,6 +68,8 @@ class _GameRoomPageState extends State<GameRoomPage> {
 
   int myPlace = 0;
 
+  bool aiGame = false;
+
   @override
   void initState() {
     super.initState();
@@ -79,7 +81,12 @@ class _GameRoomPageState extends State<GameRoomPage> {
       SharedPreferences prefs = await SharedPreferences.getInstance();
       roomID = await prefs.getString('roomId');
       userID = await prefs.getInt('myID');
-      serverUrl = '$serverUrlPartUrl/game/$roomID/ws?player_id=$userID';
+      aiGame = await prefs.getBool('aiGame') ?? false;
+      if (aiGame) {
+        serverUrl = '$serverUrlPartUrl/ai_game/$userID';
+      } else {
+        serverUrl = '$serverUrlPartUrl/game/$roomID/ws?player_id=$userID';
+      }
       print(serverUrl);
       _webSocket = GameWebSocket(
         serverUrl: serverUrl,
@@ -302,10 +309,10 @@ class _GameRoomPageState extends State<GameRoomPage> {
       myAllTurn = true;
     });
 
-    final message = {
+    var message = {
       'type': 'my_turn',
-      'my_id': userID,
-      'my_room': roomID,
+      'my_id': userID ?? null,
+      'my_room': roomID ?? null,
       'my_pallete_ch': palleteChanged ? my_pallete_ch : null,
       'rule_ch': ruleChanged ? _ruleCard : null,
       'my_hand': _myHand,
@@ -361,10 +368,6 @@ class _GameRoomPageState extends State<GameRoomPage> {
         nextIndex = (nextIndex + 1) % _players.length;
       }
     }
-    
-
-    // final index = _activePlayers.indexOf(currID);
-    // return _activePlayers[(index + 1) % _activePlayers.length];
   }
 
   void _onDisconnected() {
@@ -503,10 +506,13 @@ class _GameRoomPageState extends State<GameRoomPage> {
                               ),
                             ),
                             onPressed: () async {
-                              await leaveRoom(userID!, roomID!);
+                              if (!aiGame) {
+                                 await leaveRoom(userID!, roomID!);
+                              }
                               SharedPreferences prefs = await SharedPreferences.getInstance();
                               await prefs.remove('roomId');
                               await prefs.remove('roomPassword');
+                              await prefs.remove('aiGame');
                               _webSocket.disconnect();
                               Navigator.of(context).pop();
                               Navigator.pushNamed(context, '/mainmenu');
@@ -601,10 +607,13 @@ class _GameRoomPageState extends State<GameRoomPage> {
                           } else {
                             _exit();
                           }
-                          await leaveRoom(userID!, roomID!);
+                          if (!aiGame) {
+                            await leaveRoom(userID!, roomID!);
+                          }
                           SharedPreferences prefs = await SharedPreferences.getInstance();
                           await prefs.remove('roomId');
                           await prefs.remove('roomPassword');
+                          await prefs.remove('aiGame');
                           _webSocket.disconnect();
                           Navigator.of(context).pop();
                           Navigator.pushNamed(context, '/mainmenu');
@@ -640,15 +649,6 @@ class _GameRoomPageState extends State<GameRoomPage> {
         'assigned_id': room_id,
       })
     );
-    // if (response.statusCode == 200) {
-    //   setState(() {
-    //     logSuccess = true;
-    //   });
-    // } else {
-    //   setState(() {
-    //     logSuccess = false;
-    //   });
-    // }
   }
 
    void _exit() {
@@ -1064,7 +1064,7 @@ class _GameRoomPageState extends State<GameRoomPage> {
                       )
                     else 
                       SizedBox(
-                        height: 100,
+                        height: 105,
                         width: 50,
                         child: Text(''),
                       ),
