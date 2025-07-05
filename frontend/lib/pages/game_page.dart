@@ -74,7 +74,7 @@ class _GameRoomPageState extends State<GameRoomPage> {
   @override
   void initState() {
     super.initState();
-    // _connectToWebSocket();
+    _connectToWebSocket();
   }
 
   void _connectToWebSocket() async{

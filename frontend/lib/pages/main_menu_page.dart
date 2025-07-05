@@ -357,7 +357,7 @@ class _MainMenuPageState extends State<MainMenuPage> {
                     height: 80,
                     child: IconButton(
                       onPressed: () {
-                        // pass
+                        Navigator.pushNamed(context, '/rules');
                       },
                       icon: const Icon(Icons.help_outline, size: 60),
                     ),
