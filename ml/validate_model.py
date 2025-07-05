@@ -1,7 +1,17 @@
 from DQN import DQNAgent
 from enviroment import Red7Env
 from mcts_cpu import MCTSAI
-
+"""
+    Тестирует DQN-агента против MCTS-агента в заданном количестве игр.
+    
+    Параметры:
+        model_path (str): Путь к файлу модели DQN.
+        mcts_iterations (int): Количество итераций MCTS для принятия решений.
+        num_games (int): Количество игр для тестирования (по умолчанию 100).
+    
+    Возвращает:
+        float: Процент побед DQN-агента.
+    """
 def test_against_mcts(model_path, mcts_iterations, num_games=100):
     env = Red7Env(verbose=False)
     dqn_agent = DQNAgent(device='cpu')

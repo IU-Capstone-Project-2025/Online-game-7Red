@@ -133,20 +133,17 @@ class Red7Env:
         hand_set = set(hand)
         mask[0][0] = 1
 
-        # Ход с добавлением карты в палитку (i > 0, j == 0)
         for i in range(1, 50):
             if i in hand_set:
                 mask[i][0] = 1.0
                 if not check_win(pallete.copy() + [i], [opp_pallete], self.rule):
                     mask[i][0] = 0
-                # Двойной ход: добавить карту в палитку + сменить правило
                 for j in range(1, 50):
                     if j in hand_set and i != j:
                         if not check_win(pallete.copy() + [i], [opp_pallete], (j - 1) // 7):
                             mask[i][j] = 0
                         else:
                             mask[i][j] = 1.0
-        # Смена правила (i == 0, j > 0)
         for j in range(1, 50):
             if j in hand_set:
                 mask[0][j] = 1.0
@@ -398,7 +395,6 @@ class Red7Env:
             #print(f"Player {self._current_player + 1} has no winning moves. Game over.")
             return self._get_obs(), reward, self.done, {}
 
-        # Переключение игрока
         self._current_player = 1 - self._current_player
         return self._get_obs(), reward, self.done, {}
 
@@ -502,7 +498,7 @@ def compare_cards(a: int, b: int) -> bool:
     va, vb = card_value(a), card_value(b)
     if va != vb:
         return va < vb
-    return card_color(a) > card_color(b)  # меньший цвет считается лучше
+    return card_color(a) > card_color(b)
 
 """
     Find maximum card in list.
@@ -521,7 +517,7 @@ def find_max_card(cards: List[int]) -> int:
         raise RuntimeError("Empty card list")
     max_card = cards[0]
     for c in cards[1:]:
-        if compare_cards(max_card, c):  # если max_card < c → обновить
+        if compare_cards(max_card, c):
             max_card = c
     return max_card
 
@@ -620,7 +616,7 @@ def comparison_blue(cards: List[int]) -> Tuple[int, int]:
     values = sorted(set(card_value(c) for c in cards))
     max_len = 1
     cur_len = 1
-    sequences = []  # Будем хранить все последовательности (длина, начальное значение)
+    sequences = []
     temp_start = 0
 
     for i in range(1, len(values)):
@@ -633,29 +629,27 @@ def comparison_blue(cards: List[int]) -> Tuple[int, int]:
             cur_len = 1
             temp_start = i
     
-    # Добавляем последнюю последовательность
+   
     sequences.append((cur_len, values[temp_start]))
 
     if not sequences:
         return 0, 0
 
-    # Находим максимальную длину
+    
     max_len = max(seq[0] for seq in sequences)
     
-    # Фильтруем последовательности с максимальной длиной
+    
     max_sequences = [seq for seq in sequences if seq[0] == max_len]
     
-    # Если несколько последовательностей, выбираем с наибольшей картой
+    
     if len(max_sequences) > 1:
-        # Выбираем последовательность с наибольшим начальным значением (так как они последовательные)
-        best_seq = max(max_sequences, key=lambda x: x[1] + x[0] - 1)  # начальное + длина -1 = последнее значение
+        
+        best_seq = max(max_sequences, key=lambda x: x[1] + x[0] - 1) 
     else:
         best_seq = max_sequences[0]
 
-    # Вычисляем диапазон значений в выбранной последовательности
     seq_values = set(range(best_seq[1], best_seq[1] + best_seq[0]))
 
-    # Ищем лучшую карту среди тех, которые входят в эту последовательность
     max_card = None
     for c in cards:
         if card_value(c) in seq_values:
@@ -759,14 +753,12 @@ def get_winning_moves(
     results = []
     current_rule = card_color(rule_card)
 
-    # 1. Добавить карту в палетку (не меняя правило)
     for i, card in enumerate(hand):
         new_palette = my_palette + [card]
         if check_win(new_palette, other_palettes, current_rule):
             new_hand = hand[:i] + hand[i+1:]
             results.append((rule_card, new_hand, new_palette))
 
-    # 2. Сменить правило (не добавляя в палетку)
     for i, card in enumerate(hand):
         new_rule = card_color(card)
         new_rule_card = card
@@ -774,7 +766,6 @@ def get_winning_moves(
         if check_win(my_palette, other_palettes, new_rule):
             results.append((new_rule_card, new_hand, my_palette))
 
-    # 3. Добавить карту в палетку и сменить правило (двойной ход)
     for i in range(len(hand)):
         for j in range(len(hand)):
             if i == j:
