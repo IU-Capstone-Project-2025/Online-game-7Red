@@ -56,6 +56,13 @@ TextStyle cardNumStyle = const TextStyle(
   color: Colors.white
 );
 
+TextStyle otherCardNumStyle = const TextStyle(
+  fontFamily: 'Awesome5',
+  fontSize: 45,
+  fontWeight: FontWeight.w500,
+  color: Colors.white
+);
+
 TextStyle buttonWhiteTextStyle = const TextStyle(
   fontFamily: 'Awesome5',
   fontSize: 14,
@@ -95,10 +102,39 @@ TextStyle confirmExitStyle = const TextStyle(
   letterSpacing: 1,
 );
 
+TextStyle ruleStyle = const TextStyle(
+  fontFamily: 'Awesome5',
+  fontSize: 24,
+  fontWeight: FontWeight.w600,
+  color: Color.fromARGB(255, 58, 58, 58),
+  letterSpacing: 1,
+);
+
 TextStyle invisTextStyle = const TextStyle(
   fontSize: 5,
   fontWeight: FontWeight.w500,
   color: Color.fromARGB(0, 58, 58, 58)
+);
+
+TextStyle titleBigStyle = const TextStyle(
+  fontFamily: 'Poppins',
+  fontSize: 31,
+  fontWeight: FontWeight.w800,
+  color: Color.fromARGB(255, 58, 58, 58)
+);
+
+TextStyle titleRuleStyle = const TextStyle(
+  fontFamily: 'Poppins',
+  fontSize: 26,
+  fontWeight: FontWeight.w800,
+  color: Color.fromARGB(255, 58, 58, 58)
+);
+
+TextStyle ruleTextStyle = const TextStyle(
+  fontFamily: 'Poppins',
+  fontSize: 18,
+  fontWeight: FontWeight.w500,
+  color: Color.fromARGB(255, 58, 58, 58)
 );
 
 

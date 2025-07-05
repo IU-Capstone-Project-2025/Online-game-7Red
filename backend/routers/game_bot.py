@@ -88,7 +88,10 @@ async def websocket_game(websocket: WebSocket, player_id: int):
 
             # Game state progression
             #next_lose = not game.check_winning_at_beginning(game.current_player)
-            next_lose = True if bot_response["winner"] == 0 else False
+            if bot_response:
+                next_lose = True if bot_response["winner"] == 0 else False
+            else:
+                next_lose = False
             await broadcast_game_state(game, player_id, is_winning, my_palette_ch, new_rule, next_lose, player_id)
             print(game.players)
             print(game.cur_rule_card)

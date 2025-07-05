@@ -4,7 +4,7 @@ import torch.nn.functional as F
 import torch.optim as optim
 import random
 import numpy as np
-import matplotlib.pyplot as plt
+#import matplotlib.pyplot as plt
 from collections import deque
 from ml.enviroment import Red7Env, get_winning_moves
 
@@ -411,17 +411,17 @@ def train_mcts(env, agent_0, agent_1=None, num_episodes=5000, mode='mcts'):
     return win_history
 
 
-def plot_winrate(win_history, title="Win Rate"):
-    win_rate_curve = np.convolve(win_history, np.ones(50)/50, mode='valid') * 100
-    plt.figure(figsize=(10, 5))
-    plt.plot(win_rate_curve, label=f"{title} (avg over 50 games)")
-    plt.xlabel("Episode")
-    plt.ylabel("Win Rate (%)")
-    plt.title(title)
-    plt.grid(True)
-    plt.legend()
-    plt.tight_layout()
-    plt.show()
+# def plot_winrate(win_history, title="Win Rate"):
+#     win_rate_curve = np.convolve(win_history, np.ones(50)/50, mode='valid') * 100
+#     plt.figure(figsize=(10, 5))
+#     plt.plot(win_rate_curve, label=f"{title} (avg over 50 games)")
+#     plt.xlabel("Episode")
+#     plt.ylabel("Win Rate (%)")
+#     plt.title(title)
+#     plt.grid(True)
+#     plt.legend()
+#     plt.tight_layout()
+#     plt.show()
 
 def play_single_game():
     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
@@ -431,7 +431,7 @@ def play_single_game():
     agent = DQNAgent(device=device)
     
     try:
-        agent.load("medium.pth")
+        agent.load("final_agent (4).pth")
         print("Model loaded successfully!")
     except Exception as e:
         print(f"\nError loading model: {e}")
