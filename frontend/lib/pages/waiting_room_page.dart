@@ -80,6 +80,7 @@ class _WaitingRoomPageState extends State<WaitingRoomPage> {
           // allReady = true;
           SharedPreferences prefs = await SharedPreferences.getInstance();
           await prefs.remove('ready');
+          await prefs.setInt('playerNum', ready_players.length);
           Navigator.pushNamed(context, '/gameroom');
           _pollingTimer?.cancel();
         }

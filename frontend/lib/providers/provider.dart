@@ -59,6 +59,13 @@ class GameProvider extends ChangeNotifier {
     notifyListeners();
   }
 
+  int _playerNum = 0;
+  int get playerNum => _playerNum;
+  set playerNum(int value) {
+    _playerNum = value;
+    notifyListeners();
+  }
+
   void saveMyPersonalInfo() async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
     await prefs.setString('myName', _myName);

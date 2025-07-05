@@ -56,6 +56,13 @@ TextStyle cardNumStyle = const TextStyle(
   color: Colors.white
 );
 
+TextStyle otherCardNumStyle = const TextStyle(
+  fontFamily: 'Awesome5',
+  fontSize: 45,
+  fontWeight: FontWeight.w500,
+  color: Colors.white
+);
+
 TextStyle buttonWhiteTextStyle = const TextStyle(
   fontFamily: 'Awesome5',
   fontSize: 14,
