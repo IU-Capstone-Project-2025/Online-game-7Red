@@ -158,8 +158,6 @@ class Red7GameState:
         self.initialize_deck()
         self.deal_cards()
         self.current_player = self.players_id_list[0]  # First player from shuffled list
-        self.current_rule = 0  # Red rule
-        self.cur_rule_card = None
         self.started = True
         self.game_over = False
 
@@ -258,6 +256,7 @@ class Red7GameState:
     
     def check_in_possible_moves(self, player_id: int, new_rule: str, new_hand: List[str], new_palette: List[str]) -> bool:
         try:
+            print(f"Rule at the beggining of check_in_possible_moves{self.cur_rule_card}", flush=True)
             moves = self.players[player_id]["possible_moves"]
             if not moves:
                 return False
@@ -282,6 +281,7 @@ class Red7GameState:
                 if new_rule is not None:
                     self.cur_rule_card = new_rule
                     self.current_rule = self.rule_to_int(self.cur_rule_card[0])
+                print(f"Rule at the end of check_in_possible_moves{self.cur_rule_card}", flush=True)
                 print("In check_possible_moves found exact match", flush=True)
                 return True
             
