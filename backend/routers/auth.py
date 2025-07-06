@@ -53,7 +53,7 @@ async def signin(request: SignInRequest):
     # Record this login as a visit
     await add_visit(user["id"])
     # Check if user has earned the 7-day streak achievement
-    new_achievement = await check_and_award_7_days_streak(user["id"])
+    await check_and_award_7_days_streak(user["id"])
     
     # Get the user's profile information
     profile = await get_profile_by_user_id(user["id"])
@@ -62,6 +62,5 @@ async def signin(request: SignInRequest):
     return {
         "message": "Sign in succesfully", 
         "user_id": user["id"],
-        "nickname": nickname,
-        "new_achievement": new_achievement
+        "nickname": nickname
     }
