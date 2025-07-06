@@ -1,19 +1,23 @@
 from fastapi import APIRouter, Body, HTTPException
-from backend.models import  JoinRoomRequest
+from backend.models import JoinRoomRequest
 from backend.database import (assigned_id_exists, password_exist, create_game_room, add_user_to_room, 
 search_game_room, remove_user_from_room, set_user_ready, get_room_players_and_ready)
 import random
 import asyncio
+
+
 router = APIRouter(prefix="/rooms", tags=["rooms"])
 
-online_queue = []
-online_queue_status = {}
-ONLINE_ROOM_SIZE = 4
-ONLINE_WAIT_SECONDS = 60
+# Global variables for online matchmaking
+online_queue = []  # Queue of users waiting for online match
+online_queue_status = {}  # Status tracking for users in queue
+ONLINE_ROOM_SIZE = 4  # Number of players required for an online room
+ONLINE_WAIT_SECONDS = 60  # Maximum wait time before starting a game with fewer players
 
 
 async def generate_unique_assigned_id():
-    for _ in range(100):
+    """Generate a unique 5-digit room ID that doesn't exist in the database"""
+    for _ in range(100):  # Try up to 100 times
         assigned_id = "{:05d}".format(random.randint(0, 99999))
         if not await assigned_id_exists(assigned_id):
             return assigned_id
@@ -21,7 +25,8 @@ async def generate_unique_assigned_id():
 
 
 async def generate_unique_password():
-    for _ in range(100):
+    """Generate a unique 5-digit password that doesn't exist in the database"""
+    for _ in range(100):  # Try up to 100 times
         password = "{:05d}".format(random.randint(0, 99999))
         if not await password_exist(password):
             return password
@@ -30,6 +35,7 @@ async def generate_unique_password():
 
 @router.post("/create")
 async def create_room(user_id: int = Body(..., embed=True)):
+    """Create a new game room and add the creator to it"""
     assigned_id = await generate_unique_assigned_id()
     password = await generate_unique_password()
     await create_game_room(assigned_id, password)
@@ -42,6 +48,7 @@ async def create_room(user_id: int = Body(..., embed=True)):
 
 @router.post("/join")
 async def join_room(request: JoinRoomRequest):
+    """Join an existing game room using room ID and password"""
     room = await search_game_room(request.assigned_id)
     if not room:
         raise HTTPException(status_code=404, detail="Room not found")
@@ -63,6 +70,7 @@ async def leave_room(
     user_id: int = Body(..., embed=True),
     assigned_id: str = Body(..., embed=True)
 ):
+    """Remove a user from a game room"""
     try:
         await remove_user_from_room(user_id, assigned_id)
         return {"message": f"User {user_id} left room {assigned_id}"}
@@ -72,14 +80,17 @@ async def leave_room(
 
 @router.post("/ready")
 async def player_ready(user_id: int = Body(..., embed=True), assigned_id: str = Body(..., embed=True)):
+    """Mark a player as ready to start the game"""
     try:
         await set_user_ready(user_id, assigned_id, True)
         return {"message": f"Player {user_id} is ready in room {assigned_id}"}
     except Exception as e:
         raise HTTPException(status_code=404, detail=str(e))
 
+
 @router.post("/not_ready")
-async def player_not_ready( user_id: int = Body(..., embed=True), assigned_id: str = Body(..., embed=True)):
+async def player_not_ready(user_id: int = Body(..., embed=True), assigned_id: str = Body(..., embed=True)):
+    """Mark a player as not ready to start the game"""
     try:
         await set_user_ready(user_id, assigned_id, False)
         return {"message": f"Player {user_id} is not ready in room {assigned_id}"}
@@ -89,6 +100,7 @@ async def player_not_ready( user_id: int = Body(..., embed=True), assigned_id: s
 
 @router.post("/state")
 async def update_room_state(assigned_id: str = Body(..., embed=True)):
+    """Get the current state of a room (players and their ready status)"""
     try:
         players, ready_players = await get_room_players_and_ready(assigned_id)
         return {
@@ -102,6 +114,7 @@ async def update_room_state(assigned_id: str = Body(..., embed=True)):
 #--------------------------Find online players--------------------------------------------------------------
     
 async def start_online_game(players):
+    """Create a game room for matched online players"""
     assigned_id = await generate_unique_assigned_id()
     password = await generate_unique_password()
     await create_game_room(assigned_id, password)
@@ -117,6 +130,11 @@ async def start_online_game(players):
 
 
 async def online_queue_timeout(players_snapshot):
+    """Handle timeout for online matchmaking queue
+    
+    If enough time passes and we have at least 2 players, create a game with them.
+    Otherwise, remove players from the queue and notify them.
+    """
     await asyncio.sleep(ONLINE_WAIT_SECONDS)
     still_waiting = [uid for uid in players_snapshot if uid in online_queue]
     if len(still_waiting) >= 2:
@@ -131,29 +149,41 @@ async def online_queue_timeout(players_snapshot):
 
 @router.post("/find_online")
 async def find_online(user_id: int = Body(..., embed=True)):
+    """Add user to matchmaking queue for online games"""
+    # If user is already in queue, return current status
     if user_id in online_queue:
         return {"status": online_queue_status.get(user_id, "waiting")}
+    
+    # Add user to queue and update status
     online_queue.append(user_id)
     online_queue_status[user_id] = {"status":"waiting"}
+    
+    # If this is the first player, start timeout task
     if len(online_queue) == 1:
         asyncio.create_task(online_queue_timeout(list(online_queue)))
     
+    # If we have enough players, create a game immediately
     if len(online_queue) == ONLINE_ROOM_SIZE:
         players = list(online_queue)
         for uid in players:
             online_queue.remove(uid)
         await start_online_game(players)
         return online_queue_status[user_id]
+    
     return {"status":"waiting"}
+
 
 @router.post("/find_online_status")
 async def find_online_status(user_id: int = Body(..., embed=True)):
+    """Check the current matchmaking status for a user"""
     if user_id in online_queue_status:
         return online_queue_status[user_id]
     return {"status": "not_in_queue"}
 
+
 @router.post("/cancel_find_online")
 async def cancel_find_online(user_id: int = Body(..., embed=True)):
+    """Remove a user from the matchmaking queue"""
     if user_id in online_queue:
         online_queue.remove(user_id)
     if user_id in online_queue_status:
