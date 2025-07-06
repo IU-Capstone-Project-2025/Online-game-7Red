@@ -3,7 +3,13 @@ from backend.models import  JoinRoomRequest
 from backend.database import (assigned_id_exists, password_exist, create_game_room, add_user_to_room, 
 search_game_room, remove_user_from_room, set_user_ready, get_room_players_and_ready)
 import random
+import asyncio
 router = APIRouter(prefix="/rooms", tags=["rooms"])
+
+online_queue = []
+online_queue_status = {}
+ONLINE_ROOM_SIZE = 4
+ONLINE_WAIT_SECONDS = 60
 
 
 async def generate_unique_assigned_id():
@@ -91,3 +97,65 @@ async def update_room_state(assigned_id: str = Body(..., embed=True)):
         }
     except Exception as e:
         raise HTTPException(status_code=404, detail=str(e))
+    
+    
+#--------------------------Find online players--------------------------------------------------------------
+    
+async def start_online_game(players):
+    assigned_id = await generate_unique_assigned_id()
+    password = await generate_unique_password()
+    await create_game_room(assigned_id, password)
+    for user_id in players:
+        await add_user_to_room(user_id, assigned_id)
+        online_queue_status[user_id] = {
+            "status": "matched",
+            "assigned_id": assigned_id,
+            "password": password,
+            "players": players
+        }
+    return assigned_id, password
+
+
+async def online_queue_timeout(players_snapshot):
+    await asyncio.sleep(ONLINE_WAIT_SECONDS)
+    still_waiting = [uid for uid in players_snapshot if uid in online_queue]
+    if len(still_waiting) >= 2:
+        for uid in still_waiting:
+            online_queue.remove(uid)
+        await start_online_game(still_waiting)
+    else:
+        for uid in still_waiting:
+            online_queue.remove(uid)
+            online_queue_status[uid] = {"status": "no_players"}
+
+
+@router.post("/find_online")
+async def find_online(user_id: int = Body(..., embed=True)):
+    if user_id in online_queue:
+        return {"status": online_queue_status.get(user_id, "waiting")}
+    online_queue.append(user_id)
+    online_queue_status[user_id] = {"status":"waiting"}
+    if len(online_queue) == 1:
+        asyncio.create_task(online_queue_timeout(list(online_queue)))
+    
+    if len(online_queue) == ONLINE_ROOM_SIZE:
+        players = list(online_queue)
+        for uid in players:
+            online_queue.remove(uid)
+        await start_online_game(players)
+        return online_queue_status[user_id]
+    return {"status":"waiting"}
+
+@router.post("/find_online_status")
+async def find_online_status(user_id: int = Body(..., embed=True)):
+    if user_id in online_queue_status:
+        return online_queue_status[user_id]
+    return {"status": "not_in_queue"}
+
+@router.post("/cancel_find_online")
+async def cancel_find_online(user_id: int = Body(..., embed=True)):
+    if user_id in online_queue:
+        online_queue.remove(user_id)
+    if user_id in online_queue_status:
+        del online_queue_status[user_id]
+    return {"status": "cancelled"}

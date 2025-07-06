@@ -291,6 +291,17 @@ async def award_achievement_if_needed(user_id: int, achievement_id: int):
         )
         await database.execute(insert)
         
+        
+async def check_and_award_7_days_streak(user_id: int):
+    streak = await get_visit_streak(user_id)
+    if streak >= 7:
+        achievement_id = await get_achievement_id_by_name("7_days_streak")
+        if achievement_id:
+            awarded = await award_achievement_if_needed(user_id, achievement_id)
+            if awarded:
+                return "7_days_streak"
+    return None
+
 async def get_achievement_id_by_name(name: str):
     query = achievements.select().where(achievements.c.name == name)
     achievement = await database.fetch_one(query)
