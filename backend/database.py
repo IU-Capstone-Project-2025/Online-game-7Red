@@ -323,6 +323,7 @@ async def award_achievement_if_needed(user_id: int, achievement_id: int):
         )
         await database.execute(insert)
         
+
 # Check and award the 7-day streak achievement if eligible
 async def check_and_award_7_days_streak(user_id: int):
     streak = await get_visit_streak(user_id)
@@ -333,6 +334,7 @@ async def check_and_award_7_days_streak(user_id: int):
             if awarded:
                 return "7_days_streak"
     return None
+
 
 # Get achievement ID by name
 async def get_achievement_id_by_name(name: str):

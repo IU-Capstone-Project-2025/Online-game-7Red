@@ -3,7 +3,6 @@ from backend.models import SignInRequest, SignUpRequest
 from passlib.context import CryptContext
 from backend.database import (add_visit, create_user, search_user_by_login, create_profile, get_profile_by_user_id, check_and_award_7_days_streak)
 
-
 router = APIRouter(prefix="/auth", tags=["auth"])
 
 # Set up password hashing with bcrypt
@@ -52,6 +51,7 @@ async def signin(request: SignInRequest):
     
     # Record this login as a visit
     await add_visit(user["id"])
+
     # Check if user has earned the 7-day streak achievement
     await check_and_award_7_days_streak(user["id"])
     
