@@ -1,3 +1,4 @@
+#Not use in final version
 import os
 import torch
 import torch.nn as nn
@@ -11,7 +12,24 @@ from environment import Red7Env, get_winning_moves
 
 # Create directory for model persistence if it doesn't exist
 os.makedirs('persistent_volume', exist_ok=True)
-
+"""
+    Deep Q-Network model for Red7 game with card embeddings and state processing.
+    
+    Attributes:
+        embed (nn.Embedding): Card embedding layer (card_id -> vector)
+        hand_fc (nn.Linear): Hand cards processing layer
+        my_palette_fc (nn.Linear): Player palette processing layer  
+        opp_palette_fc (nn.Linear): Opponent palette processing layer
+        rule_fc (nn.Linear): Current rule processing layer
+        numeric_fc (nn.Linear): Numeric features processing layer
+        deck_fc (nn.Linear): Deck state processing layer
+        fc1, fc2 (nn.Linear): Hidden layers
+        fc_out (nn.Linear): Output layer for Q-values
+    
+    Methods:
+        __init__: Initializes network architecture
+        forward: Processes game state into Q-values
+    """
 class SafeDQNModel(nn.Module):
     """Neural network for Red7 DQN with card embeddings and game state processing"""
     def __init__(self, card_vocab_size=51, embed_dim=64, hidden_dim=128, max_hand_size=7):
@@ -62,7 +80,26 @@ class SafeDQNModel(nn.Module):
         q_values = self.fc_out(h)
         return q_values.reshape(-1, 50, 50)
 
-
+"""
+    Deep Q-Learning agent with experience replay and target network.
+    
+    Attributes:
+        model (SafeDQNModel): Online Q-network
+        target_model (SafeDQNModel): Target Q-network  
+        optimizer (optim.Adam): Model optimizer
+        memory (deque): Experience replay buffer
+        device (str): Computation device
+        epsilon (float): Exploration rate
+        gamma (float): Discount factor
+        tau (float): Target network update rate
+    
+    Methods:
+        select_action: Epsilon-greedy action selection
+        store_transition: Stores experience in replay buffer  
+        update: Performs Q-learning update
+        soft_update_target: Updates target network
+               save/load: Model persistence
+    """
 class DQNAgent:
     """Deep Q-Learning agent with experience replay and target network"""
     def __init__(self, model=None, device='cpu'):
@@ -162,7 +199,20 @@ class DQNAgent:
         self.optimizer.load_state_dict(checkpoint['optimizer_state'])
         self.epsilon = checkpoint.get('epsilon', self.epsilon)
 
-
+"""
+    Trains agent against specified opponent type.
+    
+    Args:
+        env (Red7Env): Game environment
+        agent (DQNAgent): Learning agent
+        opponent (DQNAgent): Optional opponent agent
+        num_episodes (int): Training episodes
+        mode (str): Training mode ('random', 'self', 'self_frozen')
+        phase_name (str): Phase identifier
+        
+    Returns:
+        list: Win history (1=agent win, 0=loss)
+    """
 def train_phase(env, agent, opponent=None, num_episodes=10000, mode='random', phase_name="Phase"):
     """Trains agent against specified opponent type"""
     win_history = []
@@ -217,7 +267,14 @@ def train_phase(env, agent, opponent=None, num_episodes=10000, mode='random', ph
     
     return win_history
 
-
+"""
+    Evaluates agent performance with verbose output.
+    
+    Args:
+        env (Red7Env): Game environment
+        agent (DQNAgent): Agent to evaluate
+        num_games (int): Number of evaluation games
+    """
 def evaluate(env, agent, num_games=10):
     """Evaluates agent performance with verbose output"""
     print("\n=== Final Evaluation ===")
@@ -245,7 +302,13 @@ def evaluate(env, agent, num_games=10):
         winner = env.get_winner()
         print(f"Game finished! Winner: {'Agent' if winner == 0 else 'Opponent'}")
 
-
+"""
+    Plots training results with moving average.
+    
+    Args:
+        win_history (list): Win/loss history
+        title (str): Plot title
+    """
 def plot_results(win_history, title):
     """Plots training results with moving average"""
     plt.figure(figsize=(12, 6))
