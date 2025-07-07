@@ -368,7 +368,7 @@ class _MainMenuPageState extends State<MainMenuPage> {
                     height: 80,
                     child: IconButton(
                       onPressed: () {
-                        //pass to settings
+                        Navigator.pushNamed(context, '/statistics');
                       },
                       icon: const Icon(Icons.emoji_events_outlined, size: 60),
                     ),

@@ -15,6 +15,7 @@ ONLINE_ROOM_SIZE = 4  # Number of players required for an online room
 ONLINE_WAIT_SECONDS = 60  # Maximum wait time before starting a game with fewer players
 
 
+
 async def generate_unique_assigned_id():
     """Generate a unique 5-digit room ID that doesn't exist in the database"""
     for _ in range(100):  # Try up to 100 times
