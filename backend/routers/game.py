@@ -2,6 +2,7 @@ from fastapi import APIRouter, Query, WebSocket, WebSocketDisconnect
 from typing import Dict, List
 from backend.red7state import Red7GameState
 from backend.database import update_room_state
+import asyncio
 
 router = APIRouter(prefix="/game", tags=["game"])
 
@@ -10,20 +11,46 @@ class GameManager:
     def __init__(self):
         self.active_games: Dict[str, Red7GameState] = {}  # room_id: Red7GameState
         self.connections: Dict[str, WebSocket] = {}  # player_id: websocket
-        self.exited_id: Dict[str, List] = {}
-        self.commonVar: Dict[str, List] = {}
+        self.exited_id: Dict[str, List] = {}  # room_id: list
+        self.commonVar: Dict[str, List] = {} # room_id: list 
+        self._init_lock = asyncio.Lock()
+        self._state_lock = asyncio.Lock()
 
     async def create_game(self, room_id: int) -> Red7GameState:
-        """Initialize a new game instance"""
-        if room_id not in self.active_games:
-            game = Red7GameState(room_id)
-            await game.get_room_players_info_from_db()  # Load players from DB
-            self.active_games[room_id] = game
-            if room_id not in self.exited_id:
-                self.exited_id[room_id] = []
-            if room_id not in self.commonVar:
-                self.commonVar[room_id] = {"exit_was": False, "type_cur": None, "ex_player": None}
-            game.start_game()
+        """Thread-safe game initialization"""
+        # Fast path - avoid lock if possible
+        if room_id in self.active_games:
+            return self.active_games[room_id]
+        
+        async with self._init_lock:
+            # Double-check after acquiring lock
+            if room_id not in self.active_games:
+                try:
+                    print(f"[DEBUG] Initializing new game for room {room_id}")
+                    game = Red7GameState(room_id)
+                    
+                    # Initialize game state
+                    await game.get_room_players_info_from_db()
+                    await game.start_game()
+                    
+                    # Set up room tracking
+                    self.active_games[room_id] = game
+                    self.exited_id[room_id] = []
+                    self.commonVar[room_id] = {
+                        "exit_was": False,
+                        "type_cur": None,
+                        "ex_player": None,
+                    }
+                    
+                    print(f"[DEBUG] Game initialized for room {room_id}")
+                    return game
+                    
+                except Exception as e:
+                    print(f"[ERROR] Game initialization failed: {e}")
+                    if room_id in self.active_games:
+                        del self.active_games[room_id]
+                    raise
+        
         return self.active_games[room_id]
 
 manager = GameManager()
@@ -36,14 +63,13 @@ async def game_websocket(
     await websocket.accept()
     connection_active = True
     print(f"Connected: assigned_id={assigned_id}, player_id={player_id}", flush=True)
-    manager.connections[player_id] = websocket
-    # exit_was = False
-    # type_cur = None
-    room_id = assigned_id
-    print(f"Room ID: {room_id}", flush=True)  # Debug room ID lookup
-        # Initialize or join game
+
     while connection_active:
         try:
+            manager.connections[player_id] = websocket
+            room_id = assigned_id
+            print(f"Room ID: {room_id}", flush=True) 
+            
             await update_room_state(str(assigned_id), "playing")
             game = await manager.create_game(room_id)
             
@@ -79,31 +105,45 @@ async def game_websocket(
                 print(f"Got from front {type_cur}, {player_id}, {room_id}, {my_palette_ch}, {new_rule}, {new_hand}, {new_palette}", flush=True)
                 print(f"turn {type_cur}, player_id {player_id}, game.current_player {game.current_player}", flush=True)
                 if  type_cur == "my_turn" and game.current_player == player_id:
-                    if not game.players[player_id]["possible_moves"]:
-                        is_winning = game.check_move(
-                            player_id=player_id,
-                            new_rule=new_rule,
-                            new_hand=new_hand,
-                            new_palette=new_palette
-                        )
-                    else:
-                        print("Check in pos moves", flush=True)
-                        is_winning = game.check_in_possible_moves(
-                            player_id=player_id,
-                            new_rule=new_rule,
-                            new_hand=new_hand,
-                            new_palette=new_palette
-                        )
+                    async with manager._state_lock:  # Acquire lock before accessing game state
+                        if not game.players[player_id]["possible_moves"]:
+                            is_winning = game.check_move(
+                                player_id=player_id,
+                                new_rule=new_rule,
+                                new_hand=new_hand,
+                                new_palette=new_palette
+                            )
+                        else:
+                            print("Check in pos moves", flush=True)
+                            is_winning = game.check_in_possible_moves(
+                                player_id=player_id,
+                                new_rule=new_rule,
+                                new_hand=new_hand,
+                                new_palette=new_palette
+                            )
+                            print(f"check happened, output {is_winning}", flush=True)
                     
                     if is_winning:
                         await websocket.send_json({"type": "right_turn"})
                     else:
-                        print(f"old_r {game.cur_rule_card} new_r {new_rule} pal_ch {my_palette_ch}")
-                        await websocket.send_json({"type": "wrong_turn", 
-                                                "my_pallete_ch": my_palette_ch,
-                                                "rule_ch": new_rule,
-                                                "old_rule": game.cur_rule_card})
-                        continue 
+                        print(f"old_r {game.cur_rule_card} new_r {new_rule} pal_ch {my_palette_ch}", flush=True)
+                        try:
+                            print("[DEBUG] Sending 'wrong_turn' response...", flush=True)  # <-- ADD THIS
+                            await asyncio.wait_for(
+                                websocket.send_json({
+                                    "type": "wrong_turn",
+                                    "my_pallete_ch": my_palette_ch,
+                                    "rule_ch": new_rule,
+                                    "old_rule": game.cur_rule_card
+                                }),
+                                timeout=5.0
+                            )
+                            print("[DEBUG] 'wrong_turn' sent successfully!", flush=True)  # <-- ADD THIS
+                        except asyncio.TimeoutError:
+                            print("[ERROR] Frontend timed out! Closing connection.", flush=True)  # <-- ADD THIS
+                            await websocket.close()
+                            break
+                        continue
 
                 elif type_cur == "time_out":
                     
@@ -269,3 +309,5 @@ async def broadcast_game_state(game: Red7GameState, cur_player_id: int, is_winni
         print(f"CHANGE TO INACTIVE {cur_player_id}", flush=True)
     active_players = [pid for pid in game.players_id_list if game.players[pid]["active"]]
     print(active_players, flush=True)
+
+#docker-compose -f docker-compose2.yml up --build

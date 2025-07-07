@@ -5,7 +5,7 @@ import 'dart:convert';
 
 import '../data/styles.dart';
 import '../providers/provider.dart';
-import '../data/connectDialog.dart';
+import '../customWidgets/connectDialog.dart';
 import '../data/urls.dart';
 
 class MainMenuPage extends StatefulWidget {
@@ -48,36 +48,6 @@ class _MainMenuPageState extends State<MainMenuPage> {
     } else {
       setState(() {
         logSuccess = false;
-      });
-    }
-  }
-
-  Future<void> connectToRoom(int id, String room_id, String password) async {
-    final url = Uri.parse('$joinRoomUrl');
-    final response = await http.post(
-      url,
-      headers: {'Content-Type': 'application/json', 'accept': 'application/json'},
-      body: jsonEncode({
-        'assigned_id': room_id,
-        'password': password,
-        'user_id': id,
-      }),
-    );
-
-    final responseBody = json.decode(response.body);
-
-    if (response.statusCode == 200) {
-      setState(() {
-        logSuccess = true;
-      });
-    } else if (responseBody['message'] == 'Game already started') {
-      setState(() {
-        postText = 'Game already started';
-      });
-    } else {
-      setState(() {
-        logSuccess = false;
-        postText = 'Invalid ID or Password';
       });
     }
   }
@@ -219,6 +189,8 @@ class _MainMenuPageState extends State<MainMenuPage> {
                                         if (logSuccess) {
                                           gameProvider.roomId = room_id;
                                           gameProvider.roomPassword = room_password;
+                                          gameProvider.aiGame = false;
+                                          gameProvider.aiGameSave();
                                           gameProvider.saveRoomInfo();
                                           Navigator.of(context).pop();
                                           Navigator.pushNamed(context, '/waitingroom');
@@ -261,6 +233,8 @@ class _MainMenuPageState extends State<MainMenuPage> {
                                         ),
                                       ),
                                       onPressed: () {
+                                        gameProvider.aiGame = false;
+                                        gameProvider.aiGameSave();
                                         Navigator.of(context).pop();
                                         showDialog(
                                           context: context,
@@ -343,9 +317,11 @@ class _MainMenuPageState extends State<MainMenuPage> {
                                           BorderSide(color: grey3A3A3AColor, width: 1),
                                         ),
                                       ),
-                                      onPressed: () {
+                                      onPressed: () async{
+                                        gameProvider.aiGame = true;
+                                        gameProvider.aiGameSave();
                                         Navigator.of(context).pop();
-                                        //pass;
+                                        Navigator.pushNamed(context, '/gameroom');
                                       },
                                       child: Column(
                                         children: [
@@ -381,7 +357,7 @@ class _MainMenuPageState extends State<MainMenuPage> {
                     height: 80,
                     child: IconButton(
                       onPressed: () {
-                        // pass
+                        Navigator.pushNamed(context, '/rules');
                       },
                       icon: const Icon(Icons.help_outline, size: 60),
                     ),

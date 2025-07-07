@@ -4,7 +4,7 @@ import torch.nn.functional as F
 import torch.optim as optim
 import random
 import numpy as np
-import matplotlib.pyplot as plt
+#import matplotlib.pyplot as plt
 from collections import deque
 from ml.enviroment import Red7Env, get_winning_moves
 
@@ -567,6 +567,7 @@ def train_mcts(env, agent_0, agent_1=None, num_episodes=5000, mode='mcts'):
 
     return win_history
 
+
 """
     Visualizes training progress by plotting win rate.
     
@@ -619,7 +620,7 @@ def play_single_game():
     agent = DQNAgent(device=device)
     
     try:
-        agent.load("medium.pth")
+        agent.load("final_agent (4).pth")
         print("Model loaded successfully!")
     except Exception as e:
         print(f"\nError loading model: {e}")
