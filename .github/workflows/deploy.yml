@@ -24,11 +24,10 @@ jobs:
           password: ${{ secrets.DOCKER_HUB_TOKEN }}
 
       - name: Build and push backend
-        working-directory: . 
         uses: docker/build-push-action@v4
         with:
-          context: .
-          dockerfile: backend/Dockerfile
+          context: ./
+          dockerfile: ./backend/Dockerfile
           push: true
           tags: |
             ${{ env.DOCKER_HUB_REPO }}:${{ env.BACKEND_TAG }}
@@ -39,6 +38,7 @@ jobs:
         uses: docker/build-push-action@v4
         with:
           context: ./frontend
+          dockerfile: ./frontend/Dockerfile
           push: true
           tags: |
             ${{ env.DOCKER_HUB_REPO }}:${{ env.FRONTEND_TAG }}
