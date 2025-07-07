@@ -137,6 +137,13 @@ TextStyle ruleTextStyle = const TextStyle(
   color: Color.fromARGB(255, 58, 58, 58)
 );
 
+TextStyle statsBigStyle = const TextStyle(
+  fontFamily: 'Poppins',
+  fontSize: 67,
+  fontWeight: FontWeight.w500,
+  color: Color.fromARGB(255, 58, 58, 58)
+);
+
 
 Color backInvisColor = const Color.fromARGB(125, 218, 209, 193);
 
