@@ -27,7 +27,7 @@ jobs:
         uses: docker/build-push-action@v4
         with:
           context: ./
-          dockerfile: ./backend/Dockerfile
+          dockerfile: backend/Dockerfile
           push: true
           tags: |
             ${{ env.DOCKER_HUB_REPO }}:${{ env.BACKEND_TAG }}
@@ -38,7 +38,7 @@ jobs:
         uses: docker/build-push-action@v4
         with:
           context: ./frontend
-          dockerfile: ./frontend/Dockerfile
+          dockerfile: Dockerfile
           push: true
           tags: |
             ${{ env.DOCKER_HUB_REPO }}:${{ env.FRONTEND_TAG }}
