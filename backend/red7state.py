@@ -1,3 +1,4 @@
+#importing necessary libraries/functions
 from enum import Enum
 from typing import List, Dict
 from backend.database import get_room_players_ids_and_names
@@ -6,7 +7,7 @@ from collections import defaultdict
 import random
 
 
-# Card colors and values
+#card colors and values
 class CardColor(Enum):
     RED = "R"
     ORANGE = "O"
@@ -16,37 +17,36 @@ class CardColor(Enum):
     INDIGO = "I"
     VIOLET = "V"
 
-CARD_VALUES = list(range(1, 8))  # 1 through 7
+CARD_VALUES = list(range(1, 8))  #values are 1 through 7
 
-# Game rules - each palette defines what rule is currently active
+#game rules (to define what rule is currently active)
 PALETTE_RULES = [
-    "Highest Card",        # Red
-    "Most of One Number",  # Orange
-    "Most of One Color",   # Yellow
-    "Most Even Cards",     # Green
-    "Most Different Colors",  # Blue
-    "Most Cards in a Row",    # Indigo
-    "Most Cards Below 4"      # Violet
+    "Highest Card", #red
+    "Most of One Number", #orange
+    "Most of One Color", #yellow
+    "Most Even Cards", #green
+    "Most Different Colors", #blue
+    "Most Cards in a Row", #indigo
+    "Most Cards Below 4" #violet
 ]
 
+#class that represents a game state
 class Red7GameState:
     def __init__(self, assigned_id: str):
-        self.assigned_id = assigned_id
-        self.players = {}  # player_id: {hand: [], palette: [], name: str}
-        self.players_name_list = []
-        self.players_id_list = []
-        self.started = False
-        self.max_players = 4
-        self.min_players = 2
-        self.current_player = None
-        self.current_rule = 0  # Starts with Red rule (Highest Card)
+        self.assigned_id = assigned_id #id of the room where the game happens
+        self.players = {}  #game players (player_id: {hand: [], palette: [], name: str, active: bool, possible_moves: {}})
+        self.players_name_list = [] #list of players' names
+        self.players_id_list = [] #list of players' ids
+        self.started = False #game started state
+        self.max_players = 4 #max players in a room
+        self.min_players = 2 #min players in a room
+        self.current_player = None #current player's id
+        self.current_rule = 0  #current rule (game starts with Red rule (Highest Card))
         self.cur_rule_card = "R0"
-        self.deck = []
-        self.discard_pile = []
-        self.game_over = False
-        self.winner = None
-        self.round = 1
+        self.deck = [] #deck of cards
+        self.game_over = False #game over state
 
+    #function to get players' information from database
     async def get_room_players_info_from_db(self):
         """Load players from database with proper error handling"""
         print(f"[DEBUG] Starting to fetch players for room {self.assigned_id}", flush=True)
@@ -57,7 +57,7 @@ class Red7GameState:
         if not names or not ids:
             raise ValueError("Empty data returned from database")
             
-        # Shuffle player
+        #players order shuffling
         combined = list(zip(names, ids))
         random.shuffle(combined)
         self.players_name_list, self.players_id_list = zip(*combined)
@@ -66,35 +66,24 @@ class Red7GameState:
         
         print(f"[DEBUG] Final player list - names: {self.players_name_list}, ids: {self.players_id_list}", flush=True)
             
-    
+    #function to convert string representation of a card to tuple
     def card_to_tuple(self, card: str) -> tuple[int, int]:
-        """Convert card string (e.g., 'R7') to (color_index, value) tuple.
-        
-        Args:
-            card: Card string in format "{ColorLetter}{Value}" (e.g., "R7")
-        
-        Returns:
-            Tuple of (color_index, value) where:
-            - color_index: 0 (Red) to 6 (Violet)
-            - value: 1-7
-        
-        Raises:
-            ValueError: If card format is invalid
-        """
+        """Convert card string to (color_index, value) tuple (e.g., 'R7' to (0, 7))"""
+
         if not card or len(card) < 2:
             raise ValueError(f"Invalid card format: {card}")
         
         color_char = card[0].upper()
         value_str = card[1:]
         
-        # Convert color to index
+        #converting color to index
         try:
-            color = CardColor(color_char)  # Raises ValueError if invalid
+            color = CardColor(color_char)
             color_index = list(CardColor).index(color)
         except ValueError:
             raise ValueError(f"Invalid color in card: {card}")
         
-        # Convert value to int
+        #converting value to int
         try:
             value = int(value_str)
             if value not in CARD_VALUES:
@@ -104,14 +93,17 @@ class Red7GameState:
         
         return (color_index, value)
     
+    #converting string rule card representation to integer
     def rule_to_int(self, rule: str) -> int:
             color_enum = CardColor(rule)
             color_index = list(CardColor).index(color_enum) 
             return color_index
     
+    #converting integer rule card representation to string
     def int_to_rule(self, ind_rule: int) -> str:
         return list(CardColor)[ind_rule].value
 
+    #initializing a deck of cards
     def initialize_deck(self):
         """Create and shuffle the deck of cards"""
         self.deck = []
@@ -120,25 +112,27 @@ class Red7GameState:
                 self.deck.append(f"{color.value}{value}")
         random.shuffle(self.deck)
 
+    #dealing cards to players
     def deal_cards(self):
         """Deal initial cards to players"""
         for i in range(len(self.players_id_list)):
             self.players[self.players_id_list[i]] = {}
-            # Each player gets 7 cards in hand and 1 in palette
-            self.players[self.players_id_list[i]]["hand"] = [self.deck.pop() for _ in range(7)]
-            # if i == 0:
-            #     self.players[self.players_id_list[i]]["hand"] = ['V1', 'V2', 'V3', 'V4', 'V5', 'V6', 'V7']
-            # elif i == 1: 
-            #     self.players[self.players_id_list[i]]["hand"] = ['I1', 'I2', 'I3', 'I4', 'I5', 'I6', 'I7']
-            # else:
-            #     self.players[self.players_id_list[i]]["hand"] = ['B1', 'B2', 'B3', 'B4', 'B5', 'B6', 'B7']
 
+            #each player gets 7 cards in hand
+            self.players[self.players_id_list[i]]["hand"] = [self.deck.pop() for _ in range(7)]
+            #initial card palette is empty
             self.players[self.players_id_list[i]]["palette"] = []
+            #player's name
             self.players[self.players_id_list[i]]["name"] = self.players_name_list[i]
+            #player is active
             self.players[self.players_id_list[i]]["active"] = True
+            #player doesn't have checked possible moves yet
             self.players[self.players_id_list[i]]["possible_moves"] = {}
-    
+
+    #dealing cards a player when the game is against bot
     def deal_cards_bot_game(self, player_id: int, hand_human: List[str], name: str):
+        """Deal initial cards to a human and to the bot"""
+        #human's data
         self.players[player_id] = {}
         self.players[player_id]["hand"] = hand_human
         self.players[player_id]["palette"] = []
@@ -146,6 +140,7 @@ class Red7GameState:
         self.players[player_id]["active"] = True
         self.players[player_id]["possible_moves"] = {}
 
+        #bot's data
         self.players[-1] = {}      
         self.players[-1]["hand"] = []
         self.players[-1]["palette"] = []
@@ -153,17 +148,19 @@ class Red7GameState:
         self.players[-1]["active"] = True
         self.players[-1]["possible_moves"] = {}
 
+    #starting a game
     async def start_game(self):
-        """Async version that should be called within a locked context"""
+        """Start a game"""
         if self.started:
             return
         
         self.initialize_deck()
         self.deal_cards()
-        self.current_player = self.players_id_list[0]  # First player from shuffled list
+        self.current_player = self.players_id_list[0]
         self.started = True
         self.game_over = False
 
+    #changing current player
     def next_player(self):
         """Move to the next active player"""
         players = [pid for pid, p in self.players.items() if p["active"]]
@@ -174,13 +171,15 @@ class Red7GameState:
         current_index = players.index(self.current_player)
         next_index = (current_index + 1) % len(players)
         self.current_player = players[next_index]
-        print("All is well isnside next_player()", flush=True)
+        print("All is well inside next_player()", flush=True)
         return True
 
+    #checking if a player can make a move after previous player's turn
     def check_winning_at_beginning(self, player_id: int) -> List[Dict]:
         if player_id not in self.players:
             return []
         
+        #saving the original game state
         original_state = {
             'hand': self.players[player_id]["hand"].copy(),
             'palette': self.players[player_id]["palette"].copy(),
@@ -189,52 +188,52 @@ class Red7GameState:
         }
         winning_moves = []
 
-        # Extract colors present in hand (e.g., {'R', 'G'} from ['R7', 'G3'])
+        #extract colors present in hand
         colors_in_hand = [card[0] for card in original_state['hand']]
 
-        # Include None (no rule change) + rules matching hand colors
+        #including None (no rule change) + rules matching hand colors
         possible_rules = [(None, None)]
+        #generating possible rules to change
         for i in range(len(colors_in_hand)):
             possible_rules.append((colors_in_hand[i], int(original_state['hand'][i][1])))
 
+        #generating possible cards to play
         possible_cards = [None] + original_state['hand']
 
+        #generating possible combinations of moves
         for i in range(len(possible_rules)):
             for j in range(len(possible_cards)):
-                if i == j:
+                if i == j: #if cards are the same, skip
                     continue
                 new_rule = possible_rules[i]
-                #print(f"new rule {new_rule}")
                 card_played = possible_cards[j]
 
+                #if a move is pass on both rule change and card paly, skip
                 if new_rule[0] is None and card_played is None:
                     continue
 
                 new_hand = original_state['hand'].copy()
                 new_palette = original_state['palette'].copy()
 
-                # --- Handle Card Play (if any) ---
+                #handling card play
                 if card_played is not None:
                     if card_played not in new_hand:
-                        continue  # Invalid card
+                        continue  #invalid card
                     new_hand.remove(card_played)
                     new_palette.append(card_played)
 
-                # --- Handle Rule Change (if any) ---
+                #handling rule change
                 orig_rule_str = self.cur_rule_card
-                # if orig_rule_str == new_rule:
-                #     continue
                 
                 new_rule_full = str(new_rule[0]) + str(new_rule[1])
                 actual_rule = new_rule_full if new_rule[0] is not None else orig_rule_str
 
-                if new_rule[0] is not None:  # Only remove a card for rule changes (not for None)
-                    # Find the first card in hand matching the new rule's color
+                if new_rule[0] is not None:  #removing a card for rule change
                     card = str(new_rule[0]) + str(new_rule[1])
                     new_hand.remove(card)
 
 
-                # Check if this move wins
+                #checking if this move wins
                 if self.check_move(player_id, actual_rule, new_hand, new_palette):
                     
                     winning_moves.append({
@@ -244,33 +243,34 @@ class Red7GameState:
                         "new_palette": new_palette
                     })
 
-        # Restore original state
+        #restore original state
         self.players[player_id]["hand"] = original_state['hand']
         self.players[player_id]["palette"] = original_state['palette']
         self.current_rule = original_state['rule']
-        #print(f"before {self.cur_rule_card} after {original_state['rule_card']}")
         self.cur_rule_card = original_state['rule_card']
 
+        #saving player's possible moves
         self.players[player_id]["possible_moves"] = winning_moves
-        #print(self.players[player_id]["possible_moves"], flush=True)
         print("Win at beg!!!", flush=True)
         print(len(winning_moves), flush=True)
         return len(winning_moves) > 0
     
+    #function that checks a move in possible_moves dictionary
     def check_in_possible_moves(self, player_id: int, new_rule: str, new_hand: List[str], new_palette: List[str]) -> bool:
         try:
             print(f"Rule at the beggining of check_in_possible_moves{self.cur_rule_card}", flush=True)
+            #retrieving possible moves from dictionary
             moves = self.players[player_id]["possible_moves"]
             if not moves:
                 return False
         
-            # Pre-sort the target hand and palette once
+            #pre-sorting the target hand and palette once
             sorted_new_hand = sorted(new_hand)
             sorted_new_palette = sorted(new_palette)
             target_rule = self.cur_rule_card if new_rule is None else new_rule
 
+            #checking the move
             for move in moves:
-                # Early exit conditions
                 if move["new_rule"] != target_rule:
                     continue
                 if sorted(move["new_hand"]) != sorted_new_hand:
@@ -278,39 +278,32 @@ class Red7GameState:
                 if sorted(move["new_palette"]) != sorted_new_palette:
                     continue
                     
-                # Found exact match
+                #if exact match was found, changing player's hand an palette to new ones from the move
                 self.players[player_id]["hand"] = new_hand
                 self.players[player_id]["palette"] = new_palette
+                #changing current rule a new one (if a move included rule change)
                 if new_rule is not None:
                     self.cur_rule_card = new_rule
                     self.current_rule = self.rule_to_int(self.cur_rule_card[0])
                 print(f"Rule at the end of check_in_possible_moves{self.cur_rule_card}", flush=True)
                 print("In check_possible_moves found exact match", flush=True)
+                #return True
                 return True
             
+        #exception handling
         except Exception as e:
             print(f"Move validation crashed: {e}", flush=True)
             return False 
     
+        #return False if no matches were found
         print("In check_possible_moves didn't find exact match", flush=True)
         return False
 
+    #function to check a move's correctness according to the game's rules
     def check_move(self, player_id: int, new_rule: str, new_hand: List[str], new_palette: List[str]) -> bool:
-        """
-        Validates if a move is legal and checks if it leads to a winning state.
-        
-        Args:
-            player_id: Player making the move
-            card_played: The card being played (for validation)
-            new_rule: Proposed new rule after move
-            new_hand: Proposed new hand after move
-            new_palette: Proposed new palette after move
+        """Validates if a move is legal and checks if it leads to a winning state"""
             
-        Returns:
-            bool: True if move is valid and leads to winning state
-        """
-            
-        # 2. Create temporary game state
+        #keeping original game state
 
         original_state = {
             'hand': self.players[player_id]["hand"].copy(),
@@ -319,21 +312,20 @@ class Red7GameState:
             'rule_card': self.cur_rule_card
         }
         
-        # 3. Apply proposed changes temporarily
+        #applying proposed changes temporarily
         self.players[player_id]["hand"] = new_hand
         self.players[player_id]["palette"] = new_palette
-        #print(f'rule: {new_rule} hand: {new_hand} pallete: {new_palette}', flush=True)
         if new_rule != None:
             self.current_rule = self.rule_to_int(new_rule[0])
             self.cur_rule_card = new_rule
 
-        #print(self.current_rule, flush=True)
-
+        #retrieving ids of active opponents
         opponent_ids = [pid for pid in self.players.keys() if pid != player_id and self.players[pid]["active"]]
         
-        # 4. Check winning condition
+        #checking winning conditions (all rules must be considered for a winning move)
         is_winning = all(self.evaluate_winning_condition(player_id, opponent_ids))
 
+        #if the move is not a winning one, going back to the original state
         if not is_winning:
             self.players[player_id]["hand"] = original_state['hand']
             self.players[player_id]["palette"] = original_state['palette']
@@ -342,12 +334,14 @@ class Red7GameState:
         
         return is_winning
 
+    #function that evaluates if a currnt state is winning for a player
     def evaluate_winning_condition(self, player_id: int, opponent_ids: List[int]) -> List[bool]:
         """Evaluates if current state is winning for player"""
         
         rule_name = PALETTE_RULES[self.current_rule]
         result_arr = []
         
+        #checking all the rules on the move's correctness
         if rule_name == "Highest Card":
             result_arr = self._highest_card_rule(player_id, opponent_ids)
         elif rule_name == "Most of One Number":
@@ -364,7 +358,8 @@ class Red7GameState:
             result_arr = self._most_cards_below_4_rule(player_id, opponent_ids)
 
         return result_arr
-        
+    
+    #function that checks red rule correctness
     def _highest_card_rule(self, my_id, opp_ids) -> List[bool]:
         """Red rule: Player with the highest card in their palette wins"""
         res = []
@@ -372,10 +367,6 @@ class Red7GameState:
         for cur_opp_id in opp_ids:
             opp_palette = [self.card_to_tuple(ent) for ent in self.players[cur_opp_id]["palette"]]
 
-            #checks in case of emty palletes
-            # if not palette and not opp_palette:
-            #     res.append(True)
-            #     continue
             if not palette:
                 res.append(False)
                 continue
@@ -400,6 +391,7 @@ class Red7GameState:
         return res
     
 
+    #function that checks orange rule correctness
     def _most_of_one_number_rule(self, my_id, opp_ids) -> List[bool]:
         """Orange rule: Player with the most cards of one number in their palette wins"""
         res = []
@@ -446,7 +438,9 @@ class Red7GameState:
             res.append(my_best_color < opp_best_color)
         return res
     
+    #function that checks yellow rule correctness
     def _most_of_one_color_rule(self, my_id, opp_ids) -> List[bool]:
+        """Yellow rule: Player with the most cards of the same color in their palette wins"""
         res = []
         palette = [self.card_to_tuple(ent) for ent in self.players[my_id]["palette"]]
         for cur_opp_id in opp_ids:
@@ -496,7 +490,9 @@ class Red7GameState:
             res.append(my_best_color < opp_best_color)
         return res
 
+    #function that checks green rule correctness
     def _most_even_cards_rule(self, my_id, opp_ids) -> List[bool]:
+        """Green rule: Player with the most number of even cards in their palette wins"""
         res = []
         palette = [self.card_to_tuple(ent) for ent in self.players[my_id]["palette"]]
         for cur_opp_id in opp_ids:
@@ -542,7 +538,9 @@ class Red7GameState:
             res.append(my_best_color < opp_best_color)
         return res
 
+    #function that checks blue rule correctness
     def _most_different_colors_rule(self, my_id, opp_ids) -> List[bool]:
+        """Blue rule: Player with the most cards of different colors in their palette wins"""
         res = []
         palette = [self.card_to_tuple(ent) for ent in self.players[my_id]["palette"]]
         for cur_opp_id in opp_ids:
@@ -579,7 +577,9 @@ class Red7GameState:
             res.append(my_best_color < opp_best_color)
         return res
 
+    #function that checks indigo rule correctness
     def _most_cards_in_row_rule(self, my_id, opp_ids) -> List[bool]:
+        """Indigo rule: Player with cards that make the longest sequence in their palette wins"""
         res = []
         palette = [self.card_to_tuple(ent) for ent in self.players[my_id]["palette"]]
         for cur_opp_id in opp_ids:
@@ -659,8 +659,9 @@ class Red7GameState:
             res.append(my_color < opp_color)
         return res
         
-
+    #function that checks violet rule correctness
     def _most_cards_below_4_rule(self, my_id, opp_ids) -> List[bool]:
+        """Violet rule: Player with the most cards less than 4 in their palette wins"""
         res = []
         palette = [self.card_to_tuple(ent) for ent in self.players[my_id]["palette"]]
         for cur_opp_id in opp_ids:
