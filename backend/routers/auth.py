@@ -1,7 +1,7 @@
 from fastapi import APIRouter, HTTPException
 from backend.models import SignInRequest, SignUpRequest
 from passlib.context import CryptContext
-from backend.database import (add_visit, create_user, search_user_by_login, create_profile, get_profile_by_user_id, check_and_award_7_days_streak)
+from backend.database import (add_visit, create_user_statistics, create_user, search_user_by_login, create_profile, get_profile_by_user_id, check_and_award_7_days_streak)
 
 router = APIRouter(prefix="/auth", tags=["auth"])
 
@@ -27,6 +27,7 @@ async def signup(request: SignUpRequest):
     hashed_password = pwd_context.hash(request.password)
     # Create user in database and get the new user ID
     user_id = await create_user(request.email, hashed_password)
+    await create_user_statistics(user_id)
     # Create profile associated with the new user
     await create_profile(user_id, request.nickname)
     
