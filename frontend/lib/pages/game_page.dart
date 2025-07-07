@@ -13,6 +13,7 @@ import '../customWidgets/cards.dart';
 import '../socket/web_socket.dart';
 import '../data/player.dart';
 import '../data/urls.dart';
+import '../customWidgets/ruleDialog.dart';
 
 class GameRoomPage extends StatefulWidget {
   const GameRoomPage({super.key});
@@ -32,8 +33,7 @@ class _GameRoomPageState extends State<GameRoomPage> {
   int? userID;
   String serverUrl = '?';
 
-  int gamemode = 2;
-  // int gamemode = 4;
+  int gamemode = 4;
 
   late GameWebSocket _webSocket;
   List<String> _myHand = [];
@@ -82,6 +82,7 @@ class _GameRoomPageState extends State<GameRoomPage> {
       roomID = await prefs.getString('roomId');
       userID = await prefs.getInt('myID');
       aiGame = await prefs.getBool('aiGame') ?? false;
+      gamemode = aiGame ? 2 : await prefs.getInt('playerNum') ?? 2; //⭐️
       if (aiGame) {
         serverUrl = '$serverUrlPartUrl/ai_game/$userID';
       } else {
@@ -155,6 +156,24 @@ class _GameRoomPageState extends State<GameRoomPage> {
             timers = [_countDownControllerUp, _countDownControllerDown];
           }
         }
+      } else if (gamemode == 3) {
+        final myIndex = _players.indexOf(_players.firstWhere((p) => p.id == userID));
+        playerRight = _players[(myIndex + 1) % _players.length];
+        playerLeft = _players[(myIndex + 2) % _players.length];
+        timers = [_countDownControllerDown, _countDownControllerDown, _countDownControllerDown,];
+        timers[(myIndex + 1) % _players.length] = _countDownControllerDown;
+        timers[(myIndex + 2) % _players.length] = _countDownControllerRight;
+        timers[(myIndex + 3) % _players.length] = _countDownControllerLeft;
+      } else if (gamemode == 4) {
+        final myIndex = _players.indexOf(_players.firstWhere((p) => p.id == userID));
+        playerRight = _players[(myIndex + 1) % _players.length];
+        playerUp = _players[(myIndex + 2) % _players.length];
+        playerLeft = _players[(myIndex + 3) % _players.length];
+        timers = [_countDownControllerDown, _countDownControllerDown, _countDownControllerDown, _countDownControllerDown];
+        timers[(myIndex + 1) % _players.length] = _countDownControllerDown;
+        timers[(myIndex + 2) % _players.length] = _countDownControllerRight;
+        timers[(myIndex + 3) % _players.length] = _countDownControllerUp;
+        timers[(myIndex + 4) % _players.length] = _countDownControllerLeft;
       }
       
       _allTimeTimer = Timer.periodic(Duration(seconds: 1), (timer) {
@@ -200,10 +219,24 @@ class _GameRoomPageState extends State<GameRoomPage> {
           if (player.id == playerUp!.id) {
             playerUp!.pallete = [];
           }
+        } else if (gamemode == 3) {
+          if (player.id == playerRight!.id) {
+            playerRight!.pallete = [];
+          } else if (player.id == playerLeft!.id) {
+            playerLeft!.pallete = [];
+          }
+        } else if (gamemode == 4) {
+          if (player.id == playerRight!.id) {
+            playerRight!.pallete = [];
+          } else if (player.id == playerUp!.id) {
+            playerUp!.pallete = [];
+          } else if (player.id == playerLeft!.id) {
+            playerLeft!.pallete = [];
+          }
         }
         _players[_players.indexOf(player)].place = _activePlayers.length;
         _activePlayers.remove(message['id_did']);
-        timersDied.add(timers[_players.indexOf(player)]);
+        timersDied.add(timers[_players.indexOf(player) + 1]);
       } else {
         if (message['his_pallete_ch'] != null) {
           if (gamemode == 2) {
@@ -211,16 +244,49 @@ class _GameRoomPageState extends State<GameRoomPage> {
               playerUp!.pallete.add(message['his_pallete_ch']);
               playerUp!.numOfCards--;
             }
+          } else if (gamemode == 3) {
+            if (player.id == playerRight!.id) {
+              playerRight!.pallete.add(message['his_pallete_ch']);
+              playerRight!.numOfCards--;
+            } else if (player.id == playerLeft!.id) {
+              playerLeft!.pallete.add(message['his_pallete_ch']);
+              playerLeft!.numOfCards--;
+            }
+          } else if (gamemode == 4) {
+            if (player.id == playerRight!.id) {
+              playerRight!.pallete.add(message['his_pallete_ch']);
+              playerRight!.numOfCards--;
+            } else if (player.id == playerUp!.id) {
+              playerUp!.pallete.add(message['his_pallete_ch']);
+              playerUp!.numOfCards--;
+            } else if (player.id == playerLeft!.id) {
+              playerLeft!.pallete.add(message['his_pallete_ch']);
+              playerLeft!.numOfCards--;
+            }
           }
         }
       }
       if (message['rule_ch'] != null) {
         _ruleCard = message['rule_ch'];
         if (gamemode == 2) {
-            if (player.id == playerUp!.id) {
-              playerUp!.numOfCards--;
-            }
+          if (player.id == playerUp!.id) {
+            playerUp!.numOfCards--;
           }
+        } else if (gamemode == 3) {
+          if (player.id == playerRight!.id) {
+            playerRight!.numOfCards--;
+          } else if (player.id == playerLeft!.id) {
+            playerLeft!.numOfCards--;
+          }
+        } else if (gamemode == 4) {
+          if (player.id == playerRight!.id) {
+            playerRight!.numOfCards--;
+          } else if (player.id == playerUp!.id) {
+            playerUp!.numOfCards--;
+          } else if (player.id == playerLeft!.id) {
+            playerLeft!.numOfCards--;
+          }
+        }
       }
       _nextLose = message['next_lose'];
       _currentPlayerId = nextPlayerId(_currentPlayerId);
@@ -433,10 +499,8 @@ class _GameRoomPageState extends State<GameRoomPage> {
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    Expanded(flex: 1, child: Text(""),),
-                    if (gamemode == 2) 
-                      // Text(youWin ? "1st" : "2nd", style: resLoseStyleBig),
-                      Text(myPlace == 1 ? "1st" : (myPlace == 2 ? "2nd" : (myPlace == 3 ? "3rd" : "4th") ), style: resLoseStyleBig),
+                    Expanded(flex: 1, child: Text(""),), 
+                    Text(myPlace == 1 ? "1st" : (myPlace == 2 ? "2nd" : (myPlace == 3 ? "3rd" : "4th") ), style: resLoseStyleBig),
                     Text("place", style: resLoseStyle,),
                     Expanded(flex: 1, child: Text(""),),
                     Row(
@@ -513,6 +577,7 @@ class _GameRoomPageState extends State<GameRoomPage> {
                               await prefs.remove('roomId');
                               await prefs.remove('roomPassword');
                               await prefs.remove('aiGame');
+                              await prefs.remove('playerNum');
                               _webSocket.disconnect();
                               Navigator.of(context).pop();
                               Navigator.pushNamed(context, '/mainmenu');
@@ -614,6 +679,7 @@ class _GameRoomPageState extends State<GameRoomPage> {
                           await prefs.remove('roomId');
                           await prefs.remove('roomPassword');
                           await prefs.remove('aiGame');
+                          await prefs.remove('playerNum');
                           _webSocket.disconnect();
                           Navigator.of(context).pop();
                           Navigator.pushNamed(context, '/mainmenu');
@@ -694,6 +760,7 @@ class _GameRoomPageState extends State<GameRoomPage> {
                     ),
                   ),
                   const Expanded(flex: 1, child: Text("")),
+                  if (gamemode == 2 || gamemode == 4)
                   Stack(
                     alignment: Alignment.center,
                     children: [
@@ -717,7 +784,9 @@ class _GameRoomPageState extends State<GameRoomPage> {
                       Icon(Icons.account_circle, size: 80, color: grey3A3A3AColor,),
                     ],
                   ),
+                  if (gamemode == 2 || gamemode == 4)
                   Padding(padding: const EdgeInsets.only(right: 15),),
+                  if (gamemode == 2 || gamemode == 4)
                   Column(
                     children: [
                       Padding(padding: const EdgeInsets.only(top: 40)),
@@ -769,9 +838,9 @@ class _GameRoomPageState extends State<GameRoomPage> {
                       Padding(padding: const EdgeInsets.only(top: 5)),
                       Row(
                         children: [
-                          Icon(Icons.filter_7, size: 24, color: grey3A3A3AColor,),
+                          Icon(playerLeft != null ? getNumOfCardsIcon(playerLeft!.numOfCards) : Icons.filter_7, size: 24, color: grey3A3A3AColor,),
                           Padding(padding: const EdgeInsets.only(right: 5),),
-                          Text("Player_123", style: buttonTextStyle),
+                          Text(playerLeft?.name ?? "Waiting...", style: buttonTextStyle),
                         ],
                       )
                   ]),
@@ -782,7 +851,14 @@ class _GameRoomPageState extends State<GameRoomPage> {
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
                       Padding(padding: const EdgeInsets.only(top: 30)),
-                      for (int i = 0; i < 7; i++)
+                      for (int i = 0; i < (playerLeft != null ? playerLeft!.pallete.length : 0); i++)
+                        Column(
+                          children: [
+                            LeftCardWidget(card: playerLeft!.pallete[i]),
+                            Padding(padding: const EdgeInsets.only(top: 9)),
+                          ],
+                        ),
+                      for (int i = playerLeft != null ? playerLeft!.pallete.length : 0; i < 7; i++)
                         Column(
                           children: [
                             Container(
@@ -807,6 +883,9 @@ class _GameRoomPageState extends State<GameRoomPage> {
                     children: [
                       if (gamemode == 2)
                         Padding(padding: const EdgeInsets.only(top: 20)),
+                      if (gamemode == 3)
+                        Padding(padding: const EdgeInsets.only(top: 100)),
+                      if (gamemode == 2 || gamemode == 4)
                       Row(
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
@@ -913,7 +992,14 @@ class _GameRoomPageState extends State<GameRoomPage> {
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
                       Padding(padding: const EdgeInsets.only(top: 30)),
-                      for (int i = 0; i < 7; i++)
+                      for (int i = 0; i < (playerRight != null ? playerRight!.pallete.length : 0); i++)
+                        Column(
+                          children: [
+                            RightCardWidget(card: playerRight!.pallete[i]),
+                            Padding(padding: const EdgeInsets.only(top: 9)),
+                          ],
+                        ),
+                      for (int i = playerRight != null ? playerRight!.pallete.length : 0; i < 7; i++)
                         Column(
                           children: [
                             Container(
@@ -963,9 +1049,9 @@ class _GameRoomPageState extends State<GameRoomPage> {
                       Padding(padding: const EdgeInsets.only(top: 5)),
                       Row(
                         children: [
-                          Icon(Icons.filter_7, size: 24, color: grey3A3A3AColor,),
+                          Icon(playerRight != null ? getNumOfCardsIcon(playerRight!.numOfCards) : Icons.filter_7, size: 24, color: grey3A3A3AColor,),
                           Padding(padding: const EdgeInsets.only(right: 5),),
-                          Text("Player_XXX", style: buttonTextStyle),
+                          Text(playerRight?.name ?? "Waiting...", style: buttonTextStyle),
                         ],
                       )
                   ]),
@@ -981,6 +1067,7 @@ class _GameRoomPageState extends State<GameRoomPage> {
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
+                    Expanded(flex: 1, child: Text("")),
                     Stack(
                       alignment: Alignment.center,
                       children: [
@@ -1068,6 +1155,17 @@ class _GameRoomPageState extends State<GameRoomPage> {
                         width: 50,
                         child: Text(''),
                       ),
+                    Expanded(flex: 1, child: Text("")),
+                    IconButton(
+                      icon: Icon(Icons.help_outline, size: 40, color: grey3A3A3AColor,),
+                      onPressed: () {
+                        showDialog(
+                          context: context,
+                          builder: (context) => RuleDialog(),
+                        );
+                      },
+                    ),
+                    Padding(padding: const EdgeInsets.only(right: 15), child: Text(""),),
                   ],
                 ),
               )
