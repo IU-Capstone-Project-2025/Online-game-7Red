@@ -3,12 +3,17 @@ import 'package:flutter/material.dart';
 import 'package:flame/game.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:circular_countdown_timer/circular_countdown_timer.dart';
+import 'package:http/http.dart' as http;
+import 'dart:convert';
 
 import '../data/styles.dart';
 import '../providers/provider.dart';
-import '../data/cards.dart';
+import '../customWidgets/cards.dart';
 import '../socket/web_socket.dart';
 import '../data/player.dart';
+import '../data/urls.dart';
+import '../customWidgets/ruleDialog.dart';
 
 class GameRoomPage extends StatefulWidget {
   const GameRoomPage({super.key});
@@ -17,12 +22,18 @@ class GameRoomPage extends StatefulWidget {
   State<GameRoomPage> createState() => _GameRoomPageState();
 }
 
+final _countDownControllerDown = CountDownController();
+final _countDownControllerRight = CountDownController();
+final _countDownControllerUp = CountDownController();
+final _countDownControllerLeft = CountDownController();
+
+
 class _GameRoomPageState extends State<GameRoomPage> {
   String? roomID;
   int? userID;
   String serverUrl = '?';
 
-  int gamemode = 2;
+  int gamemode = 4;
 
   late GameWebSocket _webSocket;
   List<String> _myHand = [];
@@ -40,6 +51,9 @@ class _GameRoomPageState extends State<GameRoomPage> {
   Player? playerLeft;
   Player? playerRight;
 
+  Timer? _allTimeTimer;
+  int _allTime = 0;
+
   bool myTurn = false;
   bool myAllTurn = false;
   bool ruleChanged = true;
@@ -47,6 +61,14 @@ class _GameRoomPageState extends State<GameRoomPage> {
 
   bool youLose = false;
   bool youWin = false;
+
+  List<CountDownController> timers = [];
+  int currTimerIndex = 0;
+  List<CountDownController> timersDied = [];
+
+  int myPlace = 0;
+
+  bool aiGame = false;
 
   @override
   void initState() {
@@ -59,7 +81,14 @@ class _GameRoomPageState extends State<GameRoomPage> {
       SharedPreferences prefs = await SharedPreferences.getInstance();
       roomID = await prefs.getString('roomId');
       userID = await prefs.getInt('myID');
-      serverUrl = 'ws://localhost:8000/game/$roomID/ws?player_id=$userID';
+      aiGame = await prefs.getBool('aiGame') ?? false;
+      gamemode = aiGame ? 2 : await prefs.getInt('playerNum') ?? 2; //⭐️
+      if (aiGame) {
+        serverUrl = '$serverUrlPartUrl/ai_game/$userID';
+      } else {
+        serverUrl = '$serverUrlPartUrl/game/$roomID/ws?player_id=$userID';
+      }
+      print(serverUrl);
       _webSocket = GameWebSocket(
         serverUrl: serverUrl,
         onMessageReceived: _handleMessage,
@@ -121,12 +150,35 @@ class _GameRoomPageState extends State<GameRoomPage> {
         } else {
           if (player.isMe == false ) {
             playerUp = player;
+            timers = [_countDownControllerDown, _countDownControllerUp];
           } else {
             playerUp = _players.firstWhere((p) => p.id == _activePlayers[1]);
+            timers = [_countDownControllerUp, _countDownControllerDown];
           }
         }
+      } else if (gamemode == 3) {
+        final myIndex = _players.indexOf(_players.firstWhere((p) => p.id == userID));
+        playerRight = _players[(myIndex + 1) % _players.length];
+        playerLeft = _players[(myIndex + 2) % _players.length];
+        timers = [_countDownControllerDown, _countDownControllerDown, _countDownControllerDown,];
+        timers[(myIndex + 1) % _players.length] = _countDownControllerDown;
+        timers[(myIndex + 2) % _players.length] = _countDownControllerRight;
+        timers[(myIndex + 3) % _players.length] = _countDownControllerLeft;
+      } else if (gamemode == 4) {
+        final myIndex = _players.indexOf(_players.firstWhere((p) => p.id == userID));
+        playerRight = _players[(myIndex + 1) % _players.length];
+        playerUp = _players[(myIndex + 2) % _players.length];
+        playerLeft = _players[(myIndex + 3) % _players.length];
+        timers = [_countDownControllerDown, _countDownControllerDown, _countDownControllerDown, _countDownControllerDown];
+        timers[(myIndex + 1) % _players.length] = _countDownControllerDown;
+        timers[(myIndex + 2) % _players.length] = _countDownControllerRight;
+        timers[(myIndex + 3) % _players.length] = _countDownControllerUp;
+        timers[(myIndex + 4) % _players.length] = _countDownControllerLeft;
       }
       
+      _allTimeTimer = Timer.periodic(Duration(seconds: 1), (timer) {
+        _allTime++;
+      });
       _startTurnTimer();
     });
   }
@@ -149,6 +201,7 @@ class _GameRoomPageState extends State<GameRoomPage> {
   }
 
   void _handleRightTurn() {
+    _turnTimer?.cancel();
     setState(() {
       myTurn = false;
       ruleChanged = true;
@@ -166,8 +219,24 @@ class _GameRoomPageState extends State<GameRoomPage> {
           if (player.id == playerUp!.id) {
             playerUp!.pallete = [];
           }
+        } else if (gamemode == 3) {
+          if (player.id == playerRight!.id) {
+            playerRight!.pallete = [];
+          } else if (player.id == playerLeft!.id) {
+            playerLeft!.pallete = [];
+          }
+        } else if (gamemode == 4) {
+          if (player.id == playerRight!.id) {
+            playerRight!.pallete = [];
+          } else if (player.id == playerUp!.id) {
+            playerUp!.pallete = [];
+          } else if (player.id == playerLeft!.id) {
+            playerLeft!.pallete = [];
+          }
         }
+        _players[_players.indexOf(player)].place = _activePlayers.length;
         _activePlayers.remove(message['id_did']);
+        timersDied.add(timers[_players.indexOf(player) + 1]);
       } else {
         if (message['his_pallete_ch'] != null) {
           if (gamemode == 2) {
@@ -175,16 +244,49 @@ class _GameRoomPageState extends State<GameRoomPage> {
               playerUp!.pallete.add(message['his_pallete_ch']);
               playerUp!.numOfCards--;
             }
+          } else if (gamemode == 3) {
+            if (player.id == playerRight!.id) {
+              playerRight!.pallete.add(message['his_pallete_ch']);
+              playerRight!.numOfCards--;
+            } else if (player.id == playerLeft!.id) {
+              playerLeft!.pallete.add(message['his_pallete_ch']);
+              playerLeft!.numOfCards--;
+            }
+          } else if (gamemode == 4) {
+            if (player.id == playerRight!.id) {
+              playerRight!.pallete.add(message['his_pallete_ch']);
+              playerRight!.numOfCards--;
+            } else if (player.id == playerUp!.id) {
+              playerUp!.pallete.add(message['his_pallete_ch']);
+              playerUp!.numOfCards--;
+            } else if (player.id == playerLeft!.id) {
+              playerLeft!.pallete.add(message['his_pallete_ch']);
+              playerLeft!.numOfCards--;
+            }
           }
         }
       }
       if (message['rule_ch'] != null) {
         _ruleCard = message['rule_ch'];
         if (gamemode == 2) {
-            if (player.id == playerUp!.id) {
-              playerUp!.numOfCards--;
-            }
+          if (player.id == playerUp!.id) {
+            playerUp!.numOfCards--;
           }
+        } else if (gamemode == 3) {
+          if (player.id == playerRight!.id) {
+            playerRight!.numOfCards--;
+          } else if (player.id == playerLeft!.id) {
+            playerLeft!.numOfCards--;
+          }
+        } else if (gamemode == 4) {
+          if (player.id == playerRight!.id) {
+            playerRight!.numOfCards--;
+          } else if (player.id == playerUp!.id) {
+            playerUp!.numOfCards--;
+          } else if (player.id == playerLeft!.id) {
+            playerLeft!.numOfCards--;
+          }
+        }
       }
       _nextLose = message['next_lose'];
       _currentPlayerId = nextPlayerId(_currentPlayerId);
@@ -195,6 +297,12 @@ class _GameRoomPageState extends State<GameRoomPage> {
           _myHand = [];
           youLose = true;
           youWin = false;
+          for (var timer in timers) {
+            timer.reset();
+          }
+          _allTimeTimer?.cancel();
+          myPlace = _activePlayers.length;
+          _players[_players.indexOf(_players.firstWhere((p) => p.id == _currentPlayerId))].place = _activePlayers.length;
           loosingWinning();
           return;
           
@@ -212,6 +320,12 @@ class _GameRoomPageState extends State<GameRoomPage> {
         youLose = false;
         _pallete = [];
         _myHand = [];
+        for (var timer in timers) {
+          timer.reset();
+        }
+        myPlace = 1;
+        _players[_players.indexOf(_players.firstWhere((p) => p.id == _currentPlayerId))].place = 1;
+        _allTimeTimer?.cancel();
         loosingWinning();
         return;
       }
@@ -224,6 +338,7 @@ class _GameRoomPageState extends State<GameRoomPage> {
 
   void _startTurnTimer() {
     _turnTimer?.cancel();
+    nextTimer();
     setState(() => _timeLeft = 60);
     _turnTimer = Timer.periodic(Duration(seconds: 1), (timer) {
       if (_timeLeft > 0) {
@@ -237,18 +352,33 @@ class _GameRoomPageState extends State<GameRoomPage> {
     });
   }
 
+  void nextTimer() {
+    timers[currTimerIndex].reset();
+    currTimerIndex = (currTimerIndex + 1) % timers.length;
+    if (timers.length != timersDied.length) {
+      while (true) {
+        if (timersDied.contains(timers[currTimerIndex]) == false) {
+          timers[currTimerIndex].restart();
+          break;
+        } else {
+          currTimerIndex = (currTimerIndex + 1) % timers.length;
+        }
+      }
+    }
+  }
+
   void _submitTurn() {
-    _turnTimer?.cancel();
+    // _turnTimer?.cancel();
 
     setState(() {
       myTurn = false;
       myAllTurn = true;
     });
 
-    final message = {
+    var message = {
       'type': 'my_turn',
-      'my_id': userID,
-      'my_room': roomID,
+      'my_id': userID ?? null,
+      'my_room': roomID ?? null,
       'my_pallete_ch': palleteChanged ? my_pallete_ch : null,
       'rule_ch': ruleChanged ? _ruleCard : null,
       'my_hand': _myHand,
@@ -272,6 +402,12 @@ class _GameRoomPageState extends State<GameRoomPage> {
       myTurn = false;
       myAllTurn = false;
       youLose = true;
+      for (var timer in timers) {
+        timer.reset();
+      }
+      _allTimeTimer?.cancel();
+      myPlace = _activePlayers.length;
+      _players[_players.indexOf(_players.firstWhere((p) => p.id == _currentPlayerId))].place = _activePlayers.length;
       loosingWinning();
     });
 
@@ -298,10 +434,6 @@ class _GameRoomPageState extends State<GameRoomPage> {
         nextIndex = (nextIndex + 1) % _players.length;
       }
     }
-    
-
-    // final index = _activePlayers.indexOf(currID);
-    // return _activePlayers[(index + 1) % _activePlayers.length];
   }
 
   void _onDisconnected() {
@@ -367,9 +499,8 @@ class _GameRoomPageState extends State<GameRoomPage> {
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    Expanded(flex: 1, child: Text(""),),
-                    if (gamemode == 2) 
-                      Text(youWin ? "1st" : "2nd", style: resLoseStyleBig),
+                    Expanded(flex: 1, child: Text(""),), 
+                    Text(myPlace == 1 ? "1st" : (myPlace == 2 ? "2nd" : (myPlace == 3 ? "3rd" : "4th") ), style: resLoseStyleBig),
                     Text("place", style: resLoseStyle,),
                     Expanded(flex: 1, child: Text(""),),
                     Row(
@@ -438,7 +569,15 @@ class _GameRoomPageState extends State<GameRoomPage> {
                                 BorderSide(color: grey3A3A3AColor, width: 1),
                               ),
                             ),
-                            onPressed: () {
+                            onPressed: () async {
+                              if (!aiGame) {
+                                 await leaveRoom(userID!, roomID!);
+                              }
+                              SharedPreferences prefs = await SharedPreferences.getInstance();
+                              await prefs.remove('roomId');
+                              await prefs.remove('roomPassword');
+                              await prefs.remove('aiGame');
+                              await prefs.remove('playerNum');
                               _webSocket.disconnect();
                               Navigator.of(context).pop();
                               Navigator.pushNamed(context, '/mainmenu');
@@ -526,8 +665,21 @@ class _GameRoomPageState extends State<GameRoomPage> {
                             BorderSide(color: grey3A3A3AColor, width: 1),
                           ),
                         ),
-                        onPressed: () {
+                        onPressed: () async {
                           _turnTimer!.cancel();
+                          if (myAllTurn) {
+                            _submitTurnTimeout();
+                          } else {
+                            _exit();
+                          }
+                          if (!aiGame) {
+                            await leaveRoom(userID!, roomID!);
+                          }
+                          SharedPreferences prefs = await SharedPreferences.getInstance();
+                          await prefs.remove('roomId');
+                          await prefs.remove('roomPassword');
+                          await prefs.remove('aiGame');
+                          await prefs.remove('playerNum');
                           _webSocket.disconnect();
                           Navigator.of(context).pop();
                           Navigator.pushNamed(context, '/mainmenu');
@@ -552,6 +704,28 @@ class _GameRoomPageState extends State<GameRoomPage> {
       }
     );
   }
+
+  Future<void> leaveRoom(int id, String room_id) async {
+    final url = Uri.parse('$leaveRoomUrl');
+    final response = await http.post(
+      url,
+      headers: {'Content-Type': 'application/json', 'accept': 'application/json'},
+      body: jsonEncode({
+        'user_id': id,
+        'assigned_id': room_id,
+      })
+    );
+  }
+
+   void _exit() {
+    final message = {
+      'type': 'exit',
+      'my_id': userID,
+    };
+    _webSocket.sendMessage(message);
+  }
+
+
   
   @override
   Widget build(BuildContext context) {
@@ -580,21 +754,39 @@ class _GameRoomPageState extends State<GameRoomPage> {
                     height: 80,
                     child: IconButton(
                       onPressed: () {
-                        // _turnTimer?.cancel();
-                        //TODO: подтверждение выхода функция
                         confirmExit();                        
-                        Navigator.pushNamed(context, '/mainmenu');
                       },
                       icon: const Icon(Icons.door_back_door_outlined, size: 60),
                     ),
                   ),
                   const Expanded(flex: 1, child: Text("")),
-                  SizedBox(
-                    width: 80,
-                    height: 80,
-                    child: Icon(Icons.account_circle, size: 90, color: grey3A3A3AColor,),
+                  if (gamemode == 2 || gamemode == 4)
+                  Stack(
+                    alignment: Alignment.center,
+                    children: [
+                      CircularCountDownTimer(
+                      controller: _countDownControllerUp,
+                      duration: 60,
+                      isReverse: true,
+                      fillColor: greenTimerColor,
+                      height: 74,
+                      width: 74,
+                      strokeWidth: 8,
+                      onComplete: () {
+                        // later
+                      },
+                      strokeCap: StrokeCap.round,
+                      isReverseAnimation: true,
+                      ringColor: greyTimerColor,
+                      autoStart: false,
+                      textStyle: invisTextStyle,
+                      ),
+                      Icon(Icons.account_circle, size: 80, color: grey3A3A3AColor,),
+                    ],
                   ),
+                  if (gamemode == 2 || gamemode == 4)
                   Padding(padding: const EdgeInsets.only(right: 15),),
+                  if (gamemode == 2 || gamemode == 4)
                   Column(
                     children: [
                       Padding(padding: const EdgeInsets.only(top: 40)),
@@ -620,13 +812,35 @@ class _GameRoomPageState extends State<GameRoomPage> {
                   Column(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      Icon(Icons.account_circle, size: 90, color: grey3A3A3AColor,),
+                      Stack(
+                        alignment: Alignment.center,
+                        children: [
+                          CircularCountDownTimer(
+                          controller: _countDownControllerLeft,
+                          duration: 60,
+                          isReverse: true,
+                          fillColor: greenTimerColor,
+                          height: 74,
+                          width: 74,
+                          strokeWidth: 8,
+                          onComplete: () {
+                            // later
+                          },
+                          strokeCap: StrokeCap.round,
+                          isReverseAnimation: true,
+                          ringColor: greyTimerColor,
+                          autoStart: false,
+                          textStyle: invisTextStyle,
+                          ),
+                          Icon(Icons.account_circle, size: 80, color: grey3A3A3AColor,),
+                        ],
+                      ),
                       Padding(padding: const EdgeInsets.only(top: 5)),
                       Row(
                         children: [
-                          Icon(Icons.filter_7, size: 24, color: grey3A3A3AColor,),
+                          Icon(playerLeft != null ? getNumOfCardsIcon(playerLeft!.numOfCards) : Icons.filter_7, size: 24, color: grey3A3A3AColor,),
                           Padding(padding: const EdgeInsets.only(right: 5),),
-                          Text("Player_123", style: buttonTextStyle),
+                          Text(playerLeft?.name ?? "Waiting...", style: buttonTextStyle),
                         ],
                       )
                   ]),
@@ -637,7 +851,14 @@ class _GameRoomPageState extends State<GameRoomPage> {
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
                       Padding(padding: const EdgeInsets.only(top: 30)),
-                      for (int i = 0; i < 7; i++)
+                      for (int i = 0; i < (playerLeft != null ? playerLeft!.pallete.length : 0); i++)
+                        Column(
+                          children: [
+                            LeftCardWidget(card: playerLeft!.pallete[i]),
+                            Padding(padding: const EdgeInsets.only(top: 9)),
+                          ],
+                        ),
+                      for (int i = playerLeft != null ? playerLeft!.pallete.length : 0; i < 7; i++)
                         Column(
                           children: [
                             Container(
@@ -662,6 +883,9 @@ class _GameRoomPageState extends State<GameRoomPage> {
                     children: [
                       if (gamemode == 2)
                         Padding(padding: const EdgeInsets.only(top: 20)),
+                      if (gamemode == 3)
+                        Padding(padding: const EdgeInsets.only(top: 100)),
+                      if (gamemode == 2 || gamemode == 4)
                       Row(
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
@@ -768,7 +992,14 @@ class _GameRoomPageState extends State<GameRoomPage> {
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
                       Padding(padding: const EdgeInsets.only(top: 30)),
-                      for (int i = 0; i < 7; i++)
+                      for (int i = 0; i < (playerRight != null ? playerRight!.pallete.length : 0); i++)
+                        Column(
+                          children: [
+                            RightCardWidget(card: playerRight!.pallete[i]),
+                            Padding(padding: const EdgeInsets.only(top: 9)),
+                          ],
+                        ),
+                      for (int i = playerRight != null ? playerRight!.pallete.length : 0; i < 7; i++)
                         Column(
                           children: [
                             Container(
@@ -792,13 +1023,35 @@ class _GameRoomPageState extends State<GameRoomPage> {
                   Column(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      Icon(Icons.account_circle, size: 90, color: grey3A3A3AColor,),
+                      Stack(
+                        alignment: Alignment.center,
+                        children: [
+                          CircularCountDownTimer(
+                          controller: _countDownControllerRight,
+                          duration: 60,
+                          isReverse: true,
+                          fillColor: greenTimerColor,
+                          height: 74,
+                          width: 74,
+                          strokeWidth: 8,
+                          onComplete: () {
+                            // later
+                          },
+                          strokeCap: StrokeCap.round,
+                          isReverseAnimation: true,
+                          ringColor: greyTimerColor,
+                          autoStart: false,
+                          textStyle: invisTextStyle,
+                          ),
+                          Icon(Icons.account_circle, size: 80, color: grey3A3A3AColor,),
+                        ],
+                      ),
                       Padding(padding: const EdgeInsets.only(top: 5)),
                       Row(
                         children: [
-                          Icon(Icons.filter_7, size: 24, color: grey3A3A3AColor,),
+                          Icon(playerRight != null ? getNumOfCardsIcon(playerRight!.numOfCards) : Icons.filter_7, size: 24, color: grey3A3A3AColor,),
                           Padding(padding: const EdgeInsets.only(right: 5),),
-                          Text("Player_XXX", style: buttonTextStyle),
+                          Text(playerRight?.name ?? "Waiting...", style: buttonTextStyle),
                         ],
                       )
                   ]),
@@ -814,10 +1067,29 @@ class _GameRoomPageState extends State<GameRoomPage> {
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    SizedBox(
-                      width: 80,
-                      height: 80,
-                      child: Icon(Icons.account_circle, size: 90, color: grey3A3A3AColor,),
+                    Expanded(flex: 1, child: Text("")),
+                    Stack(
+                      alignment: Alignment.center,
+                      children: [
+                        CircularCountDownTimer(
+                        controller: _countDownControllerDown,
+                        duration: 60,
+                        isReverse: true,
+                        fillColor: greenTimerColor,
+                        height: 74,
+                        width: 74,
+                        strokeWidth: 8,
+                        onComplete: () {
+                          // later
+                        },
+                        strokeCap: StrokeCap.round,
+                        isReverseAnimation: true,
+                        ringColor: greyTimerColor,
+                        autoStart: false,
+                        textStyle: invisTextStyle,
+                        ),
+                        Icon(Icons.account_circle, size: 80, color: grey3A3A3AColor,),
+                      ],
                     ),
                     Padding(padding: const EdgeInsets.only(left: 29)),
                     for (int i = 0; i < _myHand.length; i++)
@@ -858,7 +1130,7 @@ class _GameRoomPageState extends State<GameRoomPage> {
                     Padding(padding: const EdgeInsets.only(left: 11)),
                     if (myAllTurn)
                       SizedBox(
-                        width: 100,
+                        width: 105,
                         height: 50,
                         child: 
                         ElevatedButton(
@@ -879,10 +1151,21 @@ class _GameRoomPageState extends State<GameRoomPage> {
                       )
                     else 
                       SizedBox(
-                        height: 100,
+                        height: 105,
                         width: 50,
                         child: Text(''),
                       ),
+                    Expanded(flex: 1, child: Text("")),
+                    IconButton(
+                      icon: Icon(Icons.help_outline, size: 40, color: grey3A3A3AColor,),
+                      onPressed: () {
+                        showDialog(
+                          context: context,
+                          builder: (context) => RuleDialog(),
+                        );
+                      },
+                    ),
+                    Padding(padding: const EdgeInsets.only(right: 15), child: Text(""),),
                   ],
                 ),
               )

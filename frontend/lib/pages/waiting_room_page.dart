@@ -7,6 +7,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 import '../data/styles.dart';
 import 'package:frontend/providers/provider.dart';
+import '../data/urls.dart';
 
 
 class WaitingRoomPage extends StatefulWidget {
@@ -31,7 +32,7 @@ class _WaitingRoomPageState extends State<WaitingRoomPage> {
   Timer? _pollingTimer;
 
   bool ready = false;
-  bool allReady = false;
+  // bool allReady = false;
 
   @override
   void initState() {
@@ -60,7 +61,7 @@ class _WaitingRoomPageState extends State<WaitingRoomPage> {
   }
 
   Future<void> _fetchPlayers() async {
-    final url = Uri.parse('http://localhost:8000/rooms/state');
+    final url = Uri.parse('$roomStateUrl');
     final response = await http.post(
       url,
       headers: {'Content-Type': 'application/json', 'accept': 'application/json'},
@@ -71,11 +72,15 @@ class _WaitingRoomPageState extends State<WaitingRoomPage> {
 
     if (response.statusCode == 200) {
       final responseBody = json.decode(response.body);
-      setState(() {
+      setState(() async {
         players = List<String>.from(responseBody['players']);
         ready_players = List<String>.from(responseBody['ready_players']);
         if (ready_players.length == players.length && ready_players.length >= 2) {
           // startGame(room_id);
+          // allReady = true;
+          SharedPreferences prefs = await SharedPreferences.getInstance();
+          await prefs.remove('ready');
+          await prefs.setInt('playerNum', ready_players.length);
           Navigator.pushNamed(context, '/gameroom');
           _pollingTimer?.cancel();
         }
@@ -89,7 +94,7 @@ class _WaitingRoomPageState extends State<WaitingRoomPage> {
   }
 
   Future<void> sendReady(int my_id, String room_id) async {
-    final url = Uri.parse('http://localhost:8000/rooms/ready');
+    final url = Uri.parse('$roomReadyUrl');
     final response = await http.post(
       url,
       headers: {'Content-Type': 'application/json', 'accept': 'application/json'},
@@ -113,7 +118,7 @@ class _WaitingRoomPageState extends State<WaitingRoomPage> {
   }
 
   Future<void> sendNotReady(int my_id, String room_id) async {
-    final url = Uri.parse('http://localhost:8000/rooms/not_ready');
+    final url = Uri.parse('$roomNotReadyUrl');
     final response = await http.post(
       url,
       headers: {'Content-Type': 'application/json', 'accept': 'application/json'},
@@ -136,29 +141,8 @@ class _WaitingRoomPageState extends State<WaitingRoomPage> {
     }
   }
 
-  Future<void> startGame(String room_id) async {
-    final url = Uri.parse('http://localhost:8000/game/start');
-    final response = await http.post(
-      url,
-      headers: {'Content-Type': 'application/json', 'accept': 'application/json'},
-      body: jsonEncode({
-        'room_id': room_id,
-      }),
-    );
-
-    if (response.statusCode == 200) {
-      setState(() {
-        allReady = true;
-      });
-    } else {
-      setState(() {
-        allReady = false;
-      });
-    }
-  }
-
   Future<void> leaveRoom(int id, String room_id) async {
-    final url = Uri.parse('http://localhost:8000/rooms/leave');
+    final url = Uri.parse('$leaveRoomUrl');
     final response = await http.post(
       url,
       headers: {'Content-Type': 'application/json', 'accept': 'application/json'},
@@ -185,11 +169,6 @@ class _WaitingRoomPageState extends State<WaitingRoomPage> {
   Widget build(BuildContext context) {
     final gameProvider = Provider.of<GameProvider>(context);
     gameProvider.loadRoomInfo();
-
-    if (allReady) {
-      Navigator.pushNamed(context, '/');
-      gameProvider.clearReady();
-    }
 
     return Scaffold(
       body: Container(
@@ -244,36 +223,15 @@ class _WaitingRoomPageState extends State<WaitingRoomPage> {
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
                       Text("Room", style: boldTextStyle),
-                      Text(room_id, style: bigNumberStyle),
+                      SelectableText(room_id, style: bigNumberStyle),
                       Padding(padding: const EdgeInsets.only(top: 10)),
                       Text("Password", style: boldTextStyle),
-                      Text(gameProvider.roomPassword, style: bigNumberStyle),
+                      SelectableText(gameProvider.roomPassword, style: bigNumberStyle),
                     ],
                   )
                 ],
               ),
               const Expanded(flex: 1, child: Text("")),
-              // Container(
-              //   width: 350,
-              //   height: 65,
-              //   decoration:  BoxDecoration(
-              //     color: whiteInvisColor,
-              //     borderRadius: BorderRadius.circular(20),
-              //     border: Border.all(color: grey3A3A3AColor, width: 0.1),
-              //   ),
-              //   child: Row(
-              //     children: [
-              //       Padding(padding: const EdgeInsets.only(left: 20)),
-              //       Icon(Icons.account_circle, size: 50),
-              //       Padding(padding: const EdgeInsets.only(left: 20)),
-              //       Text(gameProvider.myName, style: basicTextStyle),
-              //       Expanded(flex: 1, child: Text("")),
-              //       Icon(Icons.check_rounded, color: Colors.green, size: 50),
-              //       Padding(padding: const EdgeInsets.only(right: 20)),
-              //     ]
-              //   )
-              // ),
-              // Padding(padding: const EdgeInsets.only(top: 20)),
               for (int i = 0; i < players.length; i++)
                 Column(
                   children: [

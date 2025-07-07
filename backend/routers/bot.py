@@ -3,6 +3,7 @@ from fastapi import APIRouter, Body, HTTPException
 import uuid
 import numpy as np
 from ml.DQN import DQNAgent, Red7Env
+import torch
 
 # Create FastAPI router for bot endpoints
 router = APIRouter(prefix="/bot", tags=["bot"])
@@ -52,6 +53,8 @@ def decode_card(idx):
     """
     if idx == 50:
         return "R0"
+    elif idx == 0:
+        return
     color = (idx - 1) // 7
     value = (idx - 1) % 7 + 1
     return f"{COLORS[color]}{value}"
@@ -85,6 +88,7 @@ def create_new_session():
     """
     env = Red7Env(verbose=False)
     agent = DQNAgent(device='cpu')
+    agent.load("ml/final_agent (4).pth")
     session_id = str(uuid.uuid4())
     sessions[session_id] = {"env": env, "agent": agent}
     return session_id
@@ -167,20 +171,41 @@ async def bot_move(session_id: str = Body(...), action: list = Body(...)):
 
     # Get bot's move
     legal_mask = env.legal_actions_mask()
-    bot_action = agent.select_action(obs, legal_mask)
+    
+    # Convert observations to proper tensor types
+    obs_tensor = {
+        'hand': torch.tensor(obs['hand'], dtype=torch.long),  # Changed to long for embedding
+        'my_palette': torch.tensor(obs['my_palette'], dtype=torch.long),  # Changed to long
+        'opp_palette': torch.tensor(obs['opp_palette'], dtype=torch.long),  # Changed to long
+        'rule': torch.tensor(obs['rule'], dtype=torch.long),  # Changed to long
+        'hand_len': torch.tensor(obs['hand_len'], dtype=torch.float32),
+        'my_palette_len': torch.tensor(obs['my_palette_len'], dtype=torch.float32),
+        'opp_hand_len': torch.tensor(obs['opp_hand_len'], dtype=torch.float32),
+        'opp_palette_len': torch.tensor(obs['opp_palette_len'], dtype=torch.float32),
+        'known_deck': torch.tensor(obs['known_deck'], dtype=torch.float32)
+    }
+    
+    # Move tensors to the same device as the model
+    device = next(agent.model.parameters()).device
+    obs_tensor = {k: v.to(device) for k, v in obs_tensor.items()}
+    
+    bot_action = agent.select_action(obs_tensor, legal_mask)
     obs, reward, done, _ = env.step(bot_action)
     bot_rule_card = decode_card(bot_action[1]) if bot_action[1] != 0 else 0
     obs = enrich_obs(obs, bot_rule_card)
     
+
     # Convert bot_action to native Python type for JSON serialization
     if isinstance(bot_action, (np.integer, np.floating)):
-        bot_action = to_native(bot_action)
-    elif isinstance(bot_action, (list, tuple, np.ndarray)):
-        bot_action = [to_native(x) for x in bot_action]
+        bot_action = int(bot_action) if isinstance(bot_action, np.integer) else float(bot_action)
+    elif isinstance(bot_action, np.ndarray):
+        bot_action = bot_action.tolist()
+    elif isinstance(bot_action, (list, tuple)):
+        bot_action = [int(x) if isinstance(x, np.integer) else float(x) if isinstance(x, np.floating) else x for x in bot_action]
     
     return {
         "obs": obs,
         "done": done,
         "bot_action": bot_action,
-        "winner": to_native(env.get_winner()) if done else None
+        "winner": int(env.get_winner()) if done else None
     }

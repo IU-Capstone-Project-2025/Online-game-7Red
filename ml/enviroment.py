@@ -2,20 +2,32 @@ import numpy as np
 import random
 from typing import Tuple, List
 import torch
-import colorama
-from colorama import Fore, Style
+# import colorama
+# from colorama import Fore, Style
 from collections import defaultdict
 
-colorama.init(autoreset=True)
+#colorama.init(autoreset=True)
 
 class Red7Env:
     COLORS = ["R", "O", "Y", "G", "L", "B", "V"]
     COLOR_NAMES = ["Red", "Orange", "Yellow", "Green", "LightBlue", "Blue", "Violet"]
-    COLOR_CODES = [Fore.RED, Fore.LIGHTRED_EX, Fore.YELLOW, Fore.GREEN,
-                   Fore.CYAN, Fore.BLUE, Fore.MAGENTA]
+    # COLOR_CODES = [Fore.RED, Fore.LIGHTRED_EX, Fore.YELLOW, Fore.GREEN,
+    #                Fore.CYAN, Fore.BLUE, Fore.MAGENTA]
 
 
-
+    """
+        Initialize a new game instance.
+        
+        Args:
+            seed (int|None): Seed for RNG. None for random initialization  
+            verbose (bool): Verbose console output mode
+            
+        Initializes:
+            - Card deck (1-49)
+            - Player hands and palettes
+            - Current rule (default Red/0)
+            - Game state (current player, done flag)
+    """
     def __init__(self, seed: int = None, verbose: bool = True):
         self.hand_size = 7
         self.verbose = verbose
@@ -23,6 +35,22 @@ class Red7Env:
             self.seed(1)
         self.reset()
 
+
+    """
+        Reset game to initial state.
+        
+        Returns:
+            dict: Observation containing:
+                - hand (Tensor[int]): Current player's hand (padded to 7)
+                - my_palette (Tensor[int]): Current player's palette
+                - opp_palette (Tensor[int]): Opponent's palette
+                - rule (Tensor[int]): Current active rule
+                - hand_len (Tensor[float]): Hand card count
+                - my_palette_len (Tensor[float]): Palette size
+                - opp_hand_len (Tensor[float]): Opponent hand count
+                - opp_palette_len (Tensor[float]): Opponent palette size
+                - known_deck (Tensor[float]): Deck mask (1-present, 0-absent)
+        """
     def reset(self):
         self.deck = list(range(1, 50))
         random.shuffle(self.deck)
@@ -36,18 +64,56 @@ class Red7Env:
         self.done = False
         self.winner = None
         return self._get_obs()
+    
+    """
+        Get current player index.
+        
+        Returns:
+            int: 0 (first player) or 1 (second player)
+        """
     def current_player(self):
         return self._current_player
 
+
+    """
+        Pad card list with zeros to standard hand size.
+        
+        Args:
+            cards (list[int]): List of card IDs (1-49)
+            
+        Returns:
+            np.ndarray: Array of length 7 (cards + zeros)
+        """
     def _pad(self, cards):
         return np.array(cards + [0] * (self.hand_size - len(cards)), dtype=np.int64)
 
+
+    """
+        Create bitmask of remaining deck cards.
+        
+        Returns:
+            np.ndarray[float32]: Array of length 49 where:
+                - 1.0 - card in deck
+                - 0.0 - card not in deck
+        """
     def _deck_mask(self):
         mask = np.zeros(49, dtype=np.float32)
         for card in self.deck:
             mask[card - 1] = 1.0
         return mask
-
+    """
+        Compute matrix of valid actions for current state.
+        
+        Returns:
+            np.ndarray[float32]: 50x50 matrix where:
+                - [i,j] = 1.0 if action valid
+                - i: card for palette (0-skip)
+                - j: card for rule change (0-skip)
+                
+        Logic:
+            1. Checks which cards are in hand
+            2. For each combination verifies if it maintains winning state
+        """
     def legal_actions_mask(self, ) -> np.ndarray:
         """
         Возвращает маску легальных действий для текущего игрока.
@@ -67,20 +133,17 @@ class Red7Env:
         hand_set = set(hand)
         mask[0][0] = 1
 
-        # Ход с добавлением карты в палитку (i > 0, j == 0)
         for i in range(1, 50):
             if i in hand_set:
                 mask[i][0] = 1.0
                 if not check_win(pallete.copy() + [i], [opp_pallete], self.rule):
                     mask[i][0] = 0
-                # Двойной ход: добавить карту в палитку + сменить правило
                 for j in range(1, 50):
                     if j in hand_set and i != j:
                         if not check_win(pallete.copy() + [i], [opp_pallete], (j - 1) // 7):
                             mask[i][j] = 0
                         else:
                             mask[i][j] = 1.0
-        # Смена правила (i == 0, j > 0)
         for j in range(1, 50):
             if j in hand_set:
                 mask[0][j] = 1.0
@@ -90,42 +153,77 @@ class Red7Env:
 
         return mask
 
-
+    """Print current game state to console with color coding."""
     def render(self):
         cp = 1 - self._current_player
         print("\n" + "="*42)
-        print(f"{Style.BRIGHT}Current Turn: Player {cp}")
+        print(f"Current Turn: Player {cp}")
         print("-" * 42)
-        print(f"{Style.BRIGHT}Player 0 (You):")
+        print(f"Player 0 (You):")
         print(f"  Hand:    {self._cards_to_str(self.player1_hand)}")
         print(f"  Palette: {self._cards_to_str(self.player1_palette)}")
-        print(f"{Style.BRIGHT}Player 1 (Opponent):")
+        print(f"Player 1 (Opponent):")
         print(f"  Hand:    {self._cards_to_str(self.player2_hand)}")
         print(f"  Palette: {self._cards_to_str(self.player2_palette)}")
         print(f"\nCurrent Rule: {self.COLOR_NAMES[self.rule]}")
         print(f"Deck: {len(self.deck)} cards remaining")
         print("="*42 + "\n")
 
-
+    """
+        Format card as colored string.
+        
+        Args:
+            card (int): Card ID (1-49)
+            
+        Returns:
+            str: String like "R3" (color + value) with ANSI color
+            
+        Example:
+            1 → "R1" (red)
+            8 → "O1" (orange)
+        """
     def _color_str(self, card: int) -> str:
         if card < 1 or card > 49:
             return "Invalid"
         val = (card - 1) % 7 + 1
         col = (card - 1) // 7
-        return self.COLOR_CODES[col] + f"{self.COLORS[col]}{val}" + Style.RESET_ALL
+        #return self.COLOR_CODES[col] + f"{self.COLORS[col]}{val}" + Style.RESET_ALL
+        return f"{self.COLORS[col]}{val}"
 
-
+    """
+        Convert card list to formatted string.
+        
+        Args:
+            cards (list[int]): List of card IDs
+            
+        Returns:
+            str: Space-separated cards ("R1 O2 Y3")
+    """
     def _cards_to_str(self, cards: List[int]) -> str:
         return " ".join([self._color_str(c) for c in sorted(cards)])
 
-
+    """
+        Get the current rule card color index.
+        
+        Returns:
+            int: Current rule color index (0-6)
+    """
     def get_rule_card(self) -> int:
-        """Возвращает текущую карту правила."""
         return self.rule
 
-
+    """
+        Get hand cards for specified player.
+        
+        Args:
+            player_index (int): 0 for first player, 1 for second player
+            
+        Returns:
+            List[int]: List of card IDs in player's hand
+            
+        Raises:
+            ValueError: If player_index is not 0 or 1
+    """
     def get_hand(self, player_index: int) -> List[int]:
-        """Возвращает руку игрока по индексу (0 или 1)."""
         if player_index == 0:
             return self.player1_hand
         elif player_index == 1:
@@ -133,9 +231,19 @@ class Red7Env:
         else:
             raise ValueError("Invalid player index. Only 0 or 1 are allowed.")
 
-
+    """
+        Get palette cards for specified player.
+        
+        Args:
+            player_index (int): 0 for first player, 1 for second player
+            
+        Returns:
+            List[int]: List of card IDs in player's palette
+            
+        Raises:
+            ValueError: If player_index is not 0 or 1
+    """
     def get_palette(self, player_index: int) -> List[int]:
-        """Возвращает палитру игрока по индексу (0 или 1)."""
         if player_index == 0:
             return self.player1_palette
         elif player_index == 1:
@@ -143,12 +251,33 @@ class Red7Env:
         else:
             raise ValueError("Invalid player index. Only 0 or 1 are allowed.")
 
-
+    """
+        Get game winner.
+        
+        Returns:
+            int: 
+                - 0 - first player won
+                - 1 - second player won
+                - -1 - game not finished
+        """
     def get_winner(self) -> int:
-        """Возвращает индекс победившего игрока, или -1 если нет победителя."""
         return self.winner
 
-
+    """
+        Get current observation dictionary.
+        
+        Returns:
+            dict: Observation containing:
+                - hand: Padded hand tensor
+                - my_palette: Padded palette tensor
+                - opp_palette: Opponent's padded palette tensor  
+                - rule: Current rule tensor
+                - hand_len: Hand length tensor
+                - my_palette_len: Palette length tensor
+                - opp_hand_len: Opponent hand length tensor
+                - opp_palette_len: Opponent palette length tensor
+                - known_deck: Deck presence mask tensor
+    """
     def _get_obs(self):
             if self._current_player == 0:
                 return {
@@ -174,7 +303,28 @@ class Red7Env:
                     'opp_palette_len': torch.tensor([[len(self.player1_palette)]], dtype=torch.float32),
                     'known_deck': torch.tensor(self._deck_mask()).unsqueeze(0),
                 }
-
+   
+    """
+        Execute game move.
+        
+        Args:
+            action (tuple): (card_to_palette, card_to_rule)
+                - card_to_palette (int): Card ID for palette (0-skip)
+                - card_to_rule (int): Card ID for rule change (0-skip)
+                
+        Returns:
+            tuple: (obs, reward, done, info)
+                - obs (dict): New state
+                - reward (float): Action reward
+                - done (bool): Game over flag
+                - info (dict): Additional info (empty)
+                
+        Reward logic:
+            +0.1 for adding to palette
+            +0.05 for changing rule
+            +0.3 for maintaining winning position
+            ±10 for win/loss
+        """
     def step(self, action: Tuple[int, int]):
         if self.done:
             raise ValueError("Game is already over.")
@@ -246,10 +396,19 @@ class Red7Env:
             #print(f"Player {self._current_player + 1} has no winning moves. Game over.")
             return self._get_obs(), reward, self.done, {}
 
-        # Переключение игрока
         self._current_player = 1 - self._current_player
         return self._get_obs(), reward, self.done, {}
 
+    """
+        Apply pre-generated move.
+        
+        Args:
+            player_id (int): 0 or 1
+            move (tuple): (rule_card, new_hand, new_palette)
+                - rule_card: Rule card ID
+                - new_hand: New hand after move
+                - new_palette: New palette
+        """
     def apply_move(self, player_id: int, move: Tuple[int, List[int], List[int]]):
         """
         Применяет выигрышный ход к среде Red7. Аналогично step, но на вход принимает move из get_winning_moves.
@@ -267,6 +426,13 @@ class Red7Env:
 
         self.rule = card_color(rule_card)
         self._current_player = 1 - self._current_player
+    
+    """
+        Create deep copy of current environment.
+        
+        Returns:
+            Red7Env: New identical environment
+        """
     def copy(self):
         """Create a deep copy of the environment"""
         new_env = Red7Env(verbose=False)
@@ -282,29 +448,88 @@ class Red7Env:
         return new_env
 
 
-
+"""
+    Get card numerical value.
+    
+    Args:
+        card (int): Card ID (1-49)
+        
+    Returns:
+        int: Value from 1 to 7
+        
+    Example:
+        1 → 1 (R1)
+        15 → 1 (Y1)
+        22 → 1 (G1)
+    """
 def card_value(card: int) -> int:
     return (card - 1) % 7 + 1
 
+"""
+    Get card color index.
+    
+    Args:
+        card (int): Card ID
+        
+    Returns:
+        int: Color index (0-6)
+        
+    Example:
+        1 → 0 (Red)
+        8 → 1 (Orange)
+    """
 def card_color(card: int) -> int:
     if card == 0 : return 0
     return (card - 1) // 7
 
+"""
+    Compare two cards by game rules.
+    
+    Args:
+        a, b (int): Card IDs
+        
+    Returns:
+        bool: True if a < b by game rules
+        
+    Rules:
+        1. First by value (1 < 2 < ... < 7)
+        2. If equal - by color (V > B > L > ... > R)
+    """
 def compare_cards(a: int, b: int) -> bool:
     va, vb = card_value(a), card_value(b)
     if va != vb:
         return va < vb
-    return card_color(a) > card_color(b)  # меньший цвет считается лучше
+    return card_color(a) > card_color(b)
 
+"""
+    Find maximum card in list.
+    
+    Args:
+        cards (list[int]): List of card IDs
+        
+    Returns:
+        int: ID of maximum card
+        
+    Raises:
+        RuntimeError: If list empty
+    """
 def find_max_card(cards: List[int]) -> int:
     if not cards:
         raise RuntimeError("Empty card list")
     max_card = cards[0]
     for c in cards[1:]:
-        if compare_cards(max_card, c):  # если max_card < c → обновить
+        if compare_cards(max_card, c):
             max_card = c
     return max_card
 
+"""
+    Orange rule: most cards of same value.
+    
+    Returns:
+        tuple: (count, card)
+            - count: Max number of same values
+            - card: Best card in group
+    """
 def comparison_orange(cards: List[int]) -> Tuple[int, int]:
     if len(cards) == 0:
         return 0, 0
@@ -322,6 +547,14 @@ def comparison_orange(cards: List[int]) -> Tuple[int, int]:
             max_card = local_max
     return max_count, max_card
 
+"""
+    Yellow rule: most cards of same color.
+    
+    Returns:
+        tuple: (count, card)
+            - count: Max number of same color
+            - card: Best card of color
+    """
 def comparison_yellow(cards: List[int]) -> Tuple[int, int]:
     if len(cards)==0:
         return 0,0
@@ -339,6 +572,14 @@ def comparison_yellow(cards: List[int]) -> Tuple[int, int]:
             max_card = local_max
     return max_count, max_card
 
+"""
+    Green rule: number of even-valued cards.
+    
+    Returns:
+        tuple: (count, card)
+            - count: Number of even cards
+            - card: Best even card
+    """
 def comparison_green(cards: List[int]) -> Tuple[int, int]:
     if len(cards)==0:
         return 0,0
@@ -347,12 +588,28 @@ def comparison_green(cards: List[int]) -> Tuple[int, int]:
         return 0, 0
     return len(filtered), find_max_card(filtered)
 
+"""
+    Light Blue rule: number of different colors.
+    
+    Returns:
+        tuple: (count, card)
+            - count: Unique color count
+            - card: Best card among them
+    """
 def comparison_lightblue(cards: List[int]) -> Tuple[int, int]:
     if len(cards) == 0:
         return 0, 0
     unique_colors = {card_color(c) for c in cards}
     return len(unique_colors), find_max_card(cards)
 
+"""
+    Blue rule: longest sequence of consecutive values.
+    
+    Returns:
+        tuple: (length, card)
+            - length: Longest sequence length
+            - card: Best card in sequence
+    """
 def comparison_blue(cards: List[int]) -> Tuple[int, int]:
     if len(cards) == 0:
         return 0, 0
@@ -360,7 +617,7 @@ def comparison_blue(cards: List[int]) -> Tuple[int, int]:
     values = sorted(set(card_value(c) for c in cards))
     max_len = 1
     cur_len = 1
-    sequences = []  # Будем хранить все последовательности (длина, начальное значение)
+    sequences = []
     temp_start = 0
 
     for i in range(1, len(values)):
@@ -373,29 +630,27 @@ def comparison_blue(cards: List[int]) -> Tuple[int, int]:
             cur_len = 1
             temp_start = i
     
-    # Добавляем последнюю последовательность
+   
     sequences.append((cur_len, values[temp_start]))
 
     if not sequences:
         return 0, 0
 
-    # Находим максимальную длину
+    
     max_len = max(seq[0] for seq in sequences)
     
-    # Фильтруем последовательности с максимальной длиной
+    
     max_sequences = [seq for seq in sequences if seq[0] == max_len]
     
-    # Если несколько последовательностей, выбираем с наибольшей картой
+    
     if len(max_sequences) > 1:
-        # Выбираем последовательность с наибольшим начальным значением (так как они последовательные)
-        best_seq = max(max_sequences, key=lambda x: x[1] + x[0] - 1)  # начальное + длина -1 = последнее значение
+        
+        best_seq = max(max_sequences, key=lambda x: x[1] + x[0] - 1) 
     else:
         best_seq = max_sequences[0]
 
-    # Вычисляем диапазон значений в выбранной последовательности
     seq_values = set(range(best_seq[1], best_seq[1] + best_seq[0]))
 
-    # Ищем лучшую карту среди тех, которые входят в эту последовательность
     max_card = None
     for c in cards:
         if card_value(c) in seq_values:
@@ -404,6 +659,14 @@ def comparison_blue(cards: List[int]) -> Tuple[int, int]:
 
     return max_len, max_card
 
+"""
+    Violet rule: number of cards with value < 4.
+    
+    Returns:
+        tuple: (count, card)
+            - count: Number of cards 1-3
+            - card: Best such card
+    """
 def comparison_violet(cards: List[int]) -> Tuple[int, int]:
     if len(cards) == 0:
         return 0, 0
@@ -412,6 +675,17 @@ def comparison_violet(cards: List[int]) -> Tuple[int, int]:
         return 0, 0
     return len(filtered), find_max_card(filtered)
 
+"""
+    Check if palette is winning.
+    
+    Args:
+        me (list): Current player's cards
+        other_palettes (list): Opponents' palettes
+        rule_color (int): Current rule index (0-6)
+        
+    Returns:
+        bool: True if 'me' beats all opponents
+    """
 def check_win(me: List[int], other_palettes: List[List[int]], rule_color: int) -> bool:
     if len(me) == 0:
         return False
@@ -459,6 +733,18 @@ def check_win(me: List[int], other_palettes: List[List[int]], rule_color: int) -
 
     return True
 
+"""
+    Generate all valid winning moves.
+    
+    Args:
+        rule_card (int): Current rule card
+        hand (list): Cards in hand
+        my_palette (list): Current palette
+        other_palettes (list): Opponents' palettes
+        
+    Returns:
+        list: Tuples of (rule_card, new_hand, new_palette)
+    """
 def get_winning_moves(
     rule_card: int,
     hand: List[int],
@@ -468,14 +754,12 @@ def get_winning_moves(
     results = []
     current_rule = card_color(rule_card)
 
-    # 1. Добавить карту в палетку (не меняя правило)
     for i, card in enumerate(hand):
         new_palette = my_palette + [card]
         if check_win(new_palette, other_palettes, current_rule):
             new_hand = hand[:i] + hand[i+1:]
             results.append((rule_card, new_hand, new_palette))
 
-    # 2. Сменить правило (не добавляя в палетку)
     for i, card in enumerate(hand):
         new_rule = card_color(card)
         new_rule_card = card
@@ -483,7 +767,6 @@ def get_winning_moves(
         if check_win(my_palette, other_palettes, new_rule):
             results.append((new_rule_card, new_hand, my_palette))
 
-    # 3. Добавить карту в палетку и сменить правило (двойной ход)
     for i in range(len(hand)):
         for j in range(len(hand)):
             if i == j:
@@ -498,129 +781,13 @@ def get_winning_moves(
 
     return results
 
-def simple_ai_move(env: Red7Env):
-    mask = env.legal_actions_mask()
-    hand = env.opponent_hand
-    palette = env.opponent_palette
-    my_palette = env.player_palette
-    best_move = None
-
-    for i in range(50):
-        for j in range(50):
-            if mask[i][j] > 0:
-                temp_hand = hand[:]
-                temp_palette = palette[:]
-                rule = env.rule
-                if i != 0 and i in temp_hand:
-                    temp_hand.remove(i)
-                    temp_palette.append(i)
-                if j != 0 and j in temp_hand:
-                    if j != i:
-                        temp_hand.remove(j)
-                    rule = (j - 1) // 7
-
-                if check_win(temp_palette, [my_palette], rule):
-                    return (i, j)
-
-    # Если нет выигрышных — просто первый доступный ход
-    for i in range(50):
-        for j in range(50):
-            if mask[i][j] > 0:
-                return (i, j)
-
-    return (0, 0)
-
-
-def play_vs_ai(agent, num_games=1, verbose=True):
+"""
+    Print legal moves matrix in readable format.
+    
+    Args:
+        mask (np.ndarray): 50x50 legal actions matrix
+        hand (list): Current player's hand cards
     """
-    Игра против обученного DQN агента
-    :param agent: Обученный DQNAgent
-    :param num_games: Количество игр
-    :param verbose: Вывод ходов
-    """
-    env = Red7Env(verbose=verbose)
-    agent.epsilon = 0.01  # Минимальная exploration
-    
-    results = {'wins': 0, 'losses': 0, 'draws': 0}
-    
-    for game in range(1, num_games+1):
-        obs = env.reset()
-        done = False
-        
-        if verbose:
-            print(f"\n=== Game {game}/{num_games} ===")
-            env.render()
-        
-        while not done:
-            current_player = env.current_player()
-            
-            if current_player == 0:  # Ход человека
-                if verbose:
-                    print("\nYour turn!")
-                    print("Your hand:", env._cards_to_str(env.player1_hand))
-                
-                legal_mask = env.legal_actions_mask()
-                if not legal_mask.any():
-                    print("No legal moves! You lose.")
-                    done = True
-                    break
-                
-                # Ввод хода
-                while True:
-                    try:
-                        move_input = input("Enter your move as 'palette_card rule_card' (0 to pass): ")
-                        play_card, rule_card = map(int, move_input.split())
-                        
-                        # Проверка допустимости хода
-                        if (play_card == 0 and rule_card == 0) or legal_mask[play_card, rule_card] > 0:
-                            break
-                        print("Invalid move! Legal moves matrix:")
-                        print_legal_moves(legal_mask, env.player1_hand)
-                    except:
-                        print("Invalid input! Example: '12 0' to play card 12 to palette")
-                
-                action = (play_card, rule_card)
-                
-            else:  # Ход ИИ
-                if verbose:
-                    print("\nAI's turn...")
-                
-                with torch.no_grad():
-                    obs_tensor = {k: v.to(agent.device) for k, v in obs.items()}
-                    q_values = agent.model(obs_tensor)[0].cpu().numpy()
-                
-                legal_mask = env.legal_actions_mask()
-                q_values[legal_mask == 0] = -np.inf
-                action = np.unravel_index(np.argmax(q_values), q_values.shape)
-                
-                if verbose:
-                    action_desc = f"Palette: {action[0]}, Rule: {action[1]}"
-                    print(f"AI plays: {action_desc}")
-            
-            # Применяем ход
-            obs, reward, done, _ = env.step(action)
-            
-            if verbose:
-                env.render()
-                if done:
-                    winner = env.get_winner()
-                    if winner == 0:
-                        print("You won!")
-                        results['wins'] += 1
-                    elif winner == 1:
-                        print("AI won!")
-                        results['losses'] += 1
-                    else:
-                        print("Draw!")
-                        results['draws'] += 1
-    
-    if num_games > 1:
-        print("\n=== Final Results ===")
-        print(f"Wins: {results['wins']}")
-        print(f"Losses: {results['losses']}")
-        print(f"Draws: {results['draws']}")
-        print(f"Win Rate: {results['wins']/num_games*100:.1f}%")
-
 def print_legal_moves(mask, hand):
     """Визуализация доступных ходов"""
     print("\nLegal moves (row=palette, col=rule):")
@@ -634,4 +801,3 @@ def print_legal_moves(mask, hand):
                 row.append(f"{'':>3}")
         print(" ".join(row))
     print("\nYour hand:", [c for c in hand if c != 0])
-

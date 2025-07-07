@@ -3,6 +3,7 @@ from typing import List, Dict
 from backend.database import get_room_players_ids_and_names
 import random
 from collections import defaultdict
+import random
 
 
 # Card colors and values
@@ -47,7 +48,24 @@ class Red7GameState:
         self.round = 1
 
     async def get_room_players_info_from_db(self):
-        self.players_name_list, self.players_id_list = await get_room_players_ids_and_names(str(self.assigned_id))
+        """Load players from database with proper error handling"""
+        print(f"[DEBUG] Starting to fetch players for room {self.assigned_id}", flush=True)
+        
+        names, ids = await get_room_players_ids_and_names(str(self.assigned_id))
+        print(f"[DEBUG] Received from DB - names: {names}, ids: {ids}", flush=True)
+        
+        if not names or not ids:
+            raise ValueError("Empty data returned from database")
+            
+        # Shuffle player
+        combined = list(zip(names, ids))
+        random.shuffle(combined)
+        self.players_name_list, self.players_id_list = zip(*combined)
+        self.players_name_list = list(self.players_name_list)
+        self.players_id_list = list(self.players_id_list)
+        
+        print(f"[DEBUG] Final player list - names: {self.players_name_list}, ids: {self.players_id_list}", flush=True)
+            
     
     def card_to_tuple(self, card: str) -> tuple[int, int]:
         """Convert card string (e.g., 'R7') to (color_index, value) tuple.
@@ -132,24 +150,28 @@ class Red7GameState:
         self.players[-1]["active"] = True
         self.players[-1]["possible_moves"] = {}
 
-    def start_game(self):
-        """Initialize the game state"""
+    async def start_game(self):
+        """Async version that should be called within a locked context"""
+        if self.started:
+            return
+        
         self.initialize_deck()
         self.deal_cards()
-        self.current_player = next(iter(self.players.keys()))  # First player
-        self.current_rule = 0  # Red rule
+        self.current_player = self.players_id_list[0]  # First player from shuffled list
         self.started = True
         self.game_over = False
 
     def next_player(self):
         """Move to the next active player"""
         players = [pid for pid, p in self.players.items() if p["active"]]
+        print(f"Active players {players}", flush=True)
         if not players:
             return False
             
         current_index = players.index(self.current_player)
         next_index = (current_index + 1) % len(players)
         self.current_player = players[next_index]
+        print("All is well isnside next_player()", flush=True)
         return True
 
     def check_winning_at_beginning(self, player_id: int) -> List[Dict]:
@@ -227,44 +249,48 @@ class Red7GameState:
         self.cur_rule_card = original_state['rule_card']
 
         self.players[player_id]["possible_moves"] = winning_moves
-        print(self.players[player_id]["possible_moves"], flush=True)
+        #print(self.players[player_id]["possible_moves"], flush=True)
         print("Win at beg!!!", flush=True)
         print(len(winning_moves), flush=True)
         return len(winning_moves) > 0
     
     def check_in_possible_moves(self, player_id: int, new_rule: str, new_hand: List[str], new_palette: List[str]) -> bool:
-        moves = self.players[player_id]["possible_moves"]
-
-        target_move = {
-            "new_rule": new_rule,
-            "new_hand": new_hand,
-            "new_palette": new_palette
-        }
-
-        if new_rule == None:
-            exact_match = any(
-                move["new_rule"] == self.cur_rule_card
-                and sorted(move["new_hand"]) == sorted(target_move["new_hand"])
-                and sorted(move["new_palette"]) == sorted(target_move["new_palette"])
-                for move in moves
-            )
+        try:
+            print(f"Rule at the beggining of check_in_possible_moves{self.cur_rule_card}", flush=True)
+            moves = self.players[player_id]["possible_moves"]
+            if not moves:
+                return False
         
-        else:
-            exact_match = any(
-                move["new_rule"] == target_move["new_rule"]
-                and sorted(move["new_hand"]) == sorted(target_move["new_hand"])
-                and sorted(move["new_palette"]) == sorted(target_move["new_palette"])
-                for move in moves
-            )
+            # Pre-sort the target hand and palette once
+            sorted_new_hand = sorted(new_hand)
+            sorted_new_palette = sorted(new_palette)
+            target_rule = self.cur_rule_card if new_rule is None else new_rule
 
-        if exact_match:
-            self.players[player_id]["hand"] = new_hand
-            self.players[player_id]["palette"] = new_palette
-            if new_rule != None:
-                self.cur_rule_card = new_rule
-                self.current_rule = self.rule_to_int(self.cur_rule_card[0])
-
-        return exact_match
+            for move in moves:
+                # Early exit conditions
+                if move["new_rule"] != target_rule:
+                    continue
+                if sorted(move["new_hand"]) != sorted_new_hand:
+                    continue
+                if sorted(move["new_palette"]) != sorted_new_palette:
+                    continue
+                    
+                # Found exact match
+                self.players[player_id]["hand"] = new_hand
+                self.players[player_id]["palette"] = new_palette
+                if new_rule is not None:
+                    self.cur_rule_card = new_rule
+                    self.current_rule = self.rule_to_int(self.cur_rule_card[0])
+                print(f"Rule at the end of check_in_possible_moves{self.cur_rule_card}", flush=True)
+                print("In check_possible_moves found exact match", flush=True)
+                return True
+            
+        except Exception as e:
+            print(f"Move validation crashed: {e}", flush=True)
+            return False 
+    
+        print("In check_possible_moves didn't find exact match", flush=True)
+        return False
 
     def check_move(self, player_id: int, new_rule: str, new_hand: List[str], new_palette: List[str]) -> bool:
         """

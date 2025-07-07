@@ -6,6 +6,7 @@ from backend.routers.game import router as game_router
 from backend.routers import settings as setting_router
 
 #from backend.routers.bot import router as bot_router
+
 #from backend.routers.game_bot import router as ai_game_router 
 from backend.database import database
 from fastapi.middleware.cors import CORSMiddleware
@@ -32,6 +33,7 @@ app.add_middleware(
     allow_headers=["*"],  # Allow all headers
 )
 
+
 # Register route handlers from different modules
 app.include_router(auth_router)  # Authentication routes
 app.include_router(rooms_router)  # Room management routes
@@ -39,6 +41,7 @@ app.include_router(game_router)  # Game functionality routes
 app.include_router(setting_router)
 #app.include_router(bot_router)  # Bot-related routes 
 #app.include_router(ai_game_router)  # AI game routes 
+
 
 # Define root endpoint
 @app.get("/")

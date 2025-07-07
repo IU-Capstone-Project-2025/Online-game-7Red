@@ -8,7 +8,30 @@ import random
 from GPU_agents import MCTSAgent
 from enviroment_legal import Red7Env
 from DQN import DQNAgent, train, train_mcts
+"""
+    Trainer class for DQN agent with progressive training against MCTS opponents.
+    
+    Attributes:
+        env (Red7Env): Game environment instance
+        device (str): Computation device ('cuda' or 'cpu')
+        dqn_agent (DQNAgent): Main DQN learning agent
+        mcts_agents (dict): Dictionary of MCTS agents with varying iteration counts
+    
+    Methods:
+        train: Main training pipeline with multiple phases
+        _micro_training: Short training run for testing
+        test_against: Evaluates agent against specified opponent
+        _save_model: Saves model checkpoint
+        _plot_results: Visualizes training results
+    """
 class Trainer:
+    """
+        Initializes trainer with environment and agents.
+        
+        Args:
+            env (Red7Env): Game environment instance
+            device (str): Computation device
+        """
     def __init__(self, env, device='cuda' if torch.cuda.is_available() else 'cpu'):
         self.env = env
         self.device = device
@@ -23,16 +46,25 @@ class Trainer:
             1000: MCTSAgent(iterations=1000),
             2000: MCTSAgent(iterations=2000)
         }
+    """
+        Main training pipeline with progressive phases.
         
+        Args:
+            total_episodes (int): Total training episodes (3000 for micro training)
+            
+        Returns:
+            dict: Training results containing:
+                - win_rates: List of win rates during training
+                - test_results: Intermediate test performance
+                - final_tests: Final evaluation results
+        """
     def train(self, total_episodes=3):
-        """Основной цикл обучения"""
         if total_episodes == 3000:
             return self._micro_training()
         
         win_rates = []
         test_results = []
         
-        # Функция для выполнения фазы обучения
         def run_phase(phase_name, mcts_iterations, num_episodes, test_iter, 
                     epsilon, lr, test_freq=100, save_name=None):
             print(f"\n=== {phase_name} ===")
@@ -65,7 +97,6 @@ class Trainer:
             if save_name:
                 self._save_model(save_name)
         
-        # Фазы обучения (name, mcts_iter, episodes, test_iter, epsilon, lr, save_name)
         phases = [
             ("Phase 1: MCTS-100 Training", 100, 300, 300, 0.5, 3e-4, "red7_dqn_1.pth"),
             ("Phase 2: MCTS-500 Training", 500, 200, 200, 0.2, 3e-4, "red7_dqn_2.pth"),
@@ -75,7 +106,6 @@ class Trainer:
         for phase in phases:
             run_phase(*phase)
         
-        # Фаза 4: Random Opponent
         print("\n=== Phase 4: Random Opponent Training ===")
         self.dqn_agent.epsilon = 0.2
         self.dqn_agent.optimizer = optim.AdamW(
@@ -88,12 +118,10 @@ class Trainer:
         win_rates.extend(phase_wins)
         self._save_model("red7_dqn_4.pth")
         
-        # Тестирование после фазы 4
         test_res = self.test_against(mode='random', num_games=100)
         test_results.append(('Random', test_res))
         print(f"Test vs Random: {test_res['win_rate']:.1f}%")
         
-        # Фаза 5: Mixed MCTS
         print("\n=== Phase 5: Mixed MCTS Training ===")
         self.dqn_agent.epsilon = 0.2
         self.dqn_agent.optimizer = optim.AdamW(
@@ -121,7 +149,6 @@ class Trainer:
         
         self._save_model("red7_dqn_5.pth")
         
-        # Финальные фазы
         print("\n=== Phase 6: Hardcore Self-play ===")
         self.dqn_agent.epsilon = 0.2
         self.dqn_agent.optimizer = optim.AdamW(
@@ -132,7 +159,6 @@ class Trainer:
         train(self.env, self.dqn_agent, num_episodes=5000, mode='self')
         self._save_model("phase5_final.pth")
         
-        # Загрузка frozen агента
         frozen_agent = DQNAgent(device=self.device)
         frozen_agent.load("phase5_final.pth")
         frozen_agent.epsilon = 0
@@ -164,7 +190,6 @@ class Trainer:
         
         self._save_model("final_agent.pth")
         
-        # Финальное тестирование
         final_tests = []
         mcts_iter = 2000
         test_res = self.test_against(
@@ -181,13 +206,25 @@ class Trainer:
         'final_tests': final_tests if 'final_tests' in locals() else []
         }
 
-    
+    """
+        Short training run for testing purposes (3000 episodes).
+        
+        Phases:
+        1. Initial training vs MCTS-100
+        2. Intermediate training vs MCTS-300
+        3. Advanced training vs MCTS-1000
+        4. Random opponent training
+        5. Mixed MCTS training
+        6. Self-play phase
+        7. Frozen agent training
+        8. Final tuning
+        
+        Returns:
+            list: Win rates during training
+        """
     def _micro_training(self):
-        # """Микро обучение для тестирования (3000 эпизодов)"""
-        # print("\n=== Micro Training (3000 episodes) ===")
         win_rates = []
         
-        # 1000 эпизодов против случайного агента
         
         for ep in range(200):
             mcts_agent = self.mcts_agents[100]
@@ -201,7 +238,7 @@ class Trainer:
         self.dqn_agent.save("red7_dqn_1.pth")
 
 
-        self.dqn_agent.epsilon = 0.3  # Уменьшаем epsilon для более стабильного обучения
+        self.dqn_agent.epsilon = 0.3
         for ep in range(200):
             mcts_agent = self.mcts_agents[300]
             phase_wins = train_mcts(self.env, self.dqn_agent, mcts_agent, num_episodes=1)
@@ -215,7 +252,7 @@ class Trainer:
 
 
 
-        self.dqn_agent.epsilon = 0.2  # Уменьшаем epsilon для более стабильного обучения
+        self.dqn_agent.epsilon = 0.2
         for ep in range(100):
             mcts_agent = self.mcts_agents[1000]
             phase_wins = train_mcts(self.env, self.dqn_agent, mcts_agent, num_episodes=1)
@@ -232,8 +269,7 @@ class Trainer:
         
         test_res = self.test_against(mode='random', num_games=100)
         print(f"Test vs Random: {test_res['win_rate']:.1f}%")
-        self.dqn_agent.epsilon = 0.2  # Уменьшаем начальное значение epsilon для более агрессивного обучения
-
+        self.dqn_agent.epsilon = 0.2
         for ep in tqdm(range(100), desc="Mixed MCTS Training"):
             mcts_iter = random.choice([200, 500, 800, 1000])
             mcts_agent = self.mcts_agents[mcts_iter]
@@ -261,7 +297,7 @@ class Trainer:
         self.dqn_agent.save("red7_dqn_6.pth")
 
 
-        self.dqn_agent.epsilon = 0.2  # Уменьшаем начальное значение epsilon для более агрессивного обучения
+        self.dqn_agent.epsilon = 0.2
         print("\n===Phase 7 Mixed MCTS Training ===")
         for ep in tqdm(range(100), desc="Mixed MCTS Training"):
             mcts_iter = random.choice([200, 500, 800, 1000])
@@ -323,39 +359,23 @@ class Trainer:
 
 
         return win_rates
-    
-    def _train_with_mcts(self, mcts_agent, episodes=1, mcts_ratio=0.8):
-        """Один шаг обучения с MCTS агентом"""
-        wins = 0
-        for _ in range(episodes):
-            obs = self.env.reset()
-            done = False
+
+    """
+        Evaluates agent against specified opponent type.
+        
+        Args:
+            mode (str): Opponent type ('random' or 'mcts')
+            mcts_agent (MCTSAgent): MCTS opponent instance (required for mode='mcts')
+            num_games (int): Number of evaluation games
             
-            while not done:
-                legal_mask = self.env.legal_actions_mask()
-                
-                # С вероятностью mcts_ratio используем MCTS для выбора действия
-                use_mcts = random.random() < mcts_ratio
-                if use_mcts:
-                    action = mcts_agent.get_action(self.env)
-                else:
-                    action = self.dqn_agent.select_action(obs, legal_mask)
-                
-                next_obs, reward, done, _ = self.env.step(action)
-                next_legal_mask = self.env.legal_actions_mask()
-                
-                self.dqn_agent.store_transition(obs, action, reward, next_obs, done, legal_mask)
-                self.dqn_agent.update()
-                
-                obs = next_obs
-                
-                if done and self.env.get_winner() == 0:
-                    wins += 1
-        self._save_model("red7_dqn_final.pth")
-        return wins / episodes if episodes > 0 else 0
-    
+        Returns:
+            dict: Evaluation results containing:
+                - wins: Number of wins
+                - losses: Number of losses
+                - draws: Number of draws
+                - win_rate: Win percentage
+        """
     def test_against(self, mode='random', mcts_agent=None, num_games=100):
-        """Тестирование модели против указанного оппонента"""
         self.dqn_agent.model.eval()
         results = {'wins': 0, 'losses': 0, 'draws': 0}
         
@@ -367,14 +387,14 @@ class Trainer:
                 current_player = self.env.current_player()
                 legal_mask = self.env.legal_actions_mask()
                 
-                if current_player == 0:  # DQN агент
+                if current_player == 0:
                     with torch.no_grad():
                         obs_tensor = {k: v.to(self.device) for k, v in obs.items()}
                         q_values = self.dqn_agent.model(obs_tensor)[0].cpu().numpy()
                     
                     q_values[legal_mask == 0] = -np.inf
                     action = np.unravel_index(np.argmax(q_values), q_values.shape)
-                else:  # Оппонент
+                else: 
                     if mode == 'random':
                         legal_positions = np.argwhere(legal_mask > 0)
                         action = tuple(random.choice(legal_positions))
@@ -395,7 +415,12 @@ class Trainer:
         
         results['win_rate'] = results['wins'] / num_games * 100
         return results
-    
+    """
+        Saves current model state to file.
+        
+        Args:
+            path (str): Path to save model checkpoint
+        """
     def _save_model(self, path):
         """Сохранить модель"""
         torch.save({
@@ -406,11 +431,17 @@ class Trainer:
             'steps_done': self.dqn_agent.steps_done
         }, path)
     
+    """
+        Visualizes training and evaluation results.
+        
+        Args:
+            win_rates (list): Training win rates
+            test_results (list): Intermediate test results
+            final_tests (list): Final evaluation results
+        """
     def _plot_results(self, win_rates, test_results, final_tests):
-        """Визуализация результатов обучения"""
         plt.figure(figsize=(15, 10))
         
-        # График win rate во время обучения
         plt.subplot(2, 2, 1)
         window = 100
         smooth_rates = np.convolve(win_rates, np.ones(window)/window, mode='valid')
@@ -419,7 +450,6 @@ class Trainer:
         plt.xlabel('Episodes')
         plt.ylabel('Win Rate')
         
-        # График тестирования против MCTS
         plt.subplot(2, 2, 2)
         mcts_tests = [x for x in test_results if x[0].startswith('MCTS')]
         iterations = [int(x[0].split('-')[1].split()[0]) if '@' not in x[0] 
@@ -430,7 +460,6 @@ class Trainer:
         plt.xlabel('MCTS Iterations')
         plt.ylabel('Win Rate (%)')
         
-        # Финальные тесты
         plt.subplot(2, 2, 3)
         labels = [x[0] for x in final_tests]
         values = [x[1]['win_rate'] for x in final_tests]
@@ -441,7 +470,12 @@ class Trainer:
         plt.tight_layout()
         plt.savefig('training_results.png')
         plt.show()
-
+"""
+    Main execution block for training:
+    1. Initializes environment and trainer
+    2. Runs either full training or micro training
+    3. Uses CUDA if available, falls back to CPU
+    """
 if __name__ == "__main__":
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     print(f"Using device: {device}")

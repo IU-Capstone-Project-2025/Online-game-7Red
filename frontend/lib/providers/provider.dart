@@ -52,6 +52,20 @@ class GameProvider extends ChangeNotifier {
     notifyListeners();
   }
 
+  bool _aiGame = false;
+  bool get aiGame => _aiGame;
+  set aiGame(bool value) {
+    _aiGame = value;
+    notifyListeners();
+  }
+
+  int _playerNum = 0;
+  int get playerNum => _playerNum;
+  set playerNum(int value) {
+    _playerNum = value;
+    notifyListeners();
+  }
+
   void saveMyPersonalInfo() async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
     await prefs.setString('myName', _myName);
@@ -112,5 +126,10 @@ class GameProvider extends ChangeNotifier {
     await prefs.remove('ready');
     _ready = false;
     notifyListeners();
+  }
+
+  void aiGameSave() async{
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    await prefs.setBool('aiGame', _aiGame);
   }
 }

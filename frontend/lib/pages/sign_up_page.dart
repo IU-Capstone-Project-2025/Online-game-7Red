@@ -5,6 +5,7 @@ import 'dart:convert';
 
 import '../providers/provider.dart';
 import '../data/styles.dart';
+import '../data/urls.dart';
 
 class SignUpPage extends StatefulWidget {
   const SignUpPage({super.key});
@@ -26,10 +27,12 @@ class _SignUpPageState extends State<SignUpPage> {
   String errRepeatedPassword = '';
   bool regSuccess = false;
 
+  bool obscure = true;
+
   int ID = -1;
 
   Future<void> signUp(String nickname, String email, String password, String repeatedPassword) async {
-    final url = Uri.parse('http://localhost:8000/auth/signup');
+    final url = Uri.parse('$signUpUrl');
     final response = await http.post(
       url,
       headers: {'Content-Type': 'application/json', 'accept': 'application/json'},
@@ -91,15 +94,15 @@ class _SignUpPageState extends State<SignUpPage> {
               ),
               Image(
                 image: AssetImage('lib/assets/logo.png'),
-                width: 140,
-                height: 140,
+                width: 115,
+                height: 115,
               ),
               const Expanded(flex: 1, child: Text("")),
               Text("Sign up to Red7", style: titleStyle),
               const Expanded(flex: 1, child: Text("")),
               Container(
-                width: 420,
-                height: 508,
+                width: 352,
+                height: 405,
                 decoration: BoxDecoration(
                   color: backInvisColor,
                   borderRadius: BorderRadius.circular(20),
@@ -107,7 +110,7 @@ class _SignUpPageState extends State<SignUpPage> {
                 ),
                 child: Column(
                   children: [
-                    Padding(padding: const EdgeInsets.only(top: 30)),
+                    Padding(padding: const EdgeInsets.only(top: 20)),
                     Row(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
@@ -120,11 +123,11 @@ class _SignUpPageState extends State<SignUpPage> {
                     ),
                     Padding(padding: const EdgeInsets.only(top: 5)),
                     Container(
-                      width: 327,
-                      height: 40,
+                      width: 260,
+                      height: 35,
                       decoration: BoxDecoration(
                         color: Colors.white,
-                        borderRadius: BorderRadius.circular(8),
+                        borderRadius: BorderRadius.circular(6),
                       ),
                       child: TextField(
                         decoration: const InputDecoration(
@@ -133,9 +136,10 @@ class _SignUpPageState extends State<SignUpPage> {
                           ),
                         ),
                         controller: controller,
+                        textAlignVertical: TextAlignVertical.top,
                       ),
                     ),
-                    Padding(padding: const EdgeInsets.only(top: 30)),
+                    Padding(padding: const EdgeInsets.only(top: 17)),
                     Row(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
@@ -148,11 +152,11 @@ class _SignUpPageState extends State<SignUpPage> {
                     ),
                     Padding(padding: const EdgeInsets.only(top: 5)),
                     Container(
-                      width: 327,
-                      height: 40,
+                      width: 260,
+                      height: 35,
                       decoration: BoxDecoration(
                         color: Colors.white,
-                        borderRadius: BorderRadius.circular(8),
+                        borderRadius: BorderRadius.circular(6),
                       ),
                       child: TextField(
                         decoration: const InputDecoration(
@@ -161,9 +165,10 @@ class _SignUpPageState extends State<SignUpPage> {
                           ),
                         ),
                         controller: controller2,
+                        textAlignVertical: TextAlignVertical.top,
                       ),
                     ),
-                    Padding(padding: const EdgeInsets.only(top: 30)),
+                    Padding(padding: const EdgeInsets.only(top: 17)),
                     Row(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
@@ -176,22 +181,35 @@ class _SignUpPageState extends State<SignUpPage> {
                     ),
                     Padding(padding: const EdgeInsets.only(top: 5)),
                     Container(
-                      width: 327,
-                      height: 40,
+                      width: 260,
+                      height: 35,
                       decoration: BoxDecoration(
                         color: Colors.white,
-                        borderRadius: BorderRadius.circular(8),
+                        borderRadius: BorderRadius.circular(6),
                       ),
                       child: TextField(
-                        decoration: const InputDecoration(
-                          border: OutlineInputBorder(
+                        obscureText: obscure,
+                        decoration: InputDecoration(
+                          border: const OutlineInputBorder(
                             borderSide: BorderSide.none,
+                          ),
+                          suffixIcon: IconButton(
+                            icon: Icon(
+                              obscure ? Icons.visibility : Icons.visibility_off,
+                              color: grey3A3A3AColor,
+                            ),
+                            onPressed: () {
+                              setState(() {
+                                obscure = !obscure;
+                              });
+                            },
                           ),
                         ),
                         controller: controller3,
+                        textAlignVertical: TextAlignVertical.top,
                       ),
                     ),
-                    Padding(padding: const EdgeInsets.only(top: 30)),
+                    Padding(padding: const EdgeInsets.only(top: 17)),
                     Row(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
@@ -204,25 +222,27 @@ class _SignUpPageState extends State<SignUpPage> {
                     ),
                     Padding(padding: const EdgeInsets.only(top: 5)),
                     Container(
-                      width: 327,
-                      height: 40,
+                      width: 260,
+                      height: 35,
                       decoration: BoxDecoration(
                         color: Colors.white,
-                        borderRadius: BorderRadius.circular(8),
+                        borderRadius: BorderRadius.circular(6),
                       ),
                       child: TextField(
+                        obscureText: obscure,
                         decoration: const InputDecoration(
                           border: OutlineInputBorder(
                             borderSide: BorderSide.none,
                           ),
                         ),
                         controller: controller4,
+                        textAlignVertical: TextAlignVertical.top,
                       ),
                     ),
-                    Padding(padding: const EdgeInsets.only(top: 30)),
+                    Padding(padding: const EdgeInsets.only(top: 20)),
                     SizedBox(
-                        width: 327,
-                        height: 40,
+                        width: 260,
+                        height: 35,
                         child: ElevatedButton(
                           style: ButtonStyle(
                             backgroundColor: WidgetStateProperty.all<Color>(
@@ -237,7 +257,7 @@ class _SignUpPageState extends State<SignUpPage> {
                             shape:
                                 WidgetStateProperty.all<RoundedRectangleBorder>(
                                   RoundedRectangleBorder(
-                                    borderRadius: BorderRadius.circular(10),
+                                    borderRadius: BorderRadius.circular(6),
                                   ),
                                 ),
                             side: WidgetStateProperty.all<BorderSide>(
@@ -261,19 +281,25 @@ class _SignUpPageState extends State<SignUpPage> {
                             }
                             else if (controller.text.length > 10) {
                               setState(() {
-                                errNickname = '(1-10 symbols)';
+                                errNickname = '1-10 symbols';
                               });
                               return;
                             }
-                            else if (controller3.text.length > 10 || controller3.text.length < 6) {
+                            else if ((controller2.text.contains('@') && controller2.text.contains('.')) == false) {
                               setState(() {
-                                errPassword = '(6-10 symbols)';
+                                errEmail = 'Invalid email';
+                              });
+                              return;
+                            }
+                            else if (controller3.text.length > 16 || controller3.text.length < 6) {
+                              setState(() {
+                                errPassword = '6-16 symbols';
                               });
                               return;
                             } 
                             else if (controller3.text != controller4.text) {
                               setState(() {
-                                errRepeatedPassword = '(passwords different)';
+                                errRepeatedPassword = 'Different';
                               });
                               return;
                             } 
@@ -292,8 +318,9 @@ class _SignUpPageState extends State<SignUpPage> {
                           child: const Text('SIGN  UP'),
                         ),
                       ),
-                      Padding(padding: const EdgeInsets.only(top: 10)),
+                      Padding(padding: const EdgeInsets.only(top: 5)),
                       Text("$postText", style: errorTextStyle,),
+                      Padding(padding: const EdgeInsets.only(top: 5)),
 
 
                   ],
