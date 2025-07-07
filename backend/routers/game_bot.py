@@ -1,6 +1,6 @@
 from fastapi import APIRouter, WebSocket, WebSocketDisconnect
 from typing import Dict
-from backend.database import get_profile_name_by_user_id
+from backend.database import get_profile_name_by_user_id, increment_bot_wins, check_and_award_bot_wins
 from backend.routers.bot import start_bot_game, bot_move, encode_card, decode_card
 from backend.red7state import Red7GameState
 
@@ -12,7 +12,7 @@ active_connections: Dict[int, WebSocket] = {}  # player_id: websocket
 async def websocket_game(websocket: WebSocket, player_id: int):
     await websocket.accept()
     active_connections[player_id] = websocket  # Register connection
-    
+    final_winner = None
     try:
         # get player profile
         name = await get_profile_name_by_user_id(player_id)
@@ -88,6 +88,7 @@ async def websocket_game(websocket: WebSocket, player_id: int):
 
             # Game state progression
             #next_lose = not game.check_winning_at_beginning(game.current_player)
+            final_winner = bot_response["winner"]
             if bot_response:
                 next_lose = True if bot_response["winner"] == 0 else False
             else:
@@ -142,6 +143,9 @@ async def websocket_game(websocket: WebSocket, player_id: int):
                 
     except WebSocketDisconnect:
         active_connections.pop(player_id, None)  # Clean up
+        if final_winner == 0:
+            await increment_bot_wins(player_id) 
+            await check_and_award_bot_wins(player_id)
     except Exception as e:
         await websocket.send_json({"error": str(e)})
         raise

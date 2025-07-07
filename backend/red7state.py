@@ -127,9 +127,12 @@ class Red7GameState:
             # Each player gets 7 cards in hand and 1 in palette
             self.players[self.players_id_list[i]]["hand"] = [self.deck.pop() for _ in range(7)]
             # if i == 0:
-            #     self.players[self.players_id_list[i]]["hand"] = ['B4', 'V5', 'G3', 'V2', 'R1', 'I4', 'G1']
-            # else: 
-            #     self.players[self.players_id_list[i]]["hand"] = ['R4', 'B5', 'B3', 'R2', 'O1', 'I1', 'B7']
+            #     self.players[self.players_id_list[i]]["hand"] = ['V1', 'V2', 'V3', 'V4', 'V5', 'V6', 'V7']
+            # elif i == 1: 
+            #     self.players[self.players_id_list[i]]["hand"] = ['I1', 'I2', 'I3', 'I4', 'I5', 'I6', 'I7']
+            # else:
+            #     self.players[self.players_id_list[i]]["hand"] = ['B1', 'B2', 'B3', 'B4', 'B5', 'B6', 'B7']
+
             self.players[self.players_id_list[i]]["palette"] = []
             self.players[self.players_id_list[i]]["name"] = self.players_name_list[i]
             self.players[self.players_id_list[i]]["active"] = True

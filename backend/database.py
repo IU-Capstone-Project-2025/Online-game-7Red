@@ -314,7 +314,8 @@ async def update_win_streak(user_id: int, is_win: bool):
             total_played=1,
             wins=1 if is_win else 0,
             cur_straight_wins=1 if is_win else 0,
-            max_straight_wins=1 if is_win else 0
+            max_straight_wins=1 if is_win else 0,
+            bot_wins=0
         ))
         return
     cur_streak = stats["cur_straight_wins"]
@@ -359,7 +360,7 @@ async def increment_bot_wins(user_id: int):
         ))
         return 1
     
-    bot_wins = stats.get("bot_wins", 0) + 1
+    bot_wins = stats["bot_wins"] + 1
     upd = statistics.update().where(statistics.c.user_id == user_id).values(bot_wins=bot_wins)
     await database.execute(upd)
     return bot_wins
@@ -367,7 +368,7 @@ async def increment_bot_wins(user_id: int):
 async def check_and_award_bot_wins(user_id: int):
     query = statistics.select().where(statistics.c.user_id == user_id)
     stats = await database.fetch_one(query)
-    if stats and stats.get("bot_wins", 0) >= 3:
+    if stats and getattr(stats, "bot_wins", 0) >= 3:
         achievement_id = await get_achievement_id_by_name("3_wins_over_the_bot")
         if achievement_id:
             await award_achievement_if_needed(user_id, achievement_id)
