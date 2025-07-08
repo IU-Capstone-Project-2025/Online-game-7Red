@@ -323,6 +323,7 @@ async def award_achievement_if_needed(user_id: int, achievement_id: int):
         )
         await database.execute(insert)
         
+
 # Check and award the 7-day streak achievement if eligible
 async def check_and_award_7_days_streak(user_id: int):
     streak = await get_visit_streak(user_id)
@@ -333,6 +334,7 @@ async def check_and_award_7_days_streak(user_id: int):
             if awarded:
                 return "7_days_streak"
     return None
+
 
 # Get achievement ID by name
 async def get_achievement_id_by_name(name: str):
@@ -427,3 +429,13 @@ async def check_and_award_bot_wins(user_id: int):
         achievement_id = await get_achievement_id_by_name("3_wins_over_the_bot")
         if achievement_id:
             await award_achievement_if_needed(user_id, achievement_id)
+async def create_user_statistics(user_id: int):
+    query = statistics.insert().values(
+        user_id=user_id,
+        total_played=0,
+        wins=0,
+        cur_straight_wins=0,
+        max_straight_wins=0,
+        bot_wins=0
+    )
+    await database.execute(query)
