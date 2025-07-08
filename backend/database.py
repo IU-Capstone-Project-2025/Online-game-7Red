@@ -441,3 +441,17 @@ async def create_user_statistics(user_id: int):
         bot_wins=0
     )
     await database.execute(query)
+    
+
+async def search_open_online_room():
+    # Find a room with game_state "waiting" and < 4 players
+    query = games.select().where(games.c.game_state == "waiting")
+    rooms = await database.fetch_all(query)
+    for room in rooms:
+        room_id = room["room_id"]
+        # Count the number of players in the room
+        count_query = user_room.select().where(user_room.c.room_id == room_id)
+        players = await database.fetch_all(count_query)
+        if len(players) < 4:
+            return room
+    return None

@@ -14,7 +14,7 @@ async def user_stats(user_id: int = Body(..., embed=True)):
         raise HTTPException(status_code=404, detail="User stats not found")
 
     # Extract statistics values
-    winstrick = stats["cur_straight_wins"]
+    winstrick = stats["max_straight_wins"]
     num_of_games = stats["total_played"]
     wins = stats["wins"]
     # Calculate win rate (avoid division by zero)
