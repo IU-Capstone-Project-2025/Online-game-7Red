@@ -205,6 +205,11 @@ async def add_user_to_room(user_id: int, assigned_id: str):
     exists = await database.fetch_one(check_query)
     if exists:
         raise Exception("User already in the room")
+    # Check if room is full
+    count_query = user_room.select().where(user_room.c.room_id == room_id)
+    players = await database.fetch_all(count_query)
+    if len(players) >= 4:
+        raise Exception("Room is full")
     
     # Add user to room
     insert_query = user_room.insert().values(user_id=user_id, room_id=room_id)

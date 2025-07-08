@@ -57,11 +57,14 @@ async def join_room(request: JoinRoomRequest):
         raise HTTPException(status_code=403, detail="Incorrect password")
     if room["game_state"] != "waiting":
         raise HTTPException(status_code=403, detail="Game already started")
+    
     try:
         await add_user_to_room(request.user_id, request.assigned_id)
     except Exception as e:
         if "User already in the room" in str(e):
             raise HTTPException(status_code=409, detail="User already in the room")
+        if "Room is full" in str(e):
+            raise HTTPException(status_code=403, detail="Room is full")
         raise
     return {"message": "User added to the room"}
 
@@ -161,7 +164,7 @@ async def find_online(user_id: int = Body(..., embed=True)):
                 "status": "matched",
                 "assigned_id": room["assigned_id"],
                 "password": room["password"],
-                "players": [user_id]  # Could fetch complete player list if needed
+                "players": [user_id] 
             }
             return online_queue_status[user_id]
         except Exception:

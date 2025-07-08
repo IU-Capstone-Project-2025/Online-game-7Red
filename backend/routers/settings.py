@@ -1,8 +1,9 @@
 from fastapi import APIRouter, Body, HTTPException
+from passlib.context import CryptContext
 from backend.database import (
-    statistics, user_achievements, get_achievement_id_by_name, database
+    statistics, user_achievements, search_user_by_id, users, get_achievement_id_by_name, database, profiles
 )
-
+pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 router = APIRouter(prefix="/settings", tags=["settings"])
 
 @router.post("/user_stats")
@@ -42,3 +43,38 @@ async def user_stats(user_id: int = Body(..., embed=True)):
         "winrate": winrate,
         "achievements": achievements
     }
+
+@router.post("/change_nickname")
+async def chenge_nickname(user_id: int = Body(...,embed=True), new_nickname: str = Body(..., embed=True)):
+    # Get user profile from database
+    query = profiles.select().where(profiles.c.user_id == user_id)
+    profile = await database.fetch_one(query)
+    if not profile:
+        raise HTTPException(status_code=404, detail="Profile not found")
+    # Update nickname in the profile
+    update = profiles.update().where(profiles.c.user_id == user_id).values(name = new_nickname)
+    await database.execute(update)
+    return {"message": "Nickname updated successfully", "new_nickname": new_nickname}
+
+@router.post("/change_password")
+async def change_password(
+    user_id: int = Body(...,embed=True),
+    prev_password: str = Body(...,embed=True),
+    new_password: str = Body(...,embed=True),
+    repeated_password: str = Body(...,embed=True)
+):
+    # Get user from database
+    user = await search_user_by_id(user_id)
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+    # Verify current password
+    if not pwd_context.verify(prev_password, user["password"]):
+        raise HTTPException(status_code=403, detail="Previous password is incorrect")
+    # Check if new passwords match
+    if new_password != repeated_password:
+        raise HTTPException(status_code=400, detail="Passwords do not match")
+    # Hash and save the new password
+    hashed_password = pwd_context.hash(new_password)
+    update = users.update().where(users.c.user_id == user_id).values(password=hashed_password)
+    await database.execute(update)
+    return {"message": "Password updated successfully"}
