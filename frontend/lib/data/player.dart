@@ -1,3 +1,4 @@
+// Class for saving each player's data
 class Player {
   int id = 0;
   final String name;

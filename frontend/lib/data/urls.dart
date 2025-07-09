@@ -1,4 +1,4 @@
-//for localhost
+// For localhost
 
 String signInUrl = 'http://localhost:8000/auth/signin';
 String signUpUrl = 'http://localhost:8000/auth/signup';
@@ -11,7 +11,7 @@ String leaveRoomUrl = 'http://localhost:8000/rooms/leave';
 String serverUrlPartUrl = 'ws://localhost:8000';
 String statisticsUrl = 'http://localhost:8000/settings/user_stats';
 
-//for server
+// For server
 
 // String signInUrl = 'http://192.145.30.253:8000/auth/signin';
 // String signUpUrl = 'http://192.145.30.253:8000/auth/signup';

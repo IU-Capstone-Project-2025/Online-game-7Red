@@ -14,6 +14,7 @@ class _RulesPageState extends State<RulesPage> {
   Widget build(BuildContext context) {
 
     return Scaffold(
+      // Add background image
       body: Container(
         decoration: BoxDecoration(
           image: DecorationImage(
@@ -30,6 +31,7 @@ class _RulesPageState extends State<RulesPage> {
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
                   Padding(padding: const EdgeInsets.only(left: 15)),
+                  // Button to return to MainMenuPage
                   SizedBox(
                     width: 60,
                     height: 60,
@@ -72,6 +74,7 @@ class _RulesPageState extends State<RulesPage> {
                         borderRadius: BorderRadius.circular(20),
                         border: Border.all(color: grey3A3A3AColor, width: 3),
                       ),
+                      // Scrolling list to show all rules
                       child: ListView(
                         children: [
                           // - - - - - Deck - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 

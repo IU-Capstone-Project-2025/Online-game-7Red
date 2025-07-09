@@ -7,12 +7,14 @@ class RuleDialog extends StatefulWidget {
   const RuleDialog({super.key});
 
   @override
-  State<RuleDialog> createState() => _ConnectDialogState();
+  State<RuleDialog> createState() => _RuleDialogState();
 }
 
-class _ConnectDialogState extends State<RuleDialog> {
+// Class for showing rules alert in the GamePage
+class _RuleDialogState extends State<RuleDialog> {
   int currSlide = 1;
 
+  // Method for getting text for each slide of the rules
   String getText(int slide) {
     if (slide == 1) {
       return 'Each card has a value (a number from 1 to 7) and a color\n(one of the 7 colors of the rainbow). There are 49 unique\ncards in total.';
@@ -36,6 +38,7 @@ class _ConnectDialogState extends State<RuleDialog> {
     return '';
   }
 
+  // Method for getting image for each slide of rules
   Widget? getImage(int slide) {
     if (slide == 1) {
       return SizedBox(
@@ -188,6 +191,7 @@ class _ConnectDialogState extends State<RuleDialog> {
             child: Column(
               children: [
                 Padding(padding: const EdgeInsets.only(top: 45)),
+                // Slide indicator in top of Rules
                 Row(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
@@ -274,6 +278,7 @@ class _ConnectDialogState extends State<RuleDialog> {
                   ]
                 ),
                 Padding(padding: const EdgeInsets.only(top: 45)),
+                // For rule images and buttons to change slide
                 Row(
                   mainAxisAlignment: MainAxisAlignment.center,
                   crossAxisAlignment: CrossAxisAlignment.center,
@@ -303,6 +308,7 @@ class _ConnectDialogState extends State<RuleDialog> {
                     Padding(padding: const EdgeInsets.only(top: 15)),
                   ],
                 ),
+                // For rule text
                 Text(getText(currSlide), style: ruleStyle, textAlign: TextAlign.center,),
               ],
             ),
