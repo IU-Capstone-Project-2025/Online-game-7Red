@@ -24,7 +24,7 @@ class _StatisticsPageState extends State<StatisticsPage> {
   @override
   void initState() {
     super.initState();
-    getInfo();
+    // getInfo();
   }
 
   void getInfo() async {
@@ -114,7 +114,10 @@ class _StatisticsPageState extends State<StatisticsPage> {
                       if (logSuccess)
                         Text(winstrick.toString(), style: statsBigStyle,)
                       else 
-                        Text("Loading...", style: titleStyle,),
+                        Padding(
+                          padding: const EdgeInsets.all(31),
+                          child: Text("Loading...", style: titleStyle,),
+                        ),
                       Padding(padding: const EdgeInsets.only(top: 40)),
                       Container(
                         width: 240,
@@ -125,11 +128,12 @@ class _StatisticsPageState extends State<StatisticsPage> {
                           border: Border.all(color: grey3A3A3AColor, width: 1),
                         ),
                         child: Center(
-                          child: Text("Achievement 1", style: basicTextStyle,),
+                          child: Text("Achievement 1", style: basicTextStyle, textAlign: TextAlign.center,),
                         ),
                       ),
                       Padding(padding: const EdgeInsets.only(top: 20)),
-                      Text("This is the text that describes why\nthis achievement 1 was received.", style: basicTextStyle, textAlign: TextAlign.center,),
+                      // Text("This is the text that describes why\nthis achievement 1 was received.", style: basicTextStyle, textAlign: TextAlign.center,),
+                      Text("Log in to the game for\n7 consecutive days", style: basicTextStyle, textAlign: TextAlign.center,),
                     ],
                   ),
                   Expanded(flex: 1, child: Text(""),),
@@ -142,7 +146,10 @@ class _StatisticsPageState extends State<StatisticsPage> {
                       if (logSuccess)
                         Text(num_of_games.toString(), style: statsBigStyle,)
                       else 
-                        Text("Loading...", style: titleStyle,),
+                        Padding(
+                          padding: const EdgeInsets.all(31),
+                          child: Text("Loading...", style: titleStyle,),
+                        ),
                       Padding(padding: const EdgeInsets.only(top: 40)),
                       Container(
                         width: 240,
@@ -157,7 +164,7 @@ class _StatisticsPageState extends State<StatisticsPage> {
                         ),
                       ),
                       Padding(padding: const EdgeInsets.only(top: 20)),
-                      Text("This is the text that describes why\nthis achievement 2 was received.", style: basicTextStyle, textAlign: TextAlign.center,),
+                      Text("Win the bot 3 times\n", style: basicTextStyle, textAlign: TextAlign.center,),
                     ],
                   ),
                   Expanded(flex: 1, child: Text(""),),
@@ -170,7 +177,10 @@ class _StatisticsPageState extends State<StatisticsPage> {
                       if (logSuccess)
                         Text(winrate.toString(), style: statsBigStyle,)
                       else 
-                        Text("Loading...", style: titleStyle,),
+                        Padding(
+                          padding: const EdgeInsets.all(31),
+                          child: Text("Loading...", style: titleStyle,),
+                        ),
                       Padding(padding: const EdgeInsets.only(top: 40)),
                       Container(
                         width: 240,
@@ -185,7 +195,8 @@ class _StatisticsPageState extends State<StatisticsPage> {
                         ),
                       ),
                       Padding(padding: const EdgeInsets.only(top: 20)),
-                      Text("This is the text that describes why\nthis achievement 3 was received.", style: basicTextStyle, textAlign: TextAlign.center,),
+                      // Text("This is the text that describes why\nthis achievement 3 was received.", style: basicTextStyle, textAlign: TextAlign.center,),
+                      Text("Get a winstreak of 5 games\nin an online-mode", style: basicTextStyle, textAlign: TextAlign.center,),
                     ],
                   ),
                   Expanded(flex: 7, child: Text(""),),
