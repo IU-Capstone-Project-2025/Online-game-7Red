@@ -5,8 +5,9 @@ import 'dart:convert';
 
 import '../data/styles.dart';
 import '../providers/provider.dart';
-import '../data/connectDialog.dart';
+import '../customWidgets/connectDialog.dart';
 import '../data/urls.dart';
+import '../customWidgets/onlineSearchDialog.dart';
 
 class MainMenuPage extends StatefulWidget {
   const MainMenuPage({super.key});
@@ -16,8 +17,6 @@ class MainMenuPage extends StatefulWidget {
 }
 
 class _MainMenuPageState extends State<MainMenuPage> {
-  final TextEditingController controller = TextEditingController();
-  final TextEditingController controller2 = TextEditingController();
 
   String postText = '';
   bool logSuccess = false;
@@ -52,36 +51,6 @@ class _MainMenuPageState extends State<MainMenuPage> {
     }
   }
 
-  Future<void> connectToRoom(int id, String room_id, String password) async {
-    final url = Uri.parse('$joinRoomUrl');
-    final response = await http.post(
-      url,
-      headers: {'Content-Type': 'application/json', 'accept': 'application/json'},
-      body: jsonEncode({
-        'assigned_id': room_id,
-        'password': password,
-        'user_id': id,
-      }),
-    );
-
-    final responseBody = json.decode(response.body);
-
-    if (response.statusCode == 200) {
-      setState(() {
-        logSuccess = true;
-      });
-    } else if (responseBody['message'] == 'Game already started') {
-      setState(() {
-        postText = 'Game already started';
-      });
-    } else {
-      setState(() {
-        logSuccess = false;
-        postText = 'Invalid ID or Password';
-      });
-    }
-  }
-
   @override
   Widget build(BuildContext context) {
     final gameProvider = Provider.of<GameProvider>(context);
@@ -90,6 +59,7 @@ class _MainMenuPageState extends State<MainMenuPage> {
     return Scaffold(
       body: Container(
         decoration: BoxDecoration(
+          // Set the background image
           image: DecorationImage(
             image: AssetImage('lib/assets/background.jpg'),
             fit: BoxFit.cover,
@@ -104,6 +74,7 @@ class _MainMenuPageState extends State<MainMenuPage> {
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
                   Padding(padding: const EdgeInsets.only(left: 15)),
+                  // Button to return to WelkomePage
                   SizedBox(
                     width: 80,
                     height: 80,
@@ -116,6 +87,7 @@ class _MainMenuPageState extends State<MainMenuPage> {
                     ),
                   ),
                   const Expanded(flex: 1, child: Text("")),
+                  // Button to return to SettingsPage
                   SizedBox(
                     width: 80,
                     height: 80,
@@ -130,12 +102,14 @@ class _MainMenuPageState extends State<MainMenuPage> {
                 ],
               ),
               Expanded(flex: 1, child: Text("")),
+              // Logo
               Image(
                 image: AssetImage('lib/assets/logo.png'),
                 width: 216,
                 height: 216,
               ),
               Expanded(flex: 1, child: Text("")),
+              // Button to start a new game
               SizedBox(
                 width: 300,
                 height: 60,
@@ -187,6 +161,7 @@ class _MainMenuPageState extends State<MainMenuPage> {
                               child: Row(
                                 children: [
                                   const Expanded(flex: 1, child: Text(""),),
+                                  // Button to create a new private room
                                   SizedBox(
                                     width: 150,
                                     height: 150,
@@ -215,10 +190,14 @@ class _MainMenuPageState extends State<MainMenuPage> {
                                         setState(() {
                                           logSuccess = false;
                                         });
+                                        // Send a http-request to the server to create a new game room
                                         await createRoom(gameProvider.myID);
+                                        // If the request is successful, go to the waiting room
                                         if (logSuccess) {
                                           gameProvider.roomId = room_id;
                                           gameProvider.roomPassword = room_password;
+                                          gameProvider.aiGame = false;
+                                          gameProvider.aiGameSave();
                                           gameProvider.saveRoomInfo();
                                           Navigator.of(context).pop();
                                           Navigator.pushNamed(context, '/waitingroom');
@@ -236,6 +215,7 @@ class _MainMenuPageState extends State<MainMenuPage> {
                                     ),
                                   ),
                                   const Expanded(flex: 1, child: Text(""),),
+                                  // Button to connect to an existing private room
                                   SizedBox(
                                     width: 150,
                                     height: 150,
@@ -261,7 +241,10 @@ class _MainMenuPageState extends State<MainMenuPage> {
                                         ),
                                       ),
                                       onPressed: () {
+                                        gameProvider.aiGame = false;
+                                        gameProvider.aiGameSave();
                                         Navigator.of(context).pop();
+                                        // Show the connect dialog
                                         showDialog(
                                           context: context,
                                           builder: (context) => ConnectDialog(gameProvider: gameProvider),
@@ -279,6 +262,7 @@ class _MainMenuPageState extends State<MainMenuPage> {
                                     ),
                                   ),
                                   const Expanded(flex: 1, child: Text(""),),
+                                  // Button to search opponents online
                                   SizedBox(
                                     width: 150,
                                     height: 150,
@@ -305,7 +289,11 @@ class _MainMenuPageState extends State<MainMenuPage> {
                                       ),
                                       onPressed: () {
                                         Navigator.of(context).pop();
-                                        //pass;
+                                        // Show the online search dialog
+                                        showDialog(
+                                          context: context,
+                                          builder: (context) => onlineSearchDialog(),
+                                        );
                                       },
                                       child: Column(
                                         children: [
@@ -319,6 +307,7 @@ class _MainMenuPageState extends State<MainMenuPage> {
                                     ),
                                   ),
                                   const Expanded(flex: 1, child: Text(""),),
+                                  // Button to play against AI
                                   SizedBox(
                                     width: 150,
                                     height: 150,
@@ -343,9 +332,11 @@ class _MainMenuPageState extends State<MainMenuPage> {
                                           BorderSide(color: grey3A3A3AColor, width: 1),
                                         ),
                                       ),
-                                      onPressed: () {
+                                      onPressed: () async{
+                                        gameProvider.aiGame = true;
+                                        gameProvider.aiGameSave();
                                         Navigator.of(context).pop();
-                                        //pass;
+                                        Navigator.pushNamed(context, '/gameroom');
                                       },
                                       child: Column(
                                         children: [
@@ -376,23 +367,25 @@ class _MainMenuPageState extends State<MainMenuPage> {
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
                   Padding(padding: const EdgeInsets.only(left: 15)),
+                  // Button to show rules
                   SizedBox(
                     width: 80,
                     height: 80,
                     child: IconButton(
                       onPressed: () {
-                        // pass
+                        Navigator.pushNamed(context, '/rules');
                       },
                       icon: const Icon(Icons.help_outline, size: 60),
                     ),
                   ),
                   const Expanded(flex: 1, child: Text("")),
+                  // Button to show statistics
                   SizedBox(
                     width: 80,
                     height: 80,
                     child: IconButton(
                       onPressed: () {
-                        //pass to settings
+                        Navigator.pushNamed(context, '/statistics');
                       },
                       icon: const Icon(Icons.emoji_events_outlined, size: 60),
                     ),

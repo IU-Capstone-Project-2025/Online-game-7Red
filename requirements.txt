@@ -1,3 +1,6 @@
+# Project dependencies for Red7 card game with AI bot
+# FastAPI backend, ML models, database, and authentication
+
 fastapi
 httpx
 sqlalchemy
@@ -11,3 +14,8 @@ passlib[bcrypt]==1.7.4
 bcrypt==4.0.1
 asyncpg
 websockets
+numpy
+torch
+paramiko
+Pillow==9.5.0
+python-multipart

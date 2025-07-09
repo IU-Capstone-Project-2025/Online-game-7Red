@@ -1,17 +1,25 @@
-# version: "3.9"
+# Docker Compose configuration for 7Red card game application
+# This file defines the multi-container setup for the backend and frontend services
+
 services:
   backend:
-    image: spalkkina/7red:backend-latest
+    # Using pre-built Docker image from Docker Hub
+    image: spalkkina/7red:backend-latest 
     ports:
+      # Map host port 8000 to container port 8000 for API access
       - "8000:8000"
-    restart: unless-stopped
+    restart: unless-stopped 
+    # Load environment variables from the database configuration file
     env_file:
-      - ./database/.env   
+      - ./database/.env   # or ./backend/.env if your .env is inside backend
   
   frontend:
+    # Using pre-built Docker image from Docker Hub
     image: spalkkina/7red:frontend-latest
     ports:
+      # Map host port 8080 to container port 80 (default)
       - "8080:80"
+    # Ensure backend starts before frontend to avoid connection issues
     depends_on:
       - backend
     restart: unless-stopped

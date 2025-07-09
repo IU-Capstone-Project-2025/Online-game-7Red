@@ -9,10 +9,11 @@ import 'dart:convert';
 
 import '../data/styles.dart';
 import '../providers/provider.dart';
-import '../data/cards.dart';
+import '../customWidgets/cards.dart';
 import '../socket/web_socket.dart';
 import '../data/player.dart';
 import '../data/urls.dart';
+import '../customWidgets/ruleDialog.dart';
 
 class GameRoomPage extends StatefulWidget {
   const GameRoomPage({super.key});
@@ -21,6 +22,7 @@ class GameRoomPage extends StatefulWidget {
   State<GameRoomPage> createState() => _GameRoomPageState();
 }
 
+// Controllers for countdown timers of 2-4 players
 final _countDownControllerDown = CountDownController();
 final _countDownControllerRight = CountDownController();
 final _countDownControllerUp = CountDownController();
@@ -32,8 +34,7 @@ class _GameRoomPageState extends State<GameRoomPage> {
   int? userID;
   String serverUrl = '?';
 
-  int gamemode = 2;
-  // int gamemode = 4;
+  int gamemode = 4;
 
   late GameWebSocket _webSocket;
   List<String> _myHand = [];
@@ -60,7 +61,6 @@ class _GameRoomPageState extends State<GameRoomPage> {
   bool palleteChanged = true;
 
   bool youLose = false;
-  bool youWin = false;
 
   List<CountDownController> timers = [];
   int currTimerIndex = 0;
@@ -68,19 +68,31 @@ class _GameRoomPageState extends State<GameRoomPage> {
 
   int myPlace = 0;
 
+  bool aiGame = false;
+
   @override
   void initState() {
     super.initState();
+    // connect to web socket immediately
     _connectToWebSocket();
   }
 
   void _connectToWebSocket() async{
     try {
+      // Get info about user from WaitingRoomPage
       SharedPreferences prefs = await SharedPreferences.getInstance();
       roomID = await prefs.getString('roomId');
       userID = await prefs.getInt('myID');
-      serverUrl = '$serverUrlPartUrl/game/$roomID/ws?player_id=$userID';
+      aiGame = await prefs.getBool('aiGame') ?? false;
+      gamemode = aiGame ? 2 : await prefs.getInt('playerNum') ?? 2; //⭐️
+      // Choose the mode of the game in case of AI or 2-4 players
+      if (aiGame) {
+        serverUrl = '$serverUrlPartUrl/ai_game/$userID';
+      } else {
+        serverUrl = '$serverUrlPartUrl/game/$roomID/ws?player_id=$userID';
+      }
       print(serverUrl);
+      // Connect to web socket
       _webSocket = GameWebSocket(
         serverUrl: serverUrl,
         onMessageReceived: _handleMessage,
@@ -88,12 +100,23 @@ class _GameRoomPageState extends State<GameRoomPage> {
       );
       _webSocket.connect();
     } catch (e) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text('Ошибка подключения: $e')),
-    );
-  }
+      // If an error occurs, print the error message in the console
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Ошибка подключения: $e')),
+      );
+    }
   }
 
+  /// Handles messages from the server.
+  ///
+  /// The message is a Json object containing a 'type' key that
+  /// determines how the message is handled. The possible types are:
+  ///
+  /// - 'initialized': The game has started and the player's hand is being
+  ///     sent.
+  /// - 'wrong_turn': The current player made an invalid move.
+  /// - 'right_turn': The current player made a valid move.
+  /// - 'change_turn': The turn has been changed to the next player. 
   void _handleMessage(dynamic message) {
     switch (message['type']) {
       case 'initialized':
@@ -113,7 +136,9 @@ class _GameRoomPageState extends State<GameRoomPage> {
 
   void _handleInitialized(Map<String, dynamic> message) {
     setState(() {
+      // Get cards that player has
       _myHand = List<String>.from(message['my_hand']);
+      // Get player's info (name, id)
       _players = List.generate(
         message['names'].length,
         (index) => Player(
@@ -122,12 +147,13 @@ class _GameRoomPageState extends State<GameRoomPage> {
           isMe: message['id'][index] == userID,
         ),
       );
+      // Array for active players
       _activePlayers = message['id'];
+      // Current player is first in array
       _currentPlayerId = message['id'][0];
 
-
       final player = _players.firstWhere((p) => p.id == _activePlayers[0]);
-      
+      // Check if first turn is for this user
       if (player.isMe) {
         myTurn = true;
         palleteChanged = false;
@@ -135,8 +161,9 @@ class _GameRoomPageState extends State<GameRoomPage> {
         my_pallete_ch = "";
         myAllTurn = true;
       }
-      
+      // Check game mode (gamemode = 2 for 2 players, gamemode = 3 for 3 players, gamemode = 4 for 4 players)
       if (gamemode == 2) {
+        // Set playerUp and animated timers
         if (_players.length == 1) {
           playerUp = player;
         } else {
@@ -148,25 +175,52 @@ class _GameRoomPageState extends State<GameRoomPage> {
             timers = [_countDownControllerUp, _countDownControllerDown];
           }
         }
+      } else if (gamemode == 3) {
+        // Set playerRight, playerLeft
+        final myIndex = _players.indexOf(_players.firstWhere((p) => p.id == userID));
+        playerRight = _players[(myIndex + 1) % _players.length];
+        playerLeft = _players[(myIndex + 2) % _players.length];
+        // Set animated timers
+        timers = [_countDownControllerDown, _countDownControllerDown, _countDownControllerDown,];
+        timers[(myIndex + 1) % _players.length] = _countDownControllerDown;
+        timers[(myIndex + 2) % _players.length] = _countDownControllerRight;
+        timers[(myIndex + 3) % _players.length] = _countDownControllerLeft;
+      } else if (gamemode == 4) {
+        // Set playerRight, playerUp, playerLeft
+        final myIndex = _players.indexOf(_players.firstWhere((p) => p.id == userID));
+        playerRight = _players[(myIndex + 1) % _players.length];
+        playerUp = _players[(myIndex + 2) % _players.length];
+        playerLeft = _players[(myIndex + 3) % _players.length];
+        // Set animated timers
+        timers = [_countDownControllerDown, _countDownControllerDown, _countDownControllerDown, _countDownControllerDown];
+        timers[(myIndex + 1) % _players.length] = _countDownControllerDown;
+        timers[(myIndex + 2) % _players.length] = _countDownControllerRight;
+        timers[(myIndex + 3) % _players.length] = _countDownControllerUp;
+        timers[(myIndex + 4) % _players.length] = _countDownControllerLeft;
       }
-      
+      // Start timer for counting Total Time of game
       _allTimeTimer = Timer.periodic(Duration(seconds: 1), (timer) {
         _allTime++;
       });
+      // Start turn
       _startTurnTimer();
     });
   }
 
   void _handleWrongTurn(Map<String, dynamic> message) {
     setState(() {
+      // Return the card to my hand fron pallete
       if (message['my_pallete_ch'] != null) {
         _pallete.remove(message['my_pallete_ch']);
         _myHand.add(message['my_pallete_ch']);
       }
+      // Return the card to my hand fron rule
       if (message['rule_ch'] != null) {
         _myHand.add(message['rule_ch']);
       }
+      // Return old rule
       _ruleCard = message['old_rule'];
+      // Rreturn turn privilegies to do the turn
       myTurn = true;
       palleteChanged = false;
       ruleChanged = false;
@@ -175,7 +229,9 @@ class _GameRoomPageState extends State<GameRoomPage> {
   }
 
   void _handleRightTurn() {
+    // Stop turn timer
     _turnTimer?.cancel();
+    // Reset turn privilegies
     setState(() {
       myTurn = false;
       ruleChanged = true;
@@ -186,103 +242,168 @@ class _GameRoomPageState extends State<GameRoomPage> {
 
   void _handleChangeTurn(Map<String, dynamic> message) {
     setState(() {
+      // find player that made the move
       final player = _players.firstWhere((p) => p.id == message['id_did']);
 
+      // Check if player lose 
       if (message['lose'] == 1) {
+        // If he lose his pallete will be empty
         if (gamemode == 2) {
           if (player.id == playerUp!.id) {
             playerUp!.pallete = [];
           }
+        } else if (gamemode == 3) {
+          if (player.id == playerRight!.id) {
+            playerRight!.pallete = [];
+          } else if (player.id == playerLeft!.id) {
+            playerLeft!.pallete = [];
+          }
+        } else if (gamemode == 4) {
+          if (player.id == playerRight!.id) {
+            playerRight!.pallete = [];
+          } else if (player.id == playerUp!.id) {
+            playerUp!.pallete = [];
+          } else if (player.id == playerLeft!.id) {
+            playerLeft!.pallete = [];
+          }
         }
+        // Remove player from active players, kill his timer
         _players[_players.indexOf(player)].place = _activePlayers.length;
         _activePlayers.remove(message['id_did']);
-        timersDied.add(timers[_players.indexOf(player)]);
+        timersDied.add(timers[_players.indexOf(player) + 1]);
       } else {
+        // Add card to player pallete
         if (message['his_pallete_ch'] != null) {
           if (gamemode == 2) {
             if (player.id == playerUp!.id) {
               playerUp!.pallete.add(message['his_pallete_ch']);
               playerUp!.numOfCards--;
             }
+          } else if (gamemode == 3) {
+            if (player.id == playerRight!.id) {
+              playerRight!.pallete.add(message['his_pallete_ch']);
+              playerRight!.numOfCards--;
+            } else if (player.id == playerLeft!.id) {
+              playerLeft!.pallete.add(message['his_pallete_ch']);
+              playerLeft!.numOfCards--;
+            }
+          } else if (gamemode == 4) {
+            if (player.id == playerRight!.id) {
+              playerRight!.pallete.add(message['his_pallete_ch']);
+              playerRight!.numOfCards--;
+            } else if (player.id == playerUp!.id) {
+              playerUp!.pallete.add(message['his_pallete_ch']);
+              playerUp!.numOfCards--;
+            } else if (player.id == playerLeft!.id) {
+              playerLeft!.pallete.add(message['his_pallete_ch']);
+              playerLeft!.numOfCards--;
+            }
           }
         }
       }
+      // Update rule after change
       if (message['rule_ch'] != null) {
         _ruleCard = message['rule_ch'];
         if (gamemode == 2) {
-            if (player.id == playerUp!.id) {
-              playerUp!.numOfCards--;
-            }
+          if (player.id == playerUp!.id) {
+            playerUp!.numOfCards--;
           }
+        } else if (gamemode == 3) {
+          if (player.id == playerRight!.id) {
+            playerRight!.numOfCards--;
+          } else if (player.id == playerLeft!.id) {
+            playerLeft!.numOfCards--;
+          }
+        } else if (gamemode == 4) {
+          if (player.id == playerRight!.id) {
+            playerRight!.numOfCards--;
+          } else if (player.id == playerUp!.id) {
+            playerUp!.numOfCards--;
+          } else if (player.id == playerLeft!.id) {
+            playerLeft!.numOfCards--;
+          }
+        }
       }
+      // Check if the next player lose
       _nextLose = message['next_lose'];
+      // Update current player
       _currentPlayerId = nextPlayerId(_currentPlayerId);
+
+      // Check if game is over
+      if (_activePlayers.length == 1) {
+        _turnTimer?.cancel();
+        for (var timer in timers) {
+          timer.reset();
+        }
+        _allTimeTimer?.cancel();
+        if (youLose == false) {
+          myPlace = 1;
+        }
+        // set a place for the winner
+        _players[_players.indexOf(_players.firstWhere((p) => p.id == _currentPlayerId))].place = 1;
+        // Win
+        goToResults();
+        return;
+      }
+
+      // check if the next player is me
       if (_players.firstWhere((p) => p.id == _currentPlayerId).isMe) {
+        // Check if this user lose
         if (_nextLose == 1) {
           _turnTimer?.cancel();
           _pallete = [];
           _myHand = [];
           youLose = true;
-          youWin = false;
-          for (var timer in timers) {
-            timer.reset();
-          }
-          _allTimeTimer?.cancel();
           myPlace = _activePlayers.length;
+          // set a place for the looser
           _players[_players.indexOf(_players.firstWhere((p) => p.id == _currentPlayerId))].place = _activePlayers.length;
-          loosingWinning();
+          // Loose
+          loosing();
           return;
           
         }
+        // Start my turn
         myTurn = true;
         palleteChanged = false;
         ruleChanged = false;
         my_pallete_ch = "";
         myAllTurn = true;
       }
-
-      if (_activePlayers.length == 1 && youLose == false) {
-        _turnTimer?.cancel();
-        youWin = true;
-        youLose = false;
-        _pallete = [];
-        _myHand = [];
-        for (var timer in timers) {
-          timer.reset();
-        }
-        myPlace = 1;
-        _players[_players.indexOf(_players.firstWhere((p) => p.id == _currentPlayerId))].place = 1;
-        _allTimeTimer?.cancel();
-        loosingWinning();
-        return;
-      }
-      
-      if (!youLose) {
-        _startTurnTimer();
-      }
+      // Start turn timer
+      _startTurnTimer();
     });
   }
 
   void _startTurnTimer() {
+    // Cancel previous timer
     _turnTimer?.cancel();
+    // Change animated timer to the next
     nextTimer();
-    setState(() => _timeLeft = 60);
-    _turnTimer = Timer.periodic(Duration(seconds: 1), (timer) {
-      if (_timeLeft > 0) {
-        setState(() => _timeLeft--);
-      } else {
-        timer.cancel();
-        if (myAllTurn) {
-          _submitTurnTimeout();
+    if (!youLose) {
+      setState(() => _timeLeft = 60);
+      _turnTimer = Timer.periodic(Duration(seconds: 1), (timer) {
+        if (_timeLeft > 0) {
+          setState(() => _timeLeft--);
+        } else {
+          timer.cancel();
+          // If time is over and it is turn of this player — senf timeout to Backend
+          if (myAllTurn) {
+            _submitTurnTimeout();
+          }
         }
-      }
-    });
+      });
+    }
   }
 
+  // Change animated timer
   void nextTimer() {
+    // Cancel previous timer
     timers[currTimerIndex].reset();
+    // Change animated timer to the next
     currTimerIndex = (currTimerIndex + 1) % timers.length;
+    // Check if all timers are dead
     if (timers.length != timersDied.length) {
+      // Find the first timer that is not dead
       while (true) {
         if (timersDied.contains(timers[currTimerIndex]) == false) {
           timers[currTimerIndex].restart();
@@ -294,18 +415,27 @@ class _GameRoomPageState extends State<GameRoomPage> {
     }
   }
 
+
+  /// Sends a message to the server with the player's move.
+  ///
+  /// The message contains the player's ID, room ID, changed palette, changed rule,
+  /// current hand and current palette.
+  ///
+  /// The message is sent only if the player has changed palette or rule.
+  ///
+  /// The player's turn is ended and the player's variables are reset after sending
+  /// the message.
   void _submitTurn() {
-    // _turnTimer?.cancel();
 
     setState(() {
       myTurn = false;
       myAllTurn = true;
     });
 
-    final message = {
+    var message = {
       'type': 'my_turn',
-      'my_id': userID,
-      'my_room': roomID,
+      'my_id': userID ?? null,
+      'my_room': roomID ?? null,
       'my_pallete_ch': palleteChanged ? my_pallete_ch : null,
       'rule_ch': ruleChanged ? _ruleCard : null,
       'my_hand': _myHand,
@@ -320,6 +450,15 @@ class _GameRoomPageState extends State<GameRoomPage> {
     _webSocket.sendMessage(message);
   }
 
+  /// Sends a message to the server that the player's turn has timed out.
+  ///
+  /// Cancels the turn timer, resets the player's variables and sends a message
+  /// to the server with the type 'time_out'.
+  ///
+  /// The message is sent only if the player's turn has timed out.
+  ///
+  /// The server then handles the message and sends a response to all the players
+  /// in the room.
   void _submitTurnTimeout() {
     _turnTimer?.cancel();
 
@@ -329,13 +468,10 @@ class _GameRoomPageState extends State<GameRoomPage> {
       myTurn = false;
       myAllTurn = false;
       youLose = true;
-      for (var timer in timers) {
-        timer.reset();
-      }
-      _allTimeTimer?.cancel();
       myPlace = _activePlayers.length;
       _players[_players.indexOf(_players.firstWhere((p) => p.id == _currentPlayerId))].place = _activePlayers.length;
-      loosingWinning();
+      // Loose
+      loosing();
     });
 
     final message = {
@@ -351,6 +487,7 @@ class _GameRoomPageState extends State<GameRoomPage> {
     _webSocket.sendMessage(message);
   }
 
+  // Returns the ID of the next player that is active
   int nextPlayerId(int currID) {
     final index = _players.indexOf(_players.firstWhere((p) => p.id == currID));
     int nextIndex = (index + 1) % _players.length;
@@ -361,18 +498,9 @@ class _GameRoomPageState extends State<GameRoomPage> {
         nextIndex = (nextIndex + 1) % _players.length;
       }
     }
-    
-
-    // final index = _activePlayers.indexOf(currID);
-    // return _activePlayers[(index + 1) % _activePlayers.length];
   }
 
-  void _onDisconnected() {
-    // Обработка разрыва соединения
-    // ScaffoldMessenger.of(context).showSnackBar(
-    //   SnackBar(content: Text('Соединение с сервером потеряно')),
-    // );
-  }
+  void _onDisconnected() {}
 
   @override
   void dispose() {
@@ -381,6 +509,7 @@ class _GameRoomPageState extends State<GameRoomPage> {
     super.dispose();
   }
 
+  // Returns the icon for the number of cards
   IconData getNumOfCardsIcon(int numberOfCards) {
     if (numberOfCards == 0) {
       return Icons.filter_none;
@@ -401,7 +530,8 @@ class _GameRoomPageState extends State<GameRoomPage> {
     }
   }
 
-  void loosingWinning() {
+  // Dialog for loosing
+  void loosing() {
     showDialog(
       barrierDismissible: false, 
       context: context, 
@@ -430,10 +560,8 @@ class _GameRoomPageState extends State<GameRoomPage> {
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    Expanded(flex: 1, child: Text(""),),
-                    if (gamemode == 2) 
-                      // Text(youWin ? "1st" : "2nd", style: resLoseStyleBig),
-                      Text(myPlace == 1 ? "1st" : (myPlace == 2 ? "2nd" : (myPlace == 3 ? "3rd" : "4th") ), style: resLoseStyleBig),
+                    Expanded(flex: 1, child: Text(""),), 
+                    Text(myPlace == 1 ? "1st" : (myPlace == 2 ? "2nd" : (myPlace == 3 ? "3rd" : "4th") ), style: resLoseStyleBig),
                     Text("place", style: resLoseStyle,),
                     Expanded(flex: 1, child: Text(""),),
                     Row(
@@ -464,7 +592,7 @@ class _GameRoomPageState extends State<GameRoomPage> {
                               ),
                             ),
                             onPressed: () {
-                              
+                              Navigator.pop(context);
                             },
                             child: Column(
                               children: [
@@ -503,10 +631,19 @@ class _GameRoomPageState extends State<GameRoomPage> {
                               ),
                             ),
                             onPressed: () async {
-                              await leaveRoom(userID!, roomID!);
+                              _allTimeTimer?.cancel();
+                              if (!aiGame) {
+                                 await leaveRoom(userID!, roomID!);
+                              }
+                              for (var timer in timers) {
+                                timer.reset();
+                              }
+                              _turnTimer?.cancel();
                               SharedPreferences prefs = await SharedPreferences.getInstance();
                               await prefs.remove('roomId');
                               await prefs.remove('roomPassword');
+                              await prefs.remove('aiGame');
+                              await prefs.remove('playerNum');
                               _webSocket.disconnect();
                               Navigator.of(context).pop();
                               Navigator.pushNamed(context, '/mainmenu');
@@ -534,6 +671,7 @@ class _GameRoomPageState extends State<GameRoomPage> {
     );
   }
 
+  // dialog to confirm exit
   void confirmExit() {
     showDialog(
       context: context, 
@@ -596,15 +734,20 @@ class _GameRoomPageState extends State<GameRoomPage> {
                         ),
                         onPressed: () async {
                           _turnTimer!.cancel();
+                          _allTimeTimer?.cancel();
                           if (myAllTurn) {
                             _submitTurnTimeout();
                           } else {
                             _exit();
                           }
-                          await leaveRoom(userID!, roomID!);
+                          if (!aiGame) {
+                            await leaveRoom(userID!, roomID!);
+                          }
                           SharedPreferences prefs = await SharedPreferences.getInstance();
                           await prefs.remove('roomId');
                           await prefs.remove('roomPassword');
+                          await prefs.remove('aiGame');
+                          await prefs.remove('playerNum');
                           _webSocket.disconnect();
                           Navigator.of(context).pop();
                           Navigator.pushNamed(context, '/mainmenu');
@@ -640,15 +783,6 @@ class _GameRoomPageState extends State<GameRoomPage> {
         'assigned_id': room_id,
       })
     );
-    // if (response.statusCode == 200) {
-    //   setState(() {
-    //     logSuccess = true;
-    //   });
-    // } else {
-    //   setState(() {
-    //     logSuccess = false;
-    //   });
-    // }
   }
 
    void _exit() {
@@ -657,6 +791,22 @@ class _GameRoomPageState extends State<GameRoomPage> {
       'my_id': userID,
     };
     _webSocket.sendMessage(message);
+  }
+
+  void goToResults() async{
+    List<String> places = [];
+    for (int i = 0; i < _players.length; i++) {
+      for (int j = 0; j < _players.length; j++) {
+        if (_players[j].place == i + 1) {
+          places.add(_players[j].name);
+        }
+      }
+    }
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    await prefs.setInt('myPlace', myPlace);
+    await prefs.setInt('totalTime', _allTime);
+    await prefs.setStringList('placesNames', places);
+    Navigator.pushNamed(context, '/result');
   }
 
 
@@ -694,6 +844,7 @@ class _GameRoomPageState extends State<GameRoomPage> {
                     ),
                   ),
                   const Expanded(flex: 1, child: Text("")),
+                  if (gamemode == 2 || gamemode == 4)
                   Stack(
                     alignment: Alignment.center,
                     children: [
@@ -717,7 +868,9 @@ class _GameRoomPageState extends State<GameRoomPage> {
                       Icon(Icons.account_circle, size: 80, color: grey3A3A3AColor,),
                     ],
                   ),
+                  if (gamemode == 2 || gamemode == 4)
                   Padding(padding: const EdgeInsets.only(right: 15),),
+                  if (gamemode == 2 || gamemode == 4)
                   Column(
                     children: [
                       Padding(padding: const EdgeInsets.only(top: 40)),
@@ -769,9 +922,9 @@ class _GameRoomPageState extends State<GameRoomPage> {
                       Padding(padding: const EdgeInsets.only(top: 5)),
                       Row(
                         children: [
-                          Icon(Icons.filter_7, size: 24, color: grey3A3A3AColor,),
+                          Icon(playerLeft != null ? getNumOfCardsIcon(playerLeft!.numOfCards) : Icons.filter_7, size: 24, color: grey3A3A3AColor,),
                           Padding(padding: const EdgeInsets.only(right: 5),),
-                          Text("Player_123", style: buttonTextStyle),
+                          Text(playerLeft?.name ?? "Waiting...", style: buttonTextStyle),
                         ],
                       )
                   ]),
@@ -782,7 +935,14 @@ class _GameRoomPageState extends State<GameRoomPage> {
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
                       Padding(padding: const EdgeInsets.only(top: 30)),
-                      for (int i = 0; i < 7; i++)
+                      for (int i = 0; i < (playerLeft != null ? playerLeft!.pallete.length : 0); i++)
+                        Column(
+                          children: [
+                            LeftCardWidget(card: playerLeft!.pallete[i]),
+                            Padding(padding: const EdgeInsets.only(top: 9)),
+                          ],
+                        ),
+                      for (int i = playerLeft != null ? playerLeft!.pallete.length : 0; i < 7; i++)
                         Column(
                           children: [
                             Container(
@@ -807,6 +967,9 @@ class _GameRoomPageState extends State<GameRoomPage> {
                     children: [
                       if (gamemode == 2)
                         Padding(padding: const EdgeInsets.only(top: 20)),
+                      if (gamemode == 3)
+                        Padding(padding: const EdgeInsets.only(top: 100)),
+                      if (gamemode == 2 || gamemode == 4)
                       Row(
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
@@ -913,7 +1076,14 @@ class _GameRoomPageState extends State<GameRoomPage> {
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
                       Padding(padding: const EdgeInsets.only(top: 30)),
-                      for (int i = 0; i < 7; i++)
+                      for (int i = 0; i < (playerRight != null ? playerRight!.pallete.length : 0); i++)
+                        Column(
+                          children: [
+                            RightCardWidget(card: playerRight!.pallete[i]),
+                            Padding(padding: const EdgeInsets.only(top: 9)),
+                          ],
+                        ),
+                      for (int i = playerRight != null ? playerRight!.pallete.length : 0; i < 7; i++)
                         Column(
                           children: [
                             Container(
@@ -963,9 +1133,9 @@ class _GameRoomPageState extends State<GameRoomPage> {
                       Padding(padding: const EdgeInsets.only(top: 5)),
                       Row(
                         children: [
-                          Icon(Icons.filter_7, size: 24, color: grey3A3A3AColor,),
+                          Icon(playerRight != null ? getNumOfCardsIcon(playerRight!.numOfCards) : Icons.filter_7, size: 24, color: grey3A3A3AColor,),
                           Padding(padding: const EdgeInsets.only(right: 5),),
-                          Text("Player_XXX", style: buttonTextStyle),
+                          Text(playerRight?.name ?? "Waiting...", style: buttonTextStyle),
                         ],
                       )
                   ]),
@@ -981,6 +1151,7 @@ class _GameRoomPageState extends State<GameRoomPage> {
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
+                    Expanded(flex: 1, child: Text("")),
                     Stack(
                       alignment: Alignment.center,
                       children: [
@@ -1064,10 +1235,21 @@ class _GameRoomPageState extends State<GameRoomPage> {
                       )
                     else 
                       SizedBox(
-                        height: 100,
+                        height: 105,
                         width: 50,
                         child: Text(''),
                       ),
+                    Expanded(flex: 1, child: Text("")),
+                    IconButton(
+                      icon: Icon(Icons.help_outline, size: 40, color: grey3A3A3AColor,),
+                      onPressed: () {
+                        showDialog(
+                          context: context,
+                          builder: (context) => RuleDialog(),
+                        );
+                      },
+                    ),
+                    Padding(padding: const EdgeInsets.only(right: 15), child: Text(""),),
                   ],
                 ),
               )

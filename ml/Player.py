@@ -1,8 +1,22 @@
 import torch
 import numpy as np
-from enviroment_legal import Red7Env  # Убедитесь, что environment.py в той же директории
-from DQN import DQNAgent         # Убедитесь, что DQN.py в той же директории
-
+from enviroment_legal import Red7Env
+from DQN import DQNAgent 
+"""
+    Tests the AI agent's decision-making in a specific Red7 game scenario.
+    
+    This function:
+    1. Initializes the DQN agent and loads a trained model
+    2. Sets up a specific game state for testing
+    3. Gets the AI's action decision
+    4. Prints the game state and chosen action
+    
+    The test scenario can be customized by modifying:
+    - Player hands (player1_hand, player2_hand)
+    - Palettes (player1_palette, player2_palette)
+    - Current rule
+    - Current player turn
+    """
 def test_specific_ai_decision():
     # Инициализация
     device = torch.device('cpu')

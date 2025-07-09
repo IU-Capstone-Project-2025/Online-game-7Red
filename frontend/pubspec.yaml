@@ -8,6 +8,7 @@ environment:
 
 dependencies:
   circular_countdown_timer: ^0.2.4
+  email_validator: ^3.0.0
   flame: ^1.29.0
   flutter:
     sdk: flutter
@@ -26,6 +27,9 @@ flutter:
   assets:
     - lib/assets/
     - lib/assets/rules_pallete.png
+    - lib/assets/rule1.png
+    - lib/assets/leftButton.png
+    - lib/assets/rightButton.png
   fonts:
     - family: Poppins
       fonts:

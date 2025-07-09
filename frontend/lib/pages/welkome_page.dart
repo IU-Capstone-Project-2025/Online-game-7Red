@@ -27,6 +27,7 @@ class _WelkomePageState extends State<WelkomePage> {
             crossAxisAlignment: CrossAxisAlignment.center,
             children: [
               const Expanded(flex: 5, child: Text("")),
+              // Red7 logo
               Image(
                 image: AssetImage('lib/assets/logo.png'),
                 width: 200,
@@ -42,6 +43,7 @@ class _WelkomePageState extends State<WelkomePage> {
                   Column(
                     crossAxisAlignment: CrossAxisAlignment.center,
                     children: [
+                      // Sign in button
                       SizedBox(
                         width: 295,
                         height: 45,
@@ -67,6 +69,7 @@ class _WelkomePageState extends State<WelkomePage> {
                             ),
                           ),
                           onPressed: () {
+                            // Go to sign in page
                             Navigator.of(context).pushNamed('/signin');
                           },
                           child: const Text('SIGN  IN'),
@@ -85,6 +88,7 @@ class _WelkomePageState extends State<WelkomePage> {
                   Column(
                     crossAxisAlignment: CrossAxisAlignment.center,
                     children: [
+                      // Sign up button
                       SizedBox(
                         width: 295,
                         height: 45,
@@ -110,6 +114,7 @@ class _WelkomePageState extends State<WelkomePage> {
                             ),
                           ),
                           onPressed: () {
+                            // Go to sign up page
                             Navigator.of(context).pushNamed('/signup');
                           },
                           child: const Text('SIGN  UP'),
@@ -125,50 +130,6 @@ class _WelkomePageState extends State<WelkomePage> {
                 ],
               ),
               const Expanded(flex: 6, child: Text("")),
-              // const Expanded(flex: 2, child: Text("")),
-              // Stack(
-              //   alignment: Alignment.center,
-              //   children: [
-              //     CircularCountDownTimer(
-              //     controller: _countDownController,
-              //     duration: 60,
-              //     isReverse: true,
-              //     fillColor: greenTimerColor,
-              //     height: 74,
-              //     width: 74,
-              //     strokeWidth: 8,
-              //     onComplete: () {
-              //       // later
-              //     },
-              //     strokeCap: StrokeCap.round,
-              //     isReverseAnimation: true,
-              //     ringColor: greyTimerColor,
-              //     autoStart: false,
-              //     textStyle: invisTextStyle,
-              //     ),
-              //     Icon(Icons.account_circle, size: 80, color: grey3A3A3AColor,),
-              //   ],
-              // ),
-              // Row(
-              //   mainAxisAlignment: MainAxisAlignment.center,
-              //   crossAxisAlignment: CrossAxisAlignment.center,
-              //   children: [
-              //     IconButton(
-              //       onPressed: () {
-              //         _countDownController.restart();
-              //       },
-              //       icon: Icon(Icons.refresh, size: 50, color: grey3A3A3AColor,),
-              //     ),
-              //     Padding(padding: EdgeInsets.only(left: 30)),
-              //     IconButton(
-              //       onPressed: () {
-              //         _countDownController.reset();
-              //       },
-              //       icon: Icon(Icons.stop, size: 50, color: grey3A3A3AColor,),
-              //     )
-              //   ],
-              // ),
-              // const Expanded(flex: 2, child: Text("")),
             ],
           ),
         ),

@@ -3,8 +3,37 @@ import time
 import math
 from collections import defaultdict
 from enviroment import Red7Env, check_win, card_color, card_value, get_winning_moves
-
+"""
+    Node for Monte Carlo Tree Search (MCTS) representing game states in Red7.
+    
+    Attributes:
+        env (Red7Env): Current game environment state
+        parent (MCTSNode): Parent node in search tree
+        move (tuple): Move that led to this node (play_card, rule_card)
+        children (list): Child nodes
+        wins (int): Number of winning simulations
+        visits (int): Total number of visits
+        untried_moves (list): List of unexplored moves
+        is_single_card_move (bool): Whether move uses only one card
+    
+    Methods:
+        __init__: Initializes node with game state
+        _generate_combinations: Generates possible moves
+        select_child: Selects child using UCT formula
+        expand: Expands the search tree
+        update: Updates node statistics
+        is_fully_expanded: Checks if node fully expanded
+        is_terminal: Checks if terminal state
+    """
 class MCTSNode:
+    """
+        Initialize MCTS node.
+        
+        Args:
+            env (Red7Env): Game environment state
+            parent (MCTSNode): Parent node reference
+            move (tuple): Action (play_card, rule_card) that led here
+        """
     def __init__(self, env, parent=None, move=None):
         self.env = env.copy() if env else None
         self.parent = parent
@@ -15,35 +44,39 @@ class MCTSNode:
         self.untried_moves = self._generate_combinations() if env else []
         self.is_single_card_move = (move is None) or (move[0] == 0) or (move[1] == 0)
     
+    """
+        Generate all legal move combinations for current player.
+        
+        Returns:
+            list: List of valid (play_card, rule_card) tuples
+        """
     def _generate_combinations(self):
-        """Generate all possible move combinations for current player."""
         hand = self.env.get_hand(self.env.current_player())
         combinations = []
         
-        # Generate all possible rule changes (different from current rule)
         rule_cards = [card for card in hand if card_color(card) != self.env.rule]
         
-        # Generate all possible play cards
         play_cards = hand.copy()
         
-        # Move when only changing rule (play_card is 0)
         for rc in rule_cards:
             combinations.append((0, rc))
         
-        # Move when only playing card (rule_card is 0)
         for pc in play_cards:
             combinations.append((pc, 0))
         
-        # Move when both changing rule and playing card
         for rc in rule_cards:
             for pc in play_cards:
                 if rc != pc:
                     combinations.append((pc, rc))
         
         return combinations
-    
+    """
+        Select child node using UCT formula with single-move preference.
+        
+        Returns:
+            MCTSNode: Child node with highest UCT score
+        """
     def select_child(self):
-        """Select child node using UCT with preference for single-card moves"""
         if not self.children:
             return None
             
@@ -53,13 +86,16 @@ class MCTSNode:
                   (child.wins / child.visits) + 
                   exploration_weight * math.sqrt(math.log(self.visits) / child.visits) +
                   (0.3 if child.is_single_card_move else 0))
-    
+    """
+        Expand tree by creating new child node.
+        
+        Returns:
+            MCTSNode: Newly created child node or None
+        """
     def expand(self):
-        """Expand moves, preferring single-card moves first"""
         if not self.untried_moves:
             return None
         
-        # Sort untried moves so single-card moves come first
         self.untried_moves.sort(key=lambda m: 0 if (m[0] == 0 or m[1] == 0) else 1)
         
         move = self.untried_moves[0]
@@ -70,42 +106,76 @@ class MCTSNode:
         child_node = MCTSNode(new_env, self, move)
         self.children.append(child_node)
         return child_node
-    
+    """
+        Update node statistics after simulation.
+        
+        Args:
+            result (int): 1 for win, 0 for loss
+        """
     def update(self, result):
-        """Update node statistics"""
         self.visits += 1
         self.wins += result
-    
+    """
+        Check if all possible moves have been explored.
+        
+        Returns:
+            bool: True if no untried moves remain
+        """
     def is_fully_expanded(self):
         return len(self.untried_moves) == 0
-    
+    """
+        Check if node represents terminal game state.
+        
+        Returns:
+            bool: True if game ended
+        """
     def is_terminal(self):
         return self.env.done
-
+"""
+    AI player using Monte Carlo Tree Search for Red7 game.
+    
+    Attributes:
+        iteration_limit (int): Maximum MCTS iterations per move
+    
+    Methods:
+        __init__: Initializes AI with search parameters
+        get_move: Selects best move for current state
+    """
 class MCTSAI:
+    """
+        Initialize MCTS AI.
+        
+        Args:
+            iteration_limit (int): Number of search iterations per move
+        """
     def __init__(self, iteration_limit=2000):
         self.iteration_limit = iteration_limit
-    
+    """
+        Determine best move using MCTS algorithm.
+        
+        Args:
+            env (Red7Env): Current game state
+            
+        Returns:
+            tuple: Best move (play_card, rule_card)
+        """
     def get_move(self, env):
         root = MCTSNode(env)
         
         for _ in range(self.iteration_limit):
             node = root
             
-            # Selection
             while node.is_fully_expanded() and not node.is_terminal():
                 child = node.select_child()
                 if child is None:
                     break
                 node = child
             
-            # Expansion
             if not node.is_terminal():
                 child = node.expand()
                 if child is not None:
                     node = child
             
-            # Simulation
             temp_env = node.env.copy()
             while not temp_env.done:
                 possible_moves = node._generate_combinations()
@@ -116,7 +186,6 @@ class MCTSAI:
                 if done: 
                     break
             
-            # Backpropagation
             result = 1 if temp_env.current_player() != env.current_player() else 0
             while node is not None:
                 node.update(result)
@@ -125,18 +194,31 @@ class MCTSAI:
         if not root.children:
             return (0, 0)
         
-        # Choose the move with highest visits, preferring single-card moves
         best_child = max(root.children, 
                         key=lambda child: (child.visits, child.is_single_card_move))
         return best_child.move
-
+"""
+    Main game controller for human vs AI Red7 matches.
+    
+    Attributes:
+        env (Red7Env): Game environment instance
+        ai (MCTSAI): AI opponent instance
+    
+    Methods:
+        __init__: Initializes game components
+        print_state: Displays current game state
+        ai_turn: Executes AI's turn
+        human_turn: Handles human player input
+        play: Manages game loop
+    """
 class Red7Game:
+    """Initialize game with environment and AI."""
     def __init__(self):
         self.env = Red7Env(verbose=False)
         self.ai = MCTSAI(iteration_limit=1000)
-    
+    """Print current game state to console."""
     def print_state(self):
-        """Print the current game state"""
+        
         print("\n" + "="*40)
         print(f"Current Rule: {self.env.COLOR_NAMES[self.env.rule]}")
         print(f"Current Player: {'AI' if self.env.current_player() == 0 else 'You'}")
@@ -147,6 +229,12 @@ class Red7Game:
         print("\nYour Hand:", self.env._cards_to_str(self.env.get_hand(1)))
         print("\nAI Hand:", self.env._cards_to_str(self.env.get_hand(0)))
     
+    """
+        Execute AI's turn with timing and move explanation.
+        
+        Returns:
+            tuple: AI's selected move (play_card, rule_card)
+        """
     def ai_turn(self):
         print("\nAI is thinking...")
         start_time = time.time()
@@ -166,6 +254,12 @@ class Red7Game:
         
         return move
     
+    """
+        Handle human player's turn with input validation.
+        
+        Returns:
+            tuple: Player's selected move (play_card, rule_card)
+        """
     def human_turn(self):
         self.print_state()
         
@@ -193,19 +287,19 @@ class Red7Game:
                 print("Invalid choice. Please try again.")
             except ValueError:
                 print("Please enter a number.")
-
+    
+    """Run complete game loop until completion."""
     def play(self):
         print("Welcome to Red7! You're playing against the AI.")
         
         while not self.env.done:
-            if self.env.current_player() == 0:  # AI's turn
+            if self.env.current_player() == 0:
                 move = self.ai_turn()
-            else:  # human's turn
+            else: 
                 move = self.human_turn()
             
             _, reward, done, _ = self.env.step(move)
             
-            # Checking if game ended due to empty hand
             if done:
                 winner = self.env.get_winner()
                 print(f"\nGame over! {'AI' if winner == 0 else 'You'} won!")

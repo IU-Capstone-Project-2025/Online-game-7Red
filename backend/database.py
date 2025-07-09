@@ -1,17 +1,23 @@
 import os
+import uuid
 from sqlalchemy import (MetaData, Table, Text, Column, Date, Integer, String, 
                         create_engine, TIMESTAMP, ForeignKey, Boolean, select)
 from databases import Database
 from dotenv import load_dotenv
 from datetime import datetime, UTC, date, timedelta
 
-# load environment variables
+# Load environment variables from .env file
 load_dotenv(os.path.join(os.path.dirname(__file__), '../database/.env'))
 
+# Get database URL from environment variables
 DATABASE_URL = os.getenv("DATABASE_URL")
 
+# Initialize SQLAlchemy metadata
 metadata = MetaData()
 
+# Define database tables using SQLAlchemy models
+
+# Table for game rooms
 games = Table(
     "game_rooms",
     metadata,
@@ -21,7 +27,7 @@ games = Table(
     Column("game_state", String(20)),
 )
 
-
+# Table for user-room associations (many-to-many)
 user_room = Table(
     "user_room",
     metadata,
@@ -30,6 +36,7 @@ user_room = Table(
     Column("ready", Boolean, default=False),
 )
 
+# Table for user accounts
 users = Table(
     "users",
     metadata,
@@ -40,6 +47,7 @@ users = Table(
     Column("last_visited", TIMESTAMP(timezone=True), default=datetime.utcnow),
 )
 
+# Table for user profiles
 profiles = Table(
     "profiles",
     metadata,
@@ -48,6 +56,7 @@ profiles = Table(
     Column("avatar", String(255)),
 )
 
+# Table for user-achievement associations (many-to-many)
 user_achievements = Table(
     "user_achievements",
     metadata,
@@ -55,6 +64,7 @@ user_achievements = Table(
     Column("achievement_id", Integer, ForeignKey("achievements.id", ondelete="CASCADE"), primary_key=True),
 )
 
+# Table for tracking user visit history
 visit_history = Table(
     "visit_history",
     metadata,
@@ -62,6 +72,7 @@ visit_history = Table(
     Column("visit_date", Date, primary_key=True),
 )
 
+# Table for achievements
 achievements = Table(
     "achievements",
     metadata,
@@ -70,6 +81,7 @@ achievements = Table(
     Column("description", Text),
 )
 
+# Table for user game statistics
 statistics = Table(
     "statistics",
     metadata,
@@ -81,43 +93,46 @@ statistics = Table(
     Column("bot_wins", Integer, default=0), 
 )
 
+# Initialize database connection
 database = Database(DATABASE_URL)
 engine = create_engine(DATABASE_URL)
 
 #--------------------ROOMS-------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
-# for creating room
+# Create a new game room in the database
 async def create_game_room(assigned_id: str, password: str, game_state: str = "waiting"):
     query = games.insert().values(assigned_id=assigned_id, password=password, game_state=game_state)
     return await database.execute(query)
 
-# for deleting room
+# Delete a game room by its ID
 async def delete_game_room(room_id: int):
     query = games.delete().where(games.c.room_id == room_id)
     return await database.execute(query)
 
-# for searching room
+# Find a game room by its assigned ID
 async def search_game_room(assigned_id: str):
     query = games.select().where(games.c.assigned_id == assigned_id)
     return await database.fetch_one(query)
 
-# for searching room by assigned_id and returning room_id
+# Get the internal room_id using the public assigned_id
 async def return_room_id_using_assigned_id(assigned_id: str):
     query = games.select().with_only_columns(games.c.room_id).where(games.c.assigned_id == assigned_id)
     result = await database.fetch_one(query)
     return result.room_id
 
-# check for assigned_id and password existance
+# Check if a room with the given assigned_id exists
 async def assigned_id_exists(assigned_id: str) -> bool:
     query = games.select().where(games.c.assigned_id == assigned_id)
     result = await database.fetch_one(query)
     return result is not None
 
+# Check if a room with the given password exists
 async def password_exist(password: str) -> bool:
     query = games.select().where(games.c.password == password)
     result = await database.fetch_one(query)
     return result is not None
 
+# Update the game state of a room
 async def update_room_state(assigned_id: str, state: str):
     query = (
         games.update()
@@ -129,7 +144,7 @@ async def update_room_state(assigned_id: str, state: str):
 
 #-------------------------USERS----------------------------------------------------------------------------------------------------------------------------------------------
 
-# for creating user
+# Create a new user account
 async def create_user(login: str, password: str, created_at: datetime | None = None, last_visited: datetime | None = None ):
     query = users.insert().values(
         login=login,
@@ -139,28 +154,32 @@ async def create_user(login: str, password: str, created_at: datetime | None = N
     )
     return await database.execute(query)
 
-# for deleting user
+# Delete a user account by ID
 async def delete_user(user_id: int):
     query = users.delete().where(users.c.id == user_id)
     return await database.execute(query)
 
-# for searching user
+# Find a user by their ID
 async def search_user_by_id(user_id: int):
     query = users.select().where(users.c.id == user_id)
     return await database.fetch_one(query)
 
+# Find a user by their login name
 async def search_user_by_login(login: str):
     query = users.select().where(users.c.login == login)
     return await database.fetch_one(query)
 
+# Create a user profile
 async def create_profile(user_id: int, name: str, avatar: str = None):
     query = profiles.insert().values(user_id=user_id, name=name, avatar=avatar)
     return await database.execute(query)
 
+# Get a user's profile by their ID
 async def get_profile_by_user_id(user_id: int):
     query = profiles.select().where(profiles.c.user_id == user_id)
     return await database.fetch_one(query)
 
+# Get a user's name from their profile
 async def get_profile_name_by_user_id(user_id: int):
     query = profiles.select().where(profiles.c.user_id == user_id)
     res = await database.fetch_one(query)
@@ -170,7 +189,39 @@ async def get_profile_name_by_user_id(user_id: int):
     
     return res["name"]
 
-# adding user to the room
+# Upload avatar link to profile
+async def update_avatar(user_id: int, filename: str):
+
+    user_exists = await database.fetch_one(
+    profiles.select().where(profiles.c.user_id == user_id))
+
+    if not user_exists:
+        raise Exception("User not found")
+    
+    query = profiles.update()\
+        .where(profiles.c.user_id == user_id)\
+        .values(avatar=filename)
+    
+    result = await database.execute(query)
+    return result
+
+# Get avatar link from profile
+async def get_avatar_from_db(user_id: int):
+    query = profiles.select().where(profiles.c.user_id == user_id)
+    profile = await database.fetch_one(query)
+    
+    return profile['avatar']
+
+# Delete avatar link from profile
+async def delete_avatar_from_db(user_id: int):
+    query = (
+        profiles.update()
+        .where(profiles.c.user_id == user_id)
+        .values(avatar=None)
+    )
+    await database.execute(query)
+
+# Add a user to a game room
 async def add_user_to_room(user_id: int, assigned_id: str):
     # find the internal room_id by assigned_id
     query = games.select().where(games.c.assigned_id == assigned_id)
@@ -178,32 +229,43 @@ async def add_user_to_room(user_id: int, assigned_id: str):
     if not room:
         raise Exception("Room not found")
     room_id = room["room_id"]
+    
+    # Check if user is already in the room
     check_query = user_room.select().where(
         (user_room.c.user_id == user_id) & (user_room.c.room_id == room_id)
     )
     exists = await database.fetch_one(check_query)
     if exists:
         raise Exception("User already in the room")
+    # Check if room is full
+    count_query = user_room.select().where(user_room.c.room_id == room_id)
+    players = await database.fetch_all(count_query)
+    if len(players) >= 4:
+        raise Exception("Room is full")
     
+    # Add user to room
     insert_query = user_room.insert().values(user_id=user_id, room_id=room_id)
     await database.execute(insert_query)
     
-
+# Remove a user from a game room
 async def remove_user_from_room(user_id: int, assigned_id: str):
     query = games.select().where(games.c.assigned_id == assigned_id)
     room = await database.fetch_one(query)
     if not room:
         raise Exception("Room mot found")
     room_id = room["room_id"]
+    
+    # Remove the user from the room
     delete = user_room.delete().where((user_room.c.user_id == user_id) & (user_room.c.room_id == room_id))
     await database.execute(delete)
     
+    # If room is empty after removal, delete the room
     check = user_room.select().where(user_room.c.room_id == room_id)
     members = await database.fetch_all(check)
     if not members:
         await delete_game_room(room_id)
     
-    
+# Set a user's ready status in a room
 async def set_user_ready(user_id: int, assigned_id: str, ready: bool):
     query = games.select().where(games.c.assigned_id == assigned_id)
     room = await database.fetch_one(query)
@@ -213,6 +275,7 @@ async def set_user_ready(user_id: int, assigned_id: str, ready: bool):
     set_query = user_room.update().where((user_room.c.user_id == user_id) & (user_room.c.room_id == room_id)).values(ready=ready)
     await database.execute(set_query)
     
+# Get all players and their ready status in a room
 async def get_room_players_and_ready(assigned_id: str):
     query = games.select().where(games.c.assigned_id == assigned_id)
     room = await database.fetch_one(query)
@@ -220,6 +283,7 @@ async def get_room_players_and_ready(assigned_id: str):
         raise Exception("Room not found")
     room_id = room["room_id"]
 
+    # Join tables to get player names and ready status
     players = (user_room.join(profiles, user_room.c.user_id == profiles.c.user_id))
     query = (
         user_room.select()
@@ -232,6 +296,7 @@ async def get_room_players_and_ready(assigned_id: str):
     ready_p = [row["name"] for row in rows if row["ready"]]
     return players, ready_p
 
+# Get player IDs and names in a room
 async def get_room_players_ids_and_names(assigned_id: str):
     query = games.select().where(games.c.assigned_id == assigned_id)
     room = await database.fetch_one(query)
@@ -239,6 +304,7 @@ async def get_room_players_ids_and_names(assigned_id: str):
         raise Exception("Room not found")
     room_id = room["room_id"]
 
+    # Join tables to get player IDs and names
     players_join = user_room.join(profiles, user_room.c.user_id == profiles.c.user_id)
     query = (
         select(profiles.c.name, user_room.c.user_id)
@@ -251,21 +317,24 @@ async def get_room_players_ids_and_names(assigned_id: str):
     ids = [row["user_id"] for row in rows]
     return players, ids
 
+# Update a user's last visited timestamp
 async def update_last_visited(user_id: int):
     query = users.update().where(users.c.user_id == user_id).values(last_visited=datetime.now(UTC))
     await database.execute(query)
 
 
 #--------------------------achievements--------------------------------------------------------------    
+
+# Record a user's daily visit
 async def add_visit(user_id: int):
     today = date.today()
     query = visit_history.insert().values(user_id=user_id, visit_date=today)
     try:
         await database.execute(query)
     except Exception:
-        pass
+        pass  # Ignore if already exists
     
-    
+# Calculate a user's consecutive visit streak
 async def get_visit_streak(user_id: int):
     query = visit_history.select().where(visit_history.c.user_id == user_id)
     visits = await database.fetch_all(query)
@@ -279,6 +348,7 @@ async def get_visit_streak(user_id: int):
             break
     return streak
 
+# Award an achievement to a user if they don't already have it
 async def award_achievement_if_needed(user_id: int, achievement_id: int):
     query = user_achievements.select().where(
         (user_achievements.c.user_id == user_id) &
@@ -291,6 +361,20 @@ async def award_achievement_if_needed(user_id: int, achievement_id: int):
         )
         await database.execute(insert)
         
+
+# Check and award the 7-day streak achievement if eligible
+async def check_and_award_7_days_streak(user_id: int):
+    streak = await get_visit_streak(user_id)
+    if streak >= 7:
+        achievement_id = await get_achievement_id_by_name("7_days_streak")
+        if achievement_id:
+            awarded = await award_achievement_if_needed(user_id, achievement_id)
+            if awarded:
+                return "7_days_streak"
+    return None
+
+
+# Get achievement ID by name
 async def get_achievement_id_by_name(name: str):
     query = achievements.select().where(achievements.c.name == name)
     achievement = await database.fetch_one(query)
@@ -298,6 +382,7 @@ async def get_achievement_id_by_name(name: str):
         return achievement["id"]
     return None
 
+# Get a user's current win streak
 async def get_win_streak(user_id: int):
     query = statistics.select().where(statistics.c.user_id == user_id)
     stats = await database.fetch_one(query)
@@ -305,18 +390,24 @@ async def get_win_streak(user_id: int):
         return stats["cur_straight_wins"]
     return 0
 
+# Update a user's win streak and statistics
 async def update_win_streak(user_id: int, is_win: bool):
     query = statistics.select().where(statistics.c.user_id == user_id)
     stats = await database.fetch_one(query)
+    
+    # Create initial statistics if none exist
     if not stats:
         await database.execute(statistics.insert().values(
             user_id=user_id,
             total_played=1,
             wins=1 if is_win else 0,
             cur_straight_wins=1 if is_win else 0,
-            max_straight_wins=1 if is_win else 0
+            max_straight_wins=1 if is_win else 0,
+            bot_wins=0
         ))
         return
+        
+    # Update existing statistics
     cur_streak = stats["cur_straight_wins"]
     max_streak = stats["max_straight_wins"]
     total_played = stats["total_played"] + 1
@@ -337,7 +428,7 @@ async def update_win_streak(user_id: int, is_win: bool):
     ) 
     await database.execute(upd) 
     
-
+# Check and award the 5-win streak achievement if eligible
 async def check_and_award_win_streak(user_id: int):
     streak = await get_win_streak(user_id)
     if streak >= 5:
@@ -345,9 +436,12 @@ async def check_and_award_win_streak(user_id: int):
         if achievement_id:
             await award_achievement_if_needed(user_id, achievement_id)
             
+# Increment a user's bot win counter
 async def increment_bot_wins(user_id: int):
     query = statistics.select().where(statistics.c.user_id == user_id)
     stats = await database.fetch_one(query)
+    
+    # Create initial statistics if none exist
     if not stats:
         await database.execute(statistics.insert().values(
             user_id=user_id,
@@ -359,15 +453,41 @@ async def increment_bot_wins(user_id: int):
         ))
         return 1
     
-    bot_wins = stats.get("bot_wins", 0) + 1
+
+    bot_wins = stats["bot_wins"] + 1
     upd = statistics.update().where(statistics.c.user_id == user_id).values(bot_wins=bot_wins)
     await database.execute(upd)
     return bot_wins
 
+# Check and award the 3 bot wins achievement if eligible
 async def check_and_award_bot_wins(user_id: int):
     query = statistics.select().where(statistics.c.user_id == user_id)
     stats = await database.fetch_one(query)
-    if stats and stats.get("bot_wins", 0) >= 3:
+    if stats and getattr(stats, "bot_wins", 0) >= 3:
         achievement_id = await get_achievement_id_by_name("3_wins_over_the_bot")
         if achievement_id:
             await award_achievement_if_needed(user_id, achievement_id)
+async def create_user_statistics(user_id: int):
+    query = statistics.insert().values(
+        user_id=user_id,
+        total_played=0,
+        wins=0,
+        cur_straight_wins=0,
+        max_straight_wins=0,
+        bot_wins=0
+    )
+    await database.execute(query)
+
+async def search_open_online_room():
+    # Find a room with game_state "waiting" and < 4 players
+    query = games.select().where(games.c.game_state == "waiting")
+    rooms = await database.fetch_all(query)
+    for room in rooms:
+        room_id = room["room_id"]
+        # Count the number of players in the room
+        count_query = user_room.select().where(user_room.c.room_id == room_id)
+        players = await database.fetch_all(count_query)
+        if len(players) < 4:
+            return room
+    return None
+

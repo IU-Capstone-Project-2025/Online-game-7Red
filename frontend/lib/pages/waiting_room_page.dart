@@ -32,11 +32,11 @@ class _WaitingRoomPageState extends State<WaitingRoomPage> {
   Timer? _pollingTimer;
 
   bool ready = false;
-  // bool allReady = false;
 
   @override
   void initState() {
     super.initState();
+    // For the first time
     _startPolling();
   }
 
@@ -46,6 +46,7 @@ class _WaitingRoomPageState extends State<WaitingRoomPage> {
     super.dispose();
   }
 
+  // Function for polling backend for room state (what players are in the room, they are ready or not)
   void _startPolling() async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
     // await assigned_room = Future.value(prefs.getString('roomId') ?? '00000');
@@ -60,6 +61,11 @@ class _WaitingRoomPageState extends State<WaitingRoomPage> {
     });
   }
 
+/// Fetches the list of players and their ready status from the server for the current room.
+/// 
+/// Sends a POST request to retrieve the room state. If successful, updates the `players`
+/// and `ready_players` lists based on the response. If all players are ready and there are
+/// at least two players, navigates to the game room and cancels the polling timer.
   Future<void> _fetchPlayers() async {
     final url = Uri.parse('$roomStateUrl');
     final response = await http.post(
@@ -75,11 +81,11 @@ class _WaitingRoomPageState extends State<WaitingRoomPage> {
       setState(() async {
         players = List<String>.from(responseBody['players']);
         ready_players = List<String>.from(responseBody['ready_players']);
+        // Check if all players are ready and there are at least two players to navigate to the game room
         if (ready_players.length == players.length && ready_players.length >= 2) {
-          // startGame(room_id);
-          // allReady = true;
           SharedPreferences prefs = await SharedPreferences.getInstance();
           await prefs.remove('ready');
+          await prefs.setInt('playerNum', ready_players.length);
           Navigator.pushNamed(context, '/gameroom');
           _pollingTimer?.cancel();
         }
@@ -92,6 +98,10 @@ class _WaitingRoomPageState extends State<WaitingRoomPage> {
     }
   }
 
+  /// Sends a request to the server to mark the player as ready in the waiting room.
+  ///
+  /// If the request is successful (200 or 201), sets `logSuccess` to true and `ready`
+  /// to true. Otherwise, sets them to false.
   Future<void> sendReady(int my_id, String room_id) async {
     final url = Uri.parse('$roomReadyUrl');
     final response = await http.post(
@@ -116,6 +126,10 @@ class _WaitingRoomPageState extends State<WaitingRoomPage> {
     }
   }
 
+  /// Sends a request to the server to mark the player as not ready in the waiting room.
+  ///
+  /// If the request is successful (200 or 201), sets `logSuccess` to true and `ready`
+  /// to false. Otherwise, sets them to false.
   Future<void> sendNotReady(int my_id, String room_id) async {
     final url = Uri.parse('$roomNotReadyUrl');
     final response = await http.post(
@@ -140,6 +154,10 @@ class _WaitingRoomPageState extends State<WaitingRoomPage> {
     }
   }
 
+  /// Sends a request to the server to leave a game room.
+  ///
+  /// If the request is successful (200), sets `logSuccess` to true. Otherwise,
+  /// sets it to false.
   Future<void> leaveRoom(int id, String room_id) async {
     final url = Uri.parse('$leaveRoomUrl');
     final response = await http.post(
@@ -167,13 +185,8 @@ class _WaitingRoomPageState extends State<WaitingRoomPage> {
   @override
   Widget build(BuildContext context) {
     final gameProvider = Provider.of<GameProvider>(context);
+    // Load the room information from the provider
     gameProvider.loadRoomInfo();
-
-    // if (allReady) {
-    //   gameProvider.clearReady();
-    //   Navigator.pushNamed(context, '/gameroom');
-    //   _pollingTimer?.cancel();
-    // }
 
     return Scaffold(
       body: Container(
@@ -192,6 +205,7 @@ class _WaitingRoomPageState extends State<WaitingRoomPage> {
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
                   Padding(padding: const EdgeInsets.only(left: 15)),
+                  // Button to return to MainMenuPage and leave the room
                   SizedBox(
                     width: 60,
                     height: 60,
@@ -200,7 +214,9 @@ class _WaitingRoomPageState extends State<WaitingRoomPage> {
                         setState(() {
                           logSuccess = false;
                         });
+                        // Send http-request to the Backend to leave the room
                         await leaveRoom(gameProvider.myID, gameProvider.roomId);
+                        // If the http-request was successful, navigate to MainMenuPage
                         if (logSuccess) {
                           gameProvider.clearRoomInfo();
                           gameProvider.clearReady();
@@ -214,6 +230,7 @@ class _WaitingRoomPageState extends State<WaitingRoomPage> {
                   const Expanded(flex: 1, child: Text("")),
                 ],
               ),
+              // Display the room information
               Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -237,27 +254,7 @@ class _WaitingRoomPageState extends State<WaitingRoomPage> {
                 ],
               ),
               const Expanded(flex: 1, child: Text("")),
-              // Container(
-              //   width: 350,
-              //   height: 65,
-              //   decoration:  BoxDecoration(
-              //     color: whiteInvisColor,
-              //     borderRadius: BorderRadius.circular(20),
-              //     border: Border.all(color: grey3A3A3AColor, width: 0.1),
-              //   ),
-              //   child: Row(
-              //     children: [
-              //       Padding(padding: const EdgeInsets.only(left: 20)),
-              //       Icon(Icons.account_circle, size: 50),
-              //       Padding(padding: const EdgeInsets.only(left: 20)),
-              //       Text(gameProvider.myName, style: basicTextStyle),
-              //       Expanded(flex: 1, child: Text("")),
-              //       Icon(Icons.check_rounded, color: Colors.green, size: 50),
-              //       Padding(padding: const EdgeInsets.only(right: 20)),
-              //     ]
-              //   )
-              // ),
-              // Padding(padding: const EdgeInsets.only(top: 20)),
+              // Display the players in the room
               for (int i = 0; i < players.length; i++)
                 Column(
                   children: [
@@ -284,6 +281,7 @@ class _WaitingRoomPageState extends State<WaitingRoomPage> {
                     Padding(padding: const EdgeInsets.only(top: 20)),
                   ],
                 ),
+              // Display empty containers for places of players that are not in the room
               for (int i = players.length; i < 4; i++)
                 Column(
                   children: [
@@ -298,6 +296,7 @@ class _WaitingRoomPageState extends State<WaitingRoomPage> {
                     Padding(padding: const EdgeInsets.only(top: 20)),
                 ]),
               const Expanded(flex: 1, child: Text("")),
+              // Button to get ready/unready
               SizedBox(
                 width: 315,
                 height: 65,
@@ -310,14 +309,18 @@ class _WaitingRoomPageState extends State<WaitingRoomPage> {
                     side: WidgetStateProperty.all<BorderSide>(BorderSide(color: grey3A3A3AColor, width: 1),),
                   ),
                   onPressed: () async{
+                    // Reset logSuccess
                     setState(() {
                       logSuccess = false;
                     });
                     if (!ready) {
+                      // Send http-request to the Backend to get ready
                       await sendReady(gameProvider.myID, gameProvider.roomId);
                     } else {
+                      // Send http-request to the Backend to unready
                       await sendNotReady(gameProvider.myID, gameProvider.roomId);
                     }
+                    // If the http-request was successful, update the ready state
                     if (logSuccess) {
                       setState(() {
                         gameProvider.ready = ready;
