@@ -1,6 +1,8 @@
 import 'dart:convert';
 import 'package:web_socket_channel/web_socket_channel.dart';
 
+
+// The basic class for handling WebSocket communication
 class GameWebSocket {
   final String serverUrl;
   WebSocketChannel? _channel;
@@ -20,6 +22,7 @@ class GameWebSocket {
         onMessageReceived(json.decode(message));
       },
       onDone: onConnectionClosed(),
+      // If an error occurs, print the error message in the console
       onError: (error) {
         print('WebSocket error: $error');
         onConnectionClosed();

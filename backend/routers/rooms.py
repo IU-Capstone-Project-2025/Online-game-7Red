@@ -1,7 +1,7 @@
 from fastapi import APIRouter, Body, HTTPException
 from backend.models import JoinRoomRequest
 from backend.database import (assigned_id_exists, password_exist, create_game_room, add_user_to_room, 
-search_game_room, remove_user_from_room, set_user_ready, get_room_players_and_ready)
+search_game_room, remove_user_from_room, set_user_ready, get_room_players_and_ready, search_open_online_room)
 import random
 import asyncio
 
@@ -57,11 +57,14 @@ async def join_room(request: JoinRoomRequest):
         raise HTTPException(status_code=403, detail="Incorrect password")
     if room["game_state"] != "waiting":
         raise HTTPException(status_code=403, detail="Game already started")
+    
     try:
         await add_user_to_room(request.user_id, request.assigned_id)
     except Exception as e:
         if "User already in the room" in str(e):
             raise HTTPException(status_code=409, detail="User already in the room")
+        if "Room is full" in str(e):
+            raise HTTPException(status_code=403, detail="Room is full")
         raise
     return {"message": "User added to the room"}
 
@@ -148,29 +151,38 @@ async def online_queue_timeout(players_snapshot):
             online_queue_status[uid] = {"status": "no_players"}
 
 
+
+
 @router.post("/find_online")
 async def find_online(user_id: int = Body(..., embed=True)):
-    """Add user to matchmaking queue for online games"""
-    # If user is already in queue, return current status
+    # 1. Try to find a suitable existing room
+    room = await search_open_online_room()
+    if room:
+        try:
+            await add_user_to_room(user_id, room["assigned_id"])
+            online_queue_status[user_id] = {
+                "status": "matched",
+                "assigned_id": room["assigned_id"],
+                "password": room["password"],
+                "players": [user_id] 
+            }
+            return online_queue_status[user_id]
+        except Exception:
+            pass  # If adding failed (e.g., race condition) - continue to next step
+
+    # 2. If no suitable room exists - use standard queue
     if user_id in online_queue:
         return {"status": online_queue_status.get(user_id, "waiting")}
-    
-    # Add user to queue and update status
     online_queue.append(user_id)
     online_queue_status[user_id] = {"status":"waiting"}
-    
-    # If this is the first player, start timeout task
     if len(online_queue) == 1:
         asyncio.create_task(online_queue_timeout(list(online_queue)))
-    
-    # If we have enough players, create a game immediately
     if len(online_queue) == ONLINE_ROOM_SIZE:
         players = list(online_queue)
         for uid in players:
             online_queue.remove(uid)
         await start_online_game(players)
         return online_queue_status[user_id]
-    
     return {"status":"waiting"}
 
 
@@ -179,7 +191,7 @@ async def find_online_status(user_id: int = Body(..., embed=True)):
     """Check the current matchmaking status for a user"""
     if user_id in online_queue_status:
         return online_queue_status[user_id]
-    return {"status": "not_in_queue"}
+    return {"status": "not_in_queue"}  
 
 
 @router.post("/cancel_find_online")

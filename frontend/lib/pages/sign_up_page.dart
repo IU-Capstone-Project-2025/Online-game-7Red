@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
+import 'package:email_validator/email_validator.dart';
 
 import '../providers/provider.dart';
 import '../data/styles.dart';
@@ -15,11 +16,13 @@ class SignUpPage extends StatefulWidget {
 }
 
 class _SignUpPageState extends State<SignUpPage> {
+  // Controllers for input fields
   final TextEditingController controller = TextEditingController();
   final TextEditingController controller2 = TextEditingController();
   final TextEditingController controller3 = TextEditingController();
   final TextEditingController controller4 = TextEditingController();
 
+  // Variables for showing error messages in the UI
   String postText = '';
   String errNickname = '';
   String errEmail = '';
@@ -30,6 +33,14 @@ class _SignUpPageState extends State<SignUpPage> {
   bool obscure = true;
 
   int ID = -1;
+
+  /// Sends a POST request to the server to register a new user.
+  ///
+  /// If the registration is successful, it sets `regSuccess` to `true` and
+  /// updates the `ID` field with the user's ID from the response.
+  ///
+  /// If the registration fails due to an already used email, it sets `regSuccess`
+  /// to `false` and updates `errEmail` with an error message.
 
   Future<void> signUp(String nickname, String email, String password, String repeatedPassword) async {
     final url = Uri.parse('$signUpUrl');
@@ -79,6 +90,7 @@ class _SignUpPageState extends State<SignUpPage> {
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
                   Padding(padding: const EdgeInsets.only(left: 15)),
+                  // Button to return to WelkomePage
                   SizedBox(
                     width: 60,
                     height: 60,
@@ -92,6 +104,7 @@ class _SignUpPageState extends State<SignUpPage> {
                   const Expanded(flex: 1, child: Text("")),
                 ],
               ),
+              // Red7 logo
               Image(
                 image: AssetImage('lib/assets/logo.png'),
                 width: 115,
@@ -122,6 +135,7 @@ class _SignUpPageState extends State<SignUpPage> {
                       ]
                     ),
                     Padding(padding: const EdgeInsets.only(top: 5)),
+                    // Input field for nickname
                     Container(
                       width: 260,
                       height: 35,
@@ -151,6 +165,7 @@ class _SignUpPageState extends State<SignUpPage> {
                       ]
                     ),
                     Padding(padding: const EdgeInsets.only(top: 5)),
+                    // Input field for email
                     Container(
                       width: 260,
                       height: 35,
@@ -180,6 +195,7 @@ class _SignUpPageState extends State<SignUpPage> {
                       ]
                     ),
                     Padding(padding: const EdgeInsets.only(top: 5)),
+                    // Input field for password
                     Container(
                       width: 260,
                       height: 35,
@@ -221,6 +237,7 @@ class _SignUpPageState extends State<SignUpPage> {
                       ]
                     ),
                     Padding(padding: const EdgeInsets.only(top: 5)),
+                    // Input field for repeated password
                     Container(
                       width: 260,
                       height: 35,
@@ -265,6 +282,7 @@ class _SignUpPageState extends State<SignUpPage> {
                             ),
                           ),
                           onPressed: () async{
+                            // Reset error messages
                             setState(() {
                               postText = '';
                               errNickname = '';
@@ -273,30 +291,35 @@ class _SignUpPageState extends State<SignUpPage> {
                               errRepeatedPassword = '';
                               regSuccess = false;
                             });
+                            // Check if all fields are filled
                             if (controller.text.isEmpty || controller2.text.isEmpty || controller3.text.isEmpty || controller4.text.isEmpty) {
                               setState(() {
                                 postText = 'All fields are required';
                               });
                               return;
                             }
+                            // Check if nickname is valid
                             else if (controller.text.length > 10) {
                               setState(() {
                                 errNickname = '1-10 symbols';
                               });
                               return;
                             }
-                            else if ((controller2.text.contains('@') && controller2.text.contains('.')) == false) {
+                            // Check if email is valid
+                            else if (!EmailValidator.validate(controller2.text)) {
                               setState(() {
                                 errEmail = 'Invalid email';
                               });
                               return;
                             }
+                            // Check if password is valid
                             else if (controller3.text.length > 16 || controller3.text.length < 6) {
                               setState(() {
                                 errPassword = '6-16 symbols';
                               });
                               return;
-                            } 
+                            }
+                            // Check if repeated password is valid
                             else if (controller3.text != controller4.text) {
                               setState(() {
                                 errRepeatedPassword = 'Different';
@@ -304,7 +327,9 @@ class _SignUpPageState extends State<SignUpPage> {
                               return;
                             } 
                             else {
+                              // If all fields are filled and valid, send http-request to sign up
                               await signUp(controller.text, controller2.text, controller3.text, controller4.text);
+                              // If sign up was successful, navigate to main menu
                               if (regSuccess) {
                                 gameProvider.myID = ID;
                                 gameProvider.myName = controller.text;
@@ -321,8 +346,6 @@ class _SignUpPageState extends State<SignUpPage> {
                       Padding(padding: const EdgeInsets.only(top: 5)),
                       Text("$postText", style: errorTextStyle,),
                       Padding(padding: const EdgeInsets.only(top: 5)),
-
-
                   ],
                 ),
               ),

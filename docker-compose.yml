@@ -11,7 +11,7 @@ services:
     restart: unless-stopped 
     # Load environment variables from the database configuration file
     env_file:
-      - ./database/.env   
+      - ./database/.env   # or ./backend/.env if your .env is inside backend
   
   frontend:
     # Using pre-built Docker image from Docker Hub

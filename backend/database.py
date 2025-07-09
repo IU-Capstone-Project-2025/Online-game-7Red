@@ -1,4 +1,5 @@
 import os
+import uuid
 from sqlalchemy import (MetaData, Table, Text, Column, Date, Integer, String, 
                         create_engine, TIMESTAMP, ForeignKey, Boolean, select)
 from databases import Database
@@ -188,6 +189,38 @@ async def get_profile_name_by_user_id(user_id: int):
     
     return res["name"]
 
+# Upload avatar link to profile
+async def update_avatar(user_id: int, filename: str):
+
+    user_exists = await database.fetch_one(
+    profiles.select().where(profiles.c.user_id == user_id))
+
+    if not user_exists:
+        raise Exception("User not found")
+    
+    query = profiles.update()\
+        .where(profiles.c.user_id == user_id)\
+        .values(avatar=filename)
+    
+    result = await database.execute(query)
+    return result
+
+# Get avatar link from profile
+async def get_avatar_from_db(user_id: int):
+    query = profiles.select().where(profiles.c.user_id == user_id)
+    profile = await database.fetch_one(query)
+    
+    return profile['avatar']
+
+# Delete avatar link from profile
+async def delete_avatar_from_db(user_id: int):
+    query = (
+        profiles.update()
+        .where(profiles.c.user_id == user_id)
+        .values(avatar=None)
+    )
+    await database.execute(query)
+
 # Add a user to a game room
 async def add_user_to_room(user_id: int, assigned_id: str):
     # find the internal room_id by assigned_id
@@ -204,6 +237,11 @@ async def add_user_to_room(user_id: int, assigned_id: str):
     exists = await database.fetch_one(check_query)
     if exists:
         raise Exception("User already in the room")
+    # Check if room is full
+    count_query = user_room.select().where(user_room.c.room_id == room_id)
+    players = await database.fetch_all(count_query)
+    if len(players) >= 4:
+        raise Exception("Room is full")
     
     # Add user to room
     insert_query = user_room.insert().values(user_id=user_id, room_id=room_id)
@@ -439,3 +477,17 @@ async def create_user_statistics(user_id: int):
         bot_wins=0
     )
     await database.execute(query)
+
+async def search_open_online_room():
+    # Find a room with game_state "waiting" and < 4 players
+    query = games.select().where(games.c.game_state == "waiting")
+    rooms = await database.fetch_all(query)
+    for room in rooms:
+        room_id = room["room_id"]
+        # Count the number of players in the room
+        count_query = user_room.select().where(user_room.c.room_id == room_id)
+        players = await database.fetch_all(count_query)
+        if len(players) < 4:
+            return room
+    return None
+

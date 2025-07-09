@@ -27,6 +27,7 @@ class _WelkomePageState extends State<WelkomePage> {
             crossAxisAlignment: CrossAxisAlignment.center,
             children: [
               const Expanded(flex: 5, child: Text("")),
+              // Red7 logo
               Image(
                 image: AssetImage('lib/assets/logo.png'),
                 width: 200,
@@ -42,6 +43,7 @@ class _WelkomePageState extends State<WelkomePage> {
                   Column(
                     crossAxisAlignment: CrossAxisAlignment.center,
                     children: [
+                      // Sign in button
                       SizedBox(
                         width: 295,
                         height: 45,
@@ -67,6 +69,7 @@ class _WelkomePageState extends State<WelkomePage> {
                             ),
                           ),
                           onPressed: () {
+                            // Go to sign in page
                             Navigator.of(context).pushNamed('/signin');
                           },
                           child: const Text('SIGN  IN'),
@@ -85,6 +88,7 @@ class _WelkomePageState extends State<WelkomePage> {
                   Column(
                     crossAxisAlignment: CrossAxisAlignment.center,
                     children: [
+                      // Sign up button
                       SizedBox(
                         width: 295,
                         height: 45,
@@ -110,6 +114,7 @@ class _WelkomePageState extends State<WelkomePage> {
                             ),
                           ),
                           onPressed: () {
+                            // Go to sign up page
                             Navigator.of(context).pushNamed('/signup');
                           },
                           child: const Text('SIGN  UP'),

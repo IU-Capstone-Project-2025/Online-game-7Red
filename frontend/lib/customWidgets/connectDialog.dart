@@ -15,17 +15,34 @@ class ConnectDialog extends StatefulWidget {
   State<ConnectDialog> createState() => _ConnectDialogState();
 }
 
+// Class for connecting to the private room from MainMenuPage
 class _ConnectDialogState extends State<ConnectDialog> {
+  // Controllers for control text field's value
   final TextEditingController controller = TextEditingController();
   final TextEditingController controller2 = TextEditingController();
 
+  // For errors
   String postText = '';
   bool logSuccess = false;
 
   bool obscure = true;
 
+  
+  /// Connects the user to a game room using the provided room ID and password.
+  ///
+  /// Sends a POST request to the join room URL with the user's ID, the room ID,
+  /// and the password. If the connection is successful (status code 200), 
+  /// updates the `logSuccess` state to true. If an error occurs, updates 
+  /// `logSuccess` to false and sets an appropriate error message in `postText`.
+  /// Possible error messages include:
+  /// - 'Game already started' if the game has already begun.
+  /// - 'User already in the room' if the user is trying to join a room they are already in.
+  /// - 'Room is full' if the room has reached its player limit.
+  /// - 'Invalid ID or Password' for other errors.
+
   Future<void> connectToRoom(int id, String room_id, String password) async {
 
+    // Use url from urls.dart file
     final url = Uri.parse('$joinRoomUrl');
     final response = await http.post(
       url,
@@ -53,6 +70,11 @@ class _ConnectDialogState extends State<ConnectDialog> {
         logSuccess = false;
         postText = 'User already in the room';
       });
+    } else if (responseBody['detail'] == 'Room is full') {
+      setState(() {
+        logSuccess = false;
+        postText = 'Room is full';
+      });
     } else {
       setState(() {
         logSuccess = false;
@@ -69,6 +91,7 @@ class _ConnectDialogState extends State<ConnectDialog> {
         height: 308,
         decoration: BoxDecoration(
           image: const DecorationImage(
+            // Add background with image
             image: AssetImage('lib/assets/background.jpg'),
             fit: BoxFit.cover,
           ),
@@ -95,6 +118,7 @@ class _ConnectDialogState extends State<ConnectDialog> {
                 ]
               ),
               Padding(padding: const EdgeInsets.only(top: 5)),
+              // Text field for entering the room ID
               Container(
                 width: 327,
                 height: 40,
@@ -121,6 +145,7 @@ class _ConnectDialogState extends State<ConnectDialog> {
                 ]
               ),
               Padding(padding: const EdgeInsets.only(top: 5)),
+              // Text field for entering the password
               Container(
                 width: 327,
                 height: 40,
@@ -175,19 +200,21 @@ class _ConnectDialogState extends State<ConnectDialog> {
                       ),
                     ),
                   onPressed: () async {
+                    // Reset the error message
                     setState(() {
                       postText = '';
                       logSuccess = false;
                     });
-                    
+                    // Check if the text fields are empty
                     if (controller.text.isEmpty || controller2.text.isEmpty) {
                       setState(() {
                         postText = "All fields are required";
                       });
                       return;
                     }
-                    
+                    // Send http-request to connect to the room
                     await connectToRoom(widget.gameProvider.myID, controller.text, controller2.text);
+                    // If the connection was successful, navigate to the waiting room
                     if (logSuccess) {
                       widget.gameProvider.roomId = controller.text;
                       widget.gameProvider.roomPassword = controller2.text;
