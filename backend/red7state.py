@@ -706,3 +706,15 @@ class Red7GameState:
             
             res.append(my_best_color < opp_best_color)
         return res
+    
+    def reset_game(self):
+        """Reset the game state"""
+        self.players = {}
+        self.players_name_list = []
+        self.players_id_list = []
+        self.started = False
+        self.current_player = None
+        self.current_rule = 0
+        self.cur_rule_card = "R0"
+        self.deck = []
+        self.game_over = False

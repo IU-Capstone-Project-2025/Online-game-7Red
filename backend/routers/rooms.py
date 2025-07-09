@@ -1,7 +1,7 @@
 from fastapi import APIRouter, Body, HTTPException
 from backend.models import JoinRoomRequest
-from backend.database import (assigned_id_exists, password_exist, create_game_room, add_user_to_room, 
-search_game_room, remove_user_from_room, set_user_ready, get_room_players_and_ready)
+from backend.database import (assigned_id_exists, change_room_type_for_user_by_user_id, get_room_state, get_room_type_for_user, password_exist, create_game_room, add_user_to_room, return_room_id_using_assigned_id, 
+search_game_room, remove_user_from_room, set_user_ready, get_room_players_and_ready, user_exists_in_room)
 import random
 import asyncio
 
@@ -40,7 +40,7 @@ async def create_room(user_id: int = Body(..., embed=True)):
     assigned_id = await generate_unique_assigned_id()
     password = await generate_unique_password()
     await create_game_room(assigned_id, password)
-    await add_user_to_room(user_id, assigned_id)
+    await add_user_to_room(user_id, assigned_id, type="private_reconnect")
     return {
         "assigned_id": assigned_id,
         "password": password 
@@ -58,7 +58,7 @@ async def join_room(request: JoinRoomRequest):
     if room["game_state"] != "waiting":
         raise HTTPException(status_code=403, detail="Game already started")
     try:
-        await add_user_to_room(request.user_id, request.assigned_id)
+        await add_user_to_room(request.user_id, request.assigned_id, type="private_reconnect")
     except Exception as e:
         if "User already in the room" in str(e):
             raise HTTPException(status_code=409, detail="User already in the room")
@@ -120,7 +120,7 @@ async def start_online_game(players):
     password = await generate_unique_password()
     await create_game_room(assigned_id, password)
     for user_id in players:
-        await add_user_to_room(user_id, assigned_id)
+        await add_user_to_room(user_id, assigned_id, type="online_reconnect")
         online_queue_status[user_id] = {
             "status": "matched",
             "assigned_id": assigned_id,
@@ -190,3 +190,27 @@ async def cancel_find_online(user_id: int = Body(..., embed=True)):
     if user_id in online_queue_status:
         del online_queue_status[user_id]
     return {"status": "cancelled"}
+#--------------------------Restart_Game--------------------------------------------------------------
+@router.post("/restart_game")
+async def restart_game_for_user(user_id: int = Body(..., embed=True), assigned_id: str = Body(..., embed=True)):
+    if await assigned_id_exists(assigned_id):
+        room_id = await return_room_id_using_assigned_id(assigned_id)
+        
+        if user_exists_in_room(user_id, assigned_id):
+            if get_room_type_for_user(user_id, room_id) == "online":
+                await change_room_type_for_user_by_user_id(user_id, room_id, "online_reconnect")
+                await player_not_ready(user_id, assigned_id)
+            elif get_room_type_for_user(user_id, room_id) == "private":
+                await change_room_type_for_user_by_user_id(user_id, room_id, "private_reconnect")
+                await player_not_ready(user_id, assigned_id)
+            return {"message": "Game restarted successfully"}
+        
+
+
+async def restart_game_all(room_id: int, assigned_id: str):
+    room_state = await get_room_state(room_id)
+    if room_state != "waiting":
+        await update_room_state(assigned_id= assigned_id, game_state="waiting")
+    
+    
+    

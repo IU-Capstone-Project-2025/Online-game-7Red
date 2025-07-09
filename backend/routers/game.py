@@ -1,9 +1,11 @@
 #importing necessary libraries/functions 
+from backend.routers.rooms import restart_game_all
 from fastapi import APIRouter, Query, WebSocket, WebSocketDisconnect
 from typing import Dict, List
 from backend.red7state import Red7GameState
-from backend.database import update_room_state, update_win_streak, update_win_streak, check_and_award_win_streak
+from backend.database import update_room_state, update_win_streak, update_win_streak, check_and_award_win_streak, change_room_type_for_user_automatic, get_room_type_for_user
 import asyncio
+import datetime
 
 #creating FastAPI router for endpoints for game with other players
 router = APIRouter(prefix="/game", tags=["game"])
@@ -33,6 +35,7 @@ class GameManager:
                     
                     #initializing game state
                     await game.get_room_players_info_from_db()
+                    await change_room_type_for_user_automatic(room_id, game.players_id_list)
                     await game.start_game()
                     
                     #setting up room related data
@@ -41,7 +44,8 @@ class GameManager:
                     self.commonVar[room_id] = {
                         "exit_was": False,
                         "type_cur": None,
-                        "final_winner": None
+                        "final_winner": None,
+                        "timeend": -1
                     }
                     
                     print(f"[DEBUG] Game initialized for room {room_id}")
@@ -55,6 +59,22 @@ class GameManager:
                     raise
         
         return self.active_games[room_id]
+    
+    async def reset_game(self, room_id: str):
+        """Reset game state for a given room"""
+        async with self._init_lock:
+            if room_id in self.active_games:
+                print(f"[DEBUG] Resetting game for room {room_id}")
+                game = self.active_games[room_id]
+                game.reset_game()
+                self.commonVar[room_id] = {
+                        "exit_was": False,
+                        "type_cur": None,
+                        "final_winner": None,
+                        "timeend": -1
+                    }
+            else:
+                print(f"[DEBUG] No active game found for room {room_id}")
 
 #connection manager
 manager = GameManager()
@@ -263,10 +283,6 @@ async def game_websocket(
             print(f"ACTIVE PLAYERS {active_players}", flush=True)
             #if a player is in the dictionary with connections, deleting the player
             if player_id in manager.connections:
-                del manager.connections[player_id]
-                connection_active = False
-                print(f"Cur_winner: {cur_winner}, list of exuted players: {manager.exited_id[room_id]}", flush=True)
-
                 #updating statistics in the database
                 if (cur_winner == player_id and (player_id not in manager.exited_id[room_id])) or (cur_winner == None and len(active_players) == 0):
                     await update_win_streak(player_id, True)
@@ -275,7 +291,19 @@ async def game_websocket(
                     print(f"Player {player_id} lost", flush=True)
                     await update_win_streak(player_id, False)
                     await check_and_award_win_streak(player_id)
+            if manager.commonVar[game.assigned_id]["timeend"] == -1:
+                manager.commonVar[game.assigned_id]["timeend"] = datetime.datetime.now().timestamp()
 
+            if manager.commonVar[game.assigned_id]["timeend"] - datetime.datetime.now().timestamp()+15 > 0:
+                await asyncio.sleep(manager.commonVar[game.assigned_id]["timeend"] - datetime.datetime.now().timestamp()+15)
+            if player_id in manager.connections and (get_room_type_for_user(player_id, assigned_id) == "online" or get_room_type_for_user(player_id, assigned_id) == "private"):
+                del manager.connections[player_id]
+                connection_active = False
+                print(f"Cur_winner: {cur_winner}, list of exuted players: {manager.exited_id[room_id]}", flush=True)
+            else:
+                if manager.commonVar[game.assigned_id]["timeend"] != -2:
+                    manager.commonVar[game.assigned_id]["timeend"] = -2
+                    asyncio.create_task(restart_game_all(room_id, assigned_id))
             game = manager.active_games.get(assigned_id)
 
             #checking if the game is finished - there are no players in the dictionary with connections that were the members of the game

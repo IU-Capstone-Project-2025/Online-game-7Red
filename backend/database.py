@@ -33,6 +33,7 @@ user_room = Table(
     Column("user_id", Integer, ForeignKey("users.id", ondelete="CASCADE"), primary_key=True),
     Column("room_id", Integer, ForeignKey("game_rooms.room_id", ondelete="CASCADE"), primary_key=True),
     Column("ready", Boolean, default=False),
+    Column("room_type", String(15)),
 )
 
 # Table for user accounts
@@ -140,6 +141,12 @@ async def update_room_state(assigned_id: str, state: str):
     )
     await database.execute(query)
 
+async def get_room_state(room_id: int):
+    query = (
+        games.select()
+        .where(games.c.room_id == room_id)
+    )
+    return await database.fetch_one(query)
 
 #-------------------------USERS----------------------------------------------------------------------------------------------------------------------------------------------
 
@@ -189,7 +196,7 @@ async def get_profile_name_by_user_id(user_id: int):
     return res["name"]
 
 # Add a user to a game room
-async def add_user_to_room(user_id: int, assigned_id: str):
+async def add_user_to_room(user_id: int, assigned_id: str, type: str = "None"):
     # find the internal room_id by assigned_id
     query = games.select().where(games.c.assigned_id == assigned_id)
     room = await database.fetch_one(query)
@@ -206,7 +213,7 @@ async def add_user_to_room(user_id: int, assigned_id: str):
         raise Exception("User already in the room")
     
     # Add user to room
-    insert_query = user_room.insert().values(user_id=user_id, room_id=room_id)
+    insert_query = user_room.insert().values(user_id=user_id, room_id=room_id, room_type=type)
     await database.execute(insert_query)
     
 # Remove a user from a game room
@@ -283,6 +290,14 @@ async def get_room_players_ids_and_names(assigned_id: str):
 async def update_last_visited(user_id: int):
     query = users.update().where(users.c.user_id == user_id).values(last_visited=datetime.now(UTC))
     await database.execute(query)
+
+async def user_exists_in_room(user_id: int, assigned_id: str) -> bool:
+    query = user_room.select().where(
+        (user_room.c.user_id == user_id) & 
+        (user_room.c.room_id == await return_room_id_using_assigned_id(assigned_id))
+    )
+    result = await database.fetch_one(query)
+    return result is not None
 
 
 #--------------------------achievements--------------------------------------------------------------    
@@ -439,3 +454,67 @@ async def create_user_statistics(user_id: int):
         bot_wins=0
     )
     await database.execute(query)
+#--------------------------reconnect--------------------------------------------------------------  
+async def get_room_type_for_user(user_id: int, room_id: int) -> str:
+    """
+    This function retrieves the type of room (e.g., 'online', 'private') for a user in a specific room.
+    Args:
+        user_id: ID user
+        room_id: ID room
+        
+    Returns:
+        str: Type of room ('online', 'private', 'online_reconnect', 'private_reconnect', 'None')
+
+    Raises:
+        Exception: If user-room association is not found
+    """
+    query = user_room.select().where(
+        (user_room.c.user_id == user_id) & 
+        (user_room.c.room_id == room_id)
+    )
+    
+    result = await database.fetch_one(query)
+    
+    if not result:
+        raise Exception("User not found in the room")
+    return result["room_type"]
+
+async def change_room_type_for_user_by_assigned_id(room_id: int, type: str) -> str:
+    query = user_room.update().where(user_room.c.room_id == room_id).values(room_type=type)
+    await database.execute(query)
+    return type
+
+async def change_room_type_for_user_by_user_id(user_id: int, room_id: int, type: str) -> str:
+    query = user_room.update().where(
+        (user_room.c.user_id == user_id) & 
+        (user_room.c.room_id == room_id)
+    ).values(room_type=type)
+    await database.execute(query)
+    return type
+
+async def change_room_type_for_user_automatic(room_id: int, list_user_id: list[int]) -> str:
+    """
+    This function changes the room type for a user in a specific room based on their current type.
+    Args:
+        room_id: ID of the room
+        user_id: ID of the user
+        
+    Returns:
+        str: New type of room ('online', 'private', 'online_reconnect', 'private_reconnect')
+    """
+    for user_id in list_user_id:
+        current_type = await get_room_type_for_user(user_id, room_id)
+        
+        if current_type == "online_reconnect":
+            new_type = "online"
+        elif current_type == "private_reconnect":
+            new_type = "private"
+        elif current_type == "online":
+            new_type = "online_reconnect"
+        elif current_type == "private":
+            new_type = "private_reconnect"
+        else:
+            raise Exception("Invalid room type for automatic change")
+        await change_room_type_for_user_by_assigned_id(room_id, new_type)
+    
+    return "".join([f"User {user_id} changed to {new_type}" for user_id in list_user_id])
