@@ -24,9 +24,11 @@ class _StatisticsPageState extends State<StatisticsPage> {
   @override
   void initState() {
     super.initState();
+    // Get statistics info abour user from Backend
     getInfo();
   }
 
+  // Function to get statistics info abour user from Backend
   void getInfo() async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
     int id = await prefs.getInt('myID') ?? -1;
@@ -35,6 +37,14 @@ class _StatisticsPageState extends State<StatisticsPage> {
     print(postText);
   }
 
+  /// Sends a POST request to the server to get user statistics.
+  ///
+  /// If the request is successful, it sets `logSuccess` to `true` and
+  /// updates the `winstrick`, `num_of_games`, `winrate` and `achievements` fields
+  /// with the values from the response.
+  ///
+  /// If the request fails, it sets `logSuccess` to `false` and sets `postText`
+  /// to an error message.
   Future<void> getStatistics(int id) async {
     final url = Uri.parse('$statisticsUrl');
     final response = await http.post(
@@ -83,6 +93,7 @@ class _StatisticsPageState extends State<StatisticsPage> {
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
                   Padding(padding: const EdgeInsets.only(left: 15)),
+                  // Button to return to MainMenuPage
                   SizedBox(
                     width: 60,
                     height: 60,
@@ -108,6 +119,7 @@ class _StatisticsPageState extends State<StatisticsPage> {
                   Column(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
+                      // Winstrick info
                       Icon(Icons.local_fire_department, color: grey3A3A3AColor, size: 100,),
                       Padding(padding: const EdgeInsets.only(top: 15)),
                       Text("Winstrick", style: titleStyle,),
@@ -119,6 +131,7 @@ class _StatisticsPageState extends State<StatisticsPage> {
                           child: Text("Loading...", style: titleStyle,),
                         ),
                       Padding(padding: const EdgeInsets.only(top: 40)),
+                      // Achievement 1
                       Container(
                         width: 240,
                         height: 240,
@@ -132,7 +145,6 @@ class _StatisticsPageState extends State<StatisticsPage> {
                         ),
                       ),
                       Padding(padding: const EdgeInsets.only(top: 20)),
-                      // Text("This is the text that describes why\nthis achievement 1 was received.", style: basicTextStyle, textAlign: TextAlign.center,),
                       Text("Log in to the game for\n7 consecutive days", style: basicTextStyle, textAlign: TextAlign.center,),
                     ],
                   ),
@@ -140,6 +152,7 @@ class _StatisticsPageState extends State<StatisticsPage> {
                   Column(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
+                      // Number of games info
                       Icon(Icons.stadium, color: grey3A3A3AColor, size: 100,),
                       Padding(padding: const EdgeInsets.only(top: 15)),
                       Text("Number of games", style: titleStyle,),
@@ -151,6 +164,7 @@ class _StatisticsPageState extends State<StatisticsPage> {
                           child: Text("Loading...", style: titleStyle,),
                         ),
                       Padding(padding: const EdgeInsets.only(top: 40)),
+                      // Achievement 2
                       Container(
                         width: 240,
                         height: 240,
@@ -171,6 +185,7 @@ class _StatisticsPageState extends State<StatisticsPage> {
                   Column(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
+                      // Winrate info
                       Icon(Icons.percent, color: grey3A3A3AColor, size: 100,),
                       Padding(padding: const EdgeInsets.only(top: 15)),
                       Text("Winrate", style: titleStyle,),
@@ -182,6 +197,7 @@ class _StatisticsPageState extends State<StatisticsPage> {
                           child: Text("Loading...", style: titleStyle,),
                         ),
                       Padding(padding: const EdgeInsets.only(top: 40)),
+                      // Achievement 3
                       Container(
                         width: 240,
                         height: 240,
@@ -195,7 +211,6 @@ class _StatisticsPageState extends State<StatisticsPage> {
                         ),
                       ),
                       Padding(padding: const EdgeInsets.only(top: 20)),
-                      // Text("This is the text that describes why\nthis achievement 3 was received.", style: basicTextStyle, textAlign: TextAlign.center,),
                       Text("Get a winstreak of 5 games\nin an online-mode", style: basicTextStyle, textAlign: TextAlign.center,),
                     ],
                   ),

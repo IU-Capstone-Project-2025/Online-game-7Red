@@ -16,6 +16,7 @@ void main() {
   WidgetsFlutterBinding.ensureInitialized();
 
   runApp(
+    // Add provider to share data between pages
     MultiProvider(
       providers: [ChangeNotifierProvider(create: (_) => GameProvider())],
       child: const MyApp(),

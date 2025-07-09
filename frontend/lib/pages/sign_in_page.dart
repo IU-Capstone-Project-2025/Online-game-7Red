@@ -16,9 +16,11 @@ class SignInPage extends StatefulWidget {
 }
 
 class _SignInPageState extends State<SignInPage> {
+  // Controllers for email and password
   final TextEditingController controller = TextEditingController();
   final TextEditingController controller2 = TextEditingController();
 
+  // Fields for showing info and errors in the UI
   String postText = '';
   String errEmail = '';
   bool logSuccess = false;
@@ -28,7 +30,15 @@ class _SignInPageState extends State<SignInPage> {
 
   bool obscure = true;
 
+  /// Sends a POST request to the server to sign in the user.
+  ///
+  /// If the request is successful, it sets `logSuccess` to `true` and
+  /// updates the `nickname` and `ID` fields with the values from the response.
+  ///
+  /// If the request fails, it sets `logSuccess` to `false` and sets `postText`
+  /// to an error message.
   Future<void> signIn(String email, String password) async {
+    // Use url from urls.dart file
     final url = Uri.parse('$signInUrl');
     final response = await http.post(
       url,
@@ -75,6 +85,7 @@ class _SignInPageState extends State<SignInPage> {
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
                   Padding(padding: const EdgeInsets.only(left: 15)),
+                  // Button to return to WelkomePage
                   SizedBox(
                     width: 60,
                     height: 60,
@@ -88,6 +99,7 @@ class _SignInPageState extends State<SignInPage> {
                   const Expanded(flex: 1, child: Text("")),
                 ],
               ),
+              // Show Logo
               Image(
                 image: AssetImage('lib/assets/logo.png'),
                 width: 115,
@@ -118,6 +130,7 @@ class _SignInPageState extends State<SignInPage> {
                       ]
                     ),
                     Padding(padding: const EdgeInsets.only(top: 5)),
+                    // Text field for email
                     Container(
                       width: 260,
                       height: 35,
@@ -145,6 +158,7 @@ class _SignInPageState extends State<SignInPage> {
                       ]
                     ),
                     Padding(padding: const EdgeInsets.only(top: 5)),
+                    // Text field for password
                     Container(
                       width: 260,
                       height: 35,
@@ -175,6 +189,7 @@ class _SignInPageState extends State<SignInPage> {
                       ),
                     ),
                     Padding(padding: const EdgeInsets.only(top: 20)),
+                    // Sign in button
                     SizedBox(
                         width: 260,
                         height: 35,
@@ -200,22 +215,26 @@ class _SignInPageState extends State<SignInPage> {
                             ),
                           ),
                           onPressed: () async {
+                            // Reset error messages
                             setState(() {
                               postText = '';
                               errEmail = '';
                             });
+                            // Check if all fields are filled
                             if (controller.text.isEmpty || controller2.text.isEmpty) {
                               setState(() {
                                 postText = 'All fields are required';
                               });
                               return;
-                            } else if (!EmailValidator.validate(controller.text)) {
+                            } else if (!EmailValidator.validate(controller.text)) { // Check if email is valid
                               setState(() {
                                 errEmail = 'Invalid email';
                               });
                               return;
                             } else {
+                              // If all fields are filled and email is valid, send http-request to sign in
                               await signIn(controller.text, controller2.text);
+                              // If sign in was successful, navigate to main menu
                               if (logSuccess) {
                                 gameProvider.myID = ID;
                                 gameProvider.myName = nickname;
@@ -230,6 +249,7 @@ class _SignInPageState extends State<SignInPage> {
                         ),
                       ),
                       Padding(padding: const EdgeInsets.only(top: 5)),
+                      // For error messages
                       Text("$postText", style: errorTextStyle,),
                       Padding(padding: const EdgeInsets.only(top: 5)),
                   ],

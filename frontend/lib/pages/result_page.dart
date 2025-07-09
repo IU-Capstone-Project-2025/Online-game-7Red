@@ -26,9 +26,11 @@ class _ResultPageState extends State<ResultPage> {
   @override
   void initState() {
     super.initState();
+    // Get results of the game from GamePage
     getData();
   }
 
+  // Function to get results of the game from GamePage
   void getData() async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
     aiGame = await prefs.getBool('aiGame') ?? false;
@@ -40,6 +42,7 @@ class _ResultPageState extends State<ResultPage> {
     setState(() {});
   }
 
+  // Function to leave the room
   Future<void> leaveRoom(int id, String room_id) async {
     final url = Uri.parse('$leaveRoomUrl');
     final response = await http.post(
@@ -52,6 +55,7 @@ class _ResultPageState extends State<ResultPage> {
     );
   }
 
+  // Function to format time in minutes and seconds
   String formatTime(int seconds) {
     int minutes = seconds ~/ 60;
     int remainingSeconds = seconds % 60;
@@ -60,8 +64,6 @@ class _ResultPageState extends State<ResultPage> {
 
   @override
   Widget build(BuildContext context) {
-    // final gameProvider = Provider.of<GameProvider>(context); 
-
     return Scaffold(
       body: Container(
         decoration: BoxDecoration(
@@ -75,6 +77,7 @@ class _ResultPageState extends State<ResultPage> {
             crossAxisAlignment: CrossAxisAlignment.center,
             children: [
               Expanded(flex: 3, child: Text("")),
+              // Winner's place for first 3 places
               Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 crossAxisAlignment: CrossAxisAlignment.end,
@@ -137,6 +140,7 @@ class _ResultPageState extends State<ResultPage> {
                 ]
               ),
               Expanded(flex: 1, child: Text("")),
+              // Container with player's actual place and all time of the game
               Container(
                 width: 370,
                 height: 90,
@@ -199,7 +203,7 @@ class _ResultPageState extends State<ResultPage> {
                         ),
                       ),
                       onPressed: () async{
-                        
+                        // Play again function 
                       },
                       child: Column(
                         children: [
@@ -238,7 +242,7 @@ class _ResultPageState extends State<ResultPage> {
                         ),
                       ),
                       onPressed: () async{
-                        //поудалять всё что можно из Shared Preferences
+                        // Leave the room with deleting all data about this room
                         SharedPreferences prefs = await SharedPreferences.getInstance();
                         await leaveRoom(userID!, roomID!);
                         await prefs.remove('aiGame');
