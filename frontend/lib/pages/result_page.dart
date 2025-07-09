@@ -244,7 +244,9 @@ class _ResultPageState extends State<ResultPage> {
                       onPressed: () async{
                         // Leave the room with deleting all data about this room
                         SharedPreferences prefs = await SharedPreferences.getInstance();
-                        await leaveRoom(userID!, roomID!);
+                        if (!aiGame) {
+                          await leaveRoom(userID!, roomID!);
+                        }
                         await prefs.remove('aiGame');
                         await prefs.remove('playerNum');
                         await prefs.remove('roomId');

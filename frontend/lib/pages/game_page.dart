@@ -341,6 +341,7 @@ class _GameRoomPageState extends State<GameRoomPage> {
         }
         // set a place for the winner
         _players[_players.indexOf(_players.firstWhere((p) => p.id == _currentPlayerId))].place = 1;
+        _webSocket.disconnect();
         // Win
         goToResults();
         return;
