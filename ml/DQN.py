@@ -273,7 +273,7 @@ class DQNAgent:
             self.model.load_state_dict(checkpoint['model_state_dict'])
             self.target_model.load_state_dict(checkpoint['target_state_dict'])
             self.optimizer.load_state_dict(checkpoint['optimizer_state_dict'])
-            self.epsilon = checkpoint.get('epsilon', 1.0)
+            self.epsilon = checkpoint.get('epsilon', 0.0)
             self.steps_done = checkpoint.get('steps_done', 0)
         
             self.update_target()

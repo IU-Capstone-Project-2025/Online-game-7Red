@@ -13,3 +13,6 @@ asyncpg
 websockets
 numpy
 torch
+paramiko
+Pillow==9.5.0
+python-multipart
