@@ -188,6 +188,38 @@ async def get_profile_name_by_user_id(user_id: int):
     
     return res["name"]
 
+# Upload avatar link to profile
+async def update_avatar(user_id: int, filename: str):
+
+    user_exists = await database.fetch_one(
+    profiles.select().where(profiles.c.user_id == user_id))
+
+    if not user_exists:
+        raise Exception("User not found")
+    
+    query = profiles.update()\
+        .where(profiles.c.user_id == user_id)\
+        .values(avatar=filename)
+    
+    result = await database.execute(query)
+    return result
+
+# Get avatar link from profile
+async def get_avatar_from_db(user_id: int):
+    query = profiles.select().where(profiles.c.user_id == user_id)
+    profile = await database.fetch_one(query)
+    
+    return profile['avatar']
+
+# Delete avatar link from profile
+async def delete_avatar_from_db(user_id: int):
+    query = (
+        profiles.update()
+        .where(profiles.c.user_id == user_id)
+        .values(avatar=None)
+    )
+    await database.execute(query)
+
 # Add a user to a game room
 async def add_user_to_room(user_id: int, assigned_id: str):
     # find the internal room_id by assigned_id
