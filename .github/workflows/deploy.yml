@@ -1,10 +1,10 @@
 # CI/CD Pipeline for 7Red game application
-# Triggers on pushes to 'cicd' branch and runs tests, builds Docker images, and deploys to VPS
+# Triggers on pushes to 'main' branch and runs tests, builds Docker images, and deploys to VPS
 name: CI/CD Pipeline
 
 on:
   push:
-    branches: [ cicd ]
+    branches: [ main ]
 
 # Global environment variables used across all jobs
 env:
