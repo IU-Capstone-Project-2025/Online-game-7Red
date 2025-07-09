@@ -1,3 +1,6 @@
+# Project dependencies for Red7 card game with AI bot
+# FastAPI backend, ML models, database, and authentication
+
 fastapi
 httpx
 sqlalchemy
