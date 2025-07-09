@@ -24,7 +24,7 @@ class _StatisticsPageState extends State<StatisticsPage> {
   @override
   void initState() {
     super.initState();
-    // getInfo();
+    getInfo();
   }
 
   void getInfo() async {
