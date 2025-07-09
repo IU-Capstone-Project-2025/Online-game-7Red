@@ -1,4 +1,5 @@
 import os
+import uuid
 from sqlalchemy import (MetaData, Table, Text, Column, Date, Integer, String, 
                         create_engine, TIMESTAMP, ForeignKey, Boolean, select)
 from databases import Database
@@ -204,6 +205,11 @@ async def add_user_to_room(user_id: int, assigned_id: str):
     exists = await database.fetch_one(check_query)
     if exists:
         raise Exception("User already in the room")
+    # Check if room is full
+    count_query = user_room.select().where(user_room.c.room_id == room_id)
+    players = await database.fetch_all(count_query)
+    if len(players) >= 4:
+        raise Exception("Room is full")
     
     # Add user to room
     insert_query = user_room.insert().values(user_id=user_id, room_id=room_id)
@@ -439,3 +445,17 @@ async def create_user_statistics(user_id: int):
         bot_wins=0
     )
     await database.execute(query)
+
+async def search_open_online_room():
+    # Find a room with game_state "waiting" and < 4 players
+    query = games.select().where(games.c.game_state == "waiting")
+    rooms = await database.fetch_all(query)
+    for room in rooms:
+        room_id = room["room_id"]
+        # Count the number of players in the room
+        count_query = user_room.select().where(user_room.c.room_id == room_id)
+        players = await database.fetch_all(count_query)
+        if len(players) < 4:
+            return room
+    return None
+
