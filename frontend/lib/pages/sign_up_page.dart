@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
+import 'package:email_validator/email_validator.dart';
 
 import '../providers/provider.dart';
 import '../data/styles.dart';
@@ -285,7 +286,7 @@ class _SignUpPageState extends State<SignUpPage> {
                               });
                               return;
                             }
-                            else if ((controller2.text.contains('@') && controller2.text.contains('.')) == false) {
+                            else if (!EmailValidator.validate(controller2.text)) {
                               setState(() {
                                 errEmail = 'Invalid email';
                               });

@@ -53,6 +53,11 @@ class _ConnectDialogState extends State<ConnectDialog> {
         logSuccess = false;
         postText = 'User already in the room';
       });
+    } else if (responseBody['detail'] == 'Room is full') {
+      setState(() {
+        logSuccess = false;
+        postText = 'Room is full';
+      });
     } else {
       setState(() {
         logSuccess = false;

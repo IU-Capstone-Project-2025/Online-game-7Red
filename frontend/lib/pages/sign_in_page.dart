@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
+import 'package:email_validator/email_validator.dart';
 
 import '../providers/provider.dart';
 import '../data/styles.dart';
@@ -208,7 +209,7 @@ class _SignInPageState extends State<SignInPage> {
                                 postText = 'All fields are required';
                               });
                               return;
-                            } else if ((controller.text.contains('@') && controller.text.contains('.')) == false) {
+                            } else if (!EmailValidator.validate(controller.text)) {
                               setState(() {
                                 errEmail = 'Invalid email';
                               });

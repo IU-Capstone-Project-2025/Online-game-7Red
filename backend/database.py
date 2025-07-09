@@ -435,7 +435,6 @@ async def check_and_award_bot_wins(user_id: int):
         achievement_id = await get_achievement_id_by_name("3_wins_over_the_bot")
         if achievement_id:
             await award_achievement_if_needed(user_id, achievement_id)
-
 async def create_user_statistics(user_id: int):
     query = statistics.insert().values(
         user_id=user_id,
@@ -446,7 +445,6 @@ async def create_user_statistics(user_id: int):
         bot_wins=0
     )
     await database.execute(query)
-    
 
 async def search_open_online_room():
     # Find a room with game_state "waiting" and < 4 players
@@ -460,3 +458,4 @@ async def search_open_online_room():
         if len(players) < 4:
             return room
     return None
+

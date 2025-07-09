@@ -144,6 +144,19 @@ TextStyle statsBigStyle = const TextStyle(
   color: Color.fromARGB(255, 58, 58, 58)
 );
 
+TextStyle resBigStyle = TextStyle(
+  fontFamily: 'Awesome5',
+  fontSize: 36,
+  fontWeight: FontWeight.w500,
+  color: grey3A3A3AColor,
+);
+
+TextStyle resLitleStyle = TextStyle(
+  fontFamily: 'Awesome5',
+  fontSize: 17,
+  fontWeight: FontWeight.w500,
+  color: grey3A3A3AColor,
+);
 
 Color backInvisColor = const Color.fromARGB(125, 218, 209, 193);
 

@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+
+import '../data/styles.dart';
+import '../data/urls.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
-
-import '../providers/provider.dart';
-import '../data/styles.dart';
 
 
 class ResultPage extends StatefulWidget {
@@ -15,9 +15,52 @@ class ResultPage extends StatefulWidget {
 }
 
 class _ResultPageState extends State<ResultPage> {
+  bool aiGame = false;
+  List<String>? placesNames;
+  int? totalTime;
+  int? myPlace;
+  int? userID;
+  String? roomID;
+
+
+  @override
+  void initState() {
+    super.initState();
+    getData();
+  }
+
+  void getData() async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    aiGame = await prefs.getBool('aiGame') ?? false;
+    placesNames = await prefs.getStringList('placesNames') ?? [];
+    totalTime = await prefs.getInt('totalTime') ?? 0;
+    myPlace = await prefs.getInt('myPlace') ?? 0;
+    userID = await prefs.getInt('myID');
+    roomID = await prefs.getString('roomId');
+    setState(() {});
+  }
+
+  Future<void> leaveRoom(int id, String room_id) async {
+    final url = Uri.parse('$leaveRoomUrl');
+    final response = await http.post(
+      url,
+      headers: {'Content-Type': 'application/json', 'accept': 'application/json'},
+      body: jsonEncode({
+        'user_id': id,
+        'assigned_id': room_id,
+      })
+    );
+  }
+
+  String formatTime(int seconds) {
+    int minutes = seconds ~/ 60;
+    int remainingSeconds = seconds % 60;
+    return '${minutes.toString().padLeft(2, '0')}:${remainingSeconds.toString().padLeft(2, '0')}';
+  }
+
   @override
   Widget build(BuildContext context) {
-    final gameProvider = Provider.of<GameProvider>(context); 
+    // final gameProvider = Provider.of<GameProvider>(context); 
 
     return Scaffold(
       body: Container(
@@ -39,10 +82,13 @@ class _ResultPageState extends State<ResultPage> {
                   Column(
                     mainAxisAlignment: MainAxisAlignment.end,
                     children: [
-                      Icon(Icons.account_circle, size: 48, color: grey3A3A3AColor,),
-                      Text("Player_XXX", style: basicTextStyle,),
+                      if (placesNames != null)
+                        if (placesNames!.length > 2)
+                          Icon(Icons.account_circle, size: 48, color: grey3A3A3AColor,),
+                      Text(placesNames != null ? (placesNames!.length > 2 ? placesNames![2] : "") : "Loading...", style: basicTextStyle,),
+                      Padding(padding: const EdgeInsets.only(top: 10)),
                       Container(
-                        width: 75,
+                        width: 90,
                         height: 60,
                         decoration: BoxDecoration(
                           color: whiteInvisColor,
@@ -52,14 +98,15 @@ class _ResultPageState extends State<ResultPage> {
                       ),
                     ],
                   ),
-                  Padding(padding: const EdgeInsets.only(left: 11)),
+                  Padding(padding: const EdgeInsets.only(left: 20)),
                   Column(
                     mainAxisAlignment: MainAxisAlignment.end,
                     children: [
                       Icon(Icons.account_circle, size: 48, color: grey3A3A3AColor,),
-                      Text("Player_XXX", style: basicTextStyle,),
+                      Text(placesNames != null ? placesNames![0] : "Loading...", style: basicTextStyle,),
+                      Padding(padding: const EdgeInsets.only(top: 10)),
                       Container(
-                        width: 75,
+                        width: 90,
                         height: 180,
                         decoration: BoxDecoration(
                           color: whiteInvisColor,
@@ -69,14 +116,15 @@ class _ResultPageState extends State<ResultPage> {
                       ),
                     ],
                   ),
-                  Padding(padding: const EdgeInsets.only(left: 11)),
+                  Padding(padding: const EdgeInsets.only(left: 20)),
                   Column(
                     mainAxisAlignment: MainAxisAlignment.end,
                     children: [
                       Icon(Icons.account_circle, size: 48, color: grey3A3A3AColor,),
-                      Text("Player_XXX", style: basicTextStyle,),
+                      Text(placesNames != null ? placesNames![1] : "Loading...", style: basicTextStyle,),
+                      Padding(padding: const EdgeInsets.only(top: 10)),
                       Container(
-                        width: 75,
+                        width: 90,
                         height: 120,
                         decoration: BoxDecoration(
                           color: whiteInvisColor,
@@ -90,12 +138,36 @@ class _ResultPageState extends State<ResultPage> {
               ),
               Expanded(flex: 1, child: Text("")),
               Container(
-                width: 308,
-                height: 80,
+                width: 370,
+                height: 90,
                 decoration: BoxDecoration(
                   color: whiteInvisColor,
                   borderRadius: BorderRadius.circular(5),
                   border: Border.all(color: grey3A3A3AColor, width: 2),
+                ),
+                child: Center(
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Expanded(flex: 1, child: Text("")),
+                      Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Text("Place", style: resLitleStyle,),
+                          Text(myPlace.toString() ?? "Loading...", style: resBigStyle,)
+                        ],
+                      ),
+                      Expanded(flex: 2, child: Text("")),
+                      Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Text("Time", style: resLitleStyle,),
+                          Text(formatTime(totalTime!) ?? "Loading...", style: resBigStyle,)
+                        ],
+                      ),
+                      Expanded(flex: 1, child: Text("")),
+                    ],
+                  )
                 ),
               ),
               Expanded(flex: 2, child: Text("")),
@@ -140,7 +212,7 @@ class _ResultPageState extends State<ResultPage> {
                       ),
                     ),
                   ),
-                  Padding(padding: const EdgeInsets.only(left: 11)),
+                  Padding(padding: const EdgeInsets.only(left: 40)),
                   SizedBox(
                     width: 118,
                     height: 118,
@@ -166,7 +238,17 @@ class _ResultPageState extends State<ResultPage> {
                         ),
                       ),
                       onPressed: () async{
-                        
+                        //поудалять всё что можно из Shared Preferences
+                        SharedPreferences prefs = await SharedPreferences.getInstance();
+                        await leaveRoom(userID!, roomID!);
+                        await prefs.remove('aiGame');
+                        await prefs.remove('playerNum');
+                        await prefs.remove('roomId');
+                        await prefs.remove('roomPassword');
+                        await prefs.remove('myPlace');
+                        await prefs.remove('totalTime');
+                        await prefs.remove('placesNames');
+                        Navigator.pushNamed(context, '/mainmenu');
                       },
                       child: Column(
                         children: [

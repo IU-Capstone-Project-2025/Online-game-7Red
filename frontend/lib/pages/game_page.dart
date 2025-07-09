@@ -60,7 +60,6 @@ class _GameRoomPageState extends State<GameRoomPage> {
   bool palleteChanged = true;
 
   bool youLose = false;
-  bool youWin = false;
 
   List<CountDownController> timers = [];
   int currTimerIndex = 0;
@@ -290,20 +289,39 @@ class _GameRoomPageState extends State<GameRoomPage> {
       }
       _nextLose = message['next_lose'];
       _currentPlayerId = nextPlayerId(_currentPlayerId);
+
+      if (_activePlayers.length == 1) {
+        _turnTimer?.cancel();
+        // youLose = false;
+        // _pallete = [];
+        // _myHand = [];
+        for (var timer in timers) {
+          timer.reset();
+        }
+        _allTimeTimer?.cancel();
+        if (youLose == false) {
+          myPlace = 1;
+        }
+        _players[_players.indexOf(_players.firstWhere((p) => p.id == _currentPlayerId))].place = 1;
+        // Win
+        goToResults();
+        return;
+      }
+
       if (_players.firstWhere((p) => p.id == _currentPlayerId).isMe) {
         if (_nextLose == 1) {
           _turnTimer?.cancel();
           _pallete = [];
           _myHand = [];
           youLose = true;
-          youWin = false;
-          for (var timer in timers) {
-            timer.reset();
-          }
-          _allTimeTimer?.cancel();
+          // for (var timer in timers) {
+          //   timer.reset();
+          // }
+          // _allTimeTimer?.cancel();
           myPlace = _activePlayers.length;
           _players[_players.indexOf(_players.firstWhere((p) => p.id == _currentPlayerId))].place = _activePlayers.length;
-          loosingWinning();
+          // Loose
+          loosing();
           return;
           
         }
@@ -313,43 +331,27 @@ class _GameRoomPageState extends State<GameRoomPage> {
         my_pallete_ch = "";
         myAllTurn = true;
       }
-
-      if (_activePlayers.length == 1 && youLose == false) {
-        _turnTimer?.cancel();
-        youWin = true;
-        youLose = false;
-        _pallete = [];
-        _myHand = [];
-        for (var timer in timers) {
-          timer.reset();
-        }
-        myPlace = 1;
-        _players[_players.indexOf(_players.firstWhere((p) => p.id == _currentPlayerId))].place = 1;
-        _allTimeTimer?.cancel();
-        loosingWinning();
-        return;
-      }
       
-      if (!youLose) {
-        _startTurnTimer();
-      }
+      _startTurnTimer();
     });
   }
 
   void _startTurnTimer() {
     _turnTimer?.cancel();
     nextTimer();
-    setState(() => _timeLeft = 60);
-    _turnTimer = Timer.periodic(Duration(seconds: 1), (timer) {
-      if (_timeLeft > 0) {
-        setState(() => _timeLeft--);
-      } else {
-        timer.cancel();
-        if (myAllTurn) {
-          _submitTurnTimeout();
+    if (!youLose) {
+      setState(() => _timeLeft = 60);
+      _turnTimer = Timer.periodic(Duration(seconds: 1), (timer) {
+        if (_timeLeft > 0) {
+          setState(() => _timeLeft--);
+        } else {
+          timer.cancel();
+          if (myAllTurn) {
+            _submitTurnTimeout();
+          }
         }
-      }
-    });
+      });
+    }
   }
 
   void nextTimer() {
@@ -402,13 +404,14 @@ class _GameRoomPageState extends State<GameRoomPage> {
       myTurn = false;
       myAllTurn = false;
       youLose = true;
-      for (var timer in timers) {
-        timer.reset();
-      }
-      _allTimeTimer?.cancel();
+      // for (var timer in timers) {
+      //   timer.reset();
+      // }
+      // _allTimeTimer?.cancel();
       myPlace = _activePlayers.length;
       _players[_players.indexOf(_players.firstWhere((p) => p.id == _currentPlayerId))].place = _activePlayers.length;
-      loosingWinning();
+      // Loose
+      loosing();
     });
 
     final message = {
@@ -470,7 +473,7 @@ class _GameRoomPageState extends State<GameRoomPage> {
     }
   }
 
-  void loosingWinning() {
+  void loosing() {
     showDialog(
       barrierDismissible: false, 
       context: context, 
@@ -531,7 +534,7 @@ class _GameRoomPageState extends State<GameRoomPage> {
                               ),
                             ),
                             onPressed: () {
-                              
+                              Navigator.pop(context);
                             },
                             child: Column(
                               children: [
@@ -570,9 +573,14 @@ class _GameRoomPageState extends State<GameRoomPage> {
                               ),
                             ),
                             onPressed: () async {
+                              _allTimeTimer?.cancel();
                               if (!aiGame) {
                                  await leaveRoom(userID!, roomID!);
                               }
+                              for (var timer in timers) {
+                                timer.reset();
+                              }
+                              _turnTimer?.cancel();
                               SharedPreferences prefs = await SharedPreferences.getInstance();
                               await prefs.remove('roomId');
                               await prefs.remove('roomPassword');
@@ -667,6 +675,7 @@ class _GameRoomPageState extends State<GameRoomPage> {
                         ),
                         onPressed: () async {
                           _turnTimer!.cancel();
+                          _allTimeTimer?.cancel();
                           if (myAllTurn) {
                             _submitTurnTimeout();
                           } else {
@@ -723,6 +732,22 @@ class _GameRoomPageState extends State<GameRoomPage> {
       'my_id': userID,
     };
     _webSocket.sendMessage(message);
+  }
+
+  void goToResults() async{
+    List<String> places = [];
+    for (int i = 0; i < _players.length; i++) {
+      for (int j = 0; j < _players.length; j++) {
+        if (_players[j].place == i + 1) {
+          places.add(_players[j].name);
+        }
+      }
+    }
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    await prefs.setInt('myPlace', myPlace);
+    await prefs.setInt('totalTime', _allTime);
+    await prefs.setStringList('placesNames', places);
+    Navigator.pushNamed(context, '/result');
   }
 
 
