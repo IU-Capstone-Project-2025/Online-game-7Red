@@ -34,6 +34,7 @@ user_room = Table(
     Column("user_id", Integer, ForeignKey("users.id", ondelete="CASCADE"), primary_key=True),
     Column("room_id", Integer, ForeignKey("game_rooms.room_id", ondelete="CASCADE"), primary_key=True),
     Column("ready", Boolean, default=False),
+    Column("room_state", String(20)),
 )
 
 # Table for user accounts
