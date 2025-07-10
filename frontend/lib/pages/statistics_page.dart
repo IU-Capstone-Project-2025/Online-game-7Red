@@ -99,7 +99,8 @@ class _StatisticsPageState extends State<StatisticsPage> {
                     height: 60,
                     child: IconButton(
                       onPressed: () {
-                        Navigator.pushNamed(context, '/mainmenu');
+                        // Navigator.pushNamed(context, '/mainmenu');
+                        Navigator.pop(context);
                       },
                       icon: const Icon(Icons.arrow_back_rounded, size: 44),
                     ),

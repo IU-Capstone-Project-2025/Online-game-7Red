@@ -93,7 +93,7 @@ class _MainMenuPageState extends State<MainMenuPage> {
                     height: 80,
                     child: IconButton(
                       onPressed: () {
-                        //pass to settings
+                        Navigator.pushNamed(context, '/profile');
                       },
                       icon: const Icon(Icons.settings, size: 60),
                     ),
@@ -291,6 +291,7 @@ class _MainMenuPageState extends State<MainMenuPage> {
                                         Navigator.of(context).pop();
                                         // Show the online search dialog
                                         showDialog(
+                                          barrierDismissible: false, 
                                           context: context,
                                           builder: (context) => onlineSearchDialog(),
                                         );
