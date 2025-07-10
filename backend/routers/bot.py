@@ -167,6 +167,7 @@ async def bot_move(session_id: str = Body(...), action: list = Body(...)):
 
     # If game is over after player's move
     if done:
+        sessions.pop(session_id, None)
         return {"obs": obs, "done": True, "winner": env.get_winner()}
 
     # Get bot's move
