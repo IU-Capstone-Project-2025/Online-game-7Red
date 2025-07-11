@@ -2,7 +2,7 @@ import sys
 import os
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 from fastapi.testclient import TestClient
-from backend.main import app
+from backend.app.main import app
 import time
 
 def test_signup_and_create_room():
