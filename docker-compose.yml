@@ -5,13 +5,14 @@ services:
   backend:
     # Using pre-built Docker image from Docker Hub
     image: spalkkina/7red:backend-latest 
-    ports:
-      # Map host port 8000 to container port 8000 for API access
-      - "8000:8000"
     restart: unless-stopped 
-    # Load environment variables from the database configuration file
-    env_file:
-      - ./database/.env   # or ./backend/.env if your .env is inside backend
+    environment:
+      PROJECT_ID: ${PROJECT_ID}
+      DB_USER: ${DB_USER}
+      DB_PASS: ${DB_PASS}
+      BRANCH_ID: ${BRANCH_ID}
+      DATABASE_URL: ${DATABASE_URL}
+      WS_URL: ${WS_URL}
   
   frontend:
     # Using pre-built Docker image from Docker Hub
