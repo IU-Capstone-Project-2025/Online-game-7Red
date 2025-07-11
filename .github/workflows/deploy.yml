@@ -108,7 +108,7 @@ jobs:
           context: ./frontend
           push: true
           build-args: |
-            WS_URL = wss://7red.ru/api
+            WS_URL=wss://7red.ru/api
           tags: |
             ${{ env.DOCKER_HUB_REPO }}:${{ env.FRONTEND_TAG }}
             ${{ env.DOCKER_HUB_REPO }}:frontend-latest
