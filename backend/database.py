@@ -1,5 +1,4 @@
 import os
-import uuid
 from sqlalchemy import (MetaData, Table, Text, Column, Date, Integer, String, 
                         create_engine, TIMESTAMP, ForeignKey, Boolean, select)
 from databases import Database
