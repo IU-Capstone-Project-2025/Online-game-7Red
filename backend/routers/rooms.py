@@ -133,14 +133,9 @@ async def start_online_game(players):
     return assigned_id, password
 
 
-async def online_queue_timeout(players_snapshot):
-    """Handle timeout for online matchmaking queue
-    
-    If enough time passes and we have at least 2 players, create a game with them.
-    Otherwise, remove players from the queue and notify them.
-    """
+async def online_queue_timeout(_):
     await asyncio.sleep(ONLINE_WAIT_SECONDS)
-    still_waiting = [uid for uid in players_snapshot if uid in online_queue]
+    still_waiting = list(online_queue)
     if len(still_waiting) >= 2:
         for uid in still_waiting:
             online_queue.remove(uid)
@@ -188,10 +183,12 @@ async def find_online(user_id: int = Body(..., embed=True)):
 
 @router.post("/find_online_status")
 async def find_online_status(user_id: int = Body(..., embed=True)):
-    """Check the current matchmaking status for a user"""
+    """Check the current matchmaking status for a user and print current queue"""
+    print(f"Current online_queue: {online_queue}")
+    print(f"Current online_queue_status: {online_queue_status}")
     if user_id in online_queue_status:
         return online_queue_status[user_id]
-    return {"status": "not_in_queue"}  
+    return {"status": "not_in_queue"}
 
 
 @router.post("/cancel_find_online")
