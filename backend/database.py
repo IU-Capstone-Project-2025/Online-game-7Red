@@ -1,10 +1,12 @@
 import os
-import uuid
 from sqlalchemy import (MetaData, Table, Text, Column, Date, Integer, String, 
                         create_engine, TIMESTAMP, ForeignKey, Boolean, select)
 from databases import Database
 from dotenv import load_dotenv
 from datetime import datetime, UTC, date, timedelta
+from asyncio import Lock
+
+room_add_lock = Lock()
 
 # Load environment variables from .env file
 load_dotenv(os.path.join(os.path.dirname(__file__), '../database/.env'))
@@ -34,6 +36,7 @@ user_room = Table(
     Column("user_id", Integer, ForeignKey("users.id", ondelete="CASCADE"), primary_key=True),
     Column("room_id", Integer, ForeignKey("game_rooms.room_id", ondelete="CASCADE"), primary_key=True),
     Column("ready", Boolean, default=False),
+    Column("room_type", String(20)),
 )
 
 # Table for user accounts
@@ -222,30 +225,33 @@ async def delete_avatar_from_db(user_id: int):
     await database.execute(query)
 
 # Add a user to a game room
-async def add_user_to_room(user_id: int, assigned_id: str):
-    # find the internal room_id by assigned_id
-    query = games.select().where(games.c.assigned_id == assigned_id)
-    room = await database.fetch_one(query)
-    if not room:
-        raise Exception("Room not found")
-    room_id = room["room_id"]
-    
-    # Check if user is already in the room
-    check_query = user_room.select().where(
-        (user_room.c.user_id == user_id) & (user_room.c.room_id == room_id)
-    )
-    exists = await database.fetch_one(check_query)
-    if exists:
-        raise Exception("User already in the room")
-    # Check if room is full
-    count_query = user_room.select().where(user_room.c.room_id == room_id)
-    players = await database.fetch_all(count_query)
-    if len(players) >= 4:
-        raise Exception("Room is full")
-    
-    # Add user to room
-    insert_query = user_room.insert().values(user_id=user_id, room_id=room_id)
-    await database.execute(insert_query)
+async def add_user_to_room(user_id: int, assigned_id: str, room_type: str = "public"):
+    # Use a lock to prevent race conditions when multiple users try to join simultaneously
+    async with room_add_lock:
+        # Find the room by its assigned ID
+        query = games.select().where(games.c.assigned_id == assigned_id)
+        room = await database.fetch_one(query)
+        if not room:
+            raise Exception("Room not found")
+        room_id = room["room_id"]
+
+        # Check if the user is already in this room
+        check_query = user_room.select().where(
+            (user_room.c.user_id == user_id) & (user_room.c.room_id == room_id)
+        )
+        exists = await database.fetch_one(check_query)
+        if exists:
+            raise Exception("User already in the room")
+            
+        # Check if the room is full (maximum 4 players)
+        count_query = user_room.select().where(user_room.c.room_id == room_id)
+        players = await database.fetch_all(count_query)
+        if len(players) >= 4:
+            raise Exception("Room is full")
+
+        # Add the user to the room with specified room type (public by default)
+        insert_query = user_room.insert().values(user_id=user_id, room_id=room_id, room_type=room_type)
+        await database.execute(insert_query)
     
 # Remove a user from a game room
 async def remove_user_from_room(user_id: int, assigned_id: str):
@@ -487,7 +493,7 @@ async def search_open_online_room():
         # Count the number of players in the room
         count_query = user_room.select().where(user_room.c.room_id == room_id)
         players = await database.fetch_all(count_query)
-        if len(players) < 4:
+        if len(players) < 4 and any(p["room_type"] == "public" for p in players):
             return room
     return None
 

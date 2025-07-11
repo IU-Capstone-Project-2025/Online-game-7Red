@@ -40,7 +40,7 @@ async def create_room(user_id: int = Body(..., embed=True)):
     assigned_id = await generate_unique_assigned_id()
     password = await generate_unique_password()
     await create_game_room(assigned_id, password)
-    await add_user_to_room(user_id, assigned_id)
+    await add_user_to_room(user_id, assigned_id, room_type="private")
     return {
         "assigned_id": assigned_id,
         "password": password 
@@ -123,7 +123,7 @@ async def start_online_game(players):
     password = await generate_unique_password()
     await create_game_room(assigned_id, password)
     for user_id in players:
-        await add_user_to_room(user_id, assigned_id)
+        await add_user_to_room(user_id, assigned_id, room_type="public")
         online_queue_status[user_id] = {
             "status": "matched",
             "assigned_id": assigned_id,
@@ -133,17 +133,32 @@ async def start_online_game(players):
     return assigned_id, password
 
 
-async def online_queue_timeout(_):
+async def online_queue_timeout(initial_queue):
+    # Wait for the defined time limit before processing the queue
     await asyncio.sleep(ONLINE_WAIT_SECONDS)
+    
+    # Get the list of users still waiting in the queue
     still_waiting = list(online_queue)
+    
+    # If we have at least 2 players waiting, create a game
     if len(still_waiting) >= 2:
+        # Remove all waiting users from the queue
         for uid in still_waiting:
             online_queue.remove(uid)
+        # Create a game room for these players
         await start_online_game(still_waiting)
+        # If a new player joined during processing, start a new timeout task for them
+        if len(online_queue) == 1:
+            asyncio.create_task(online_queue_timeout(list(online_queue)))
     else:
+        # Not enough players to form a game
         for uid in still_waiting:
             online_queue.remove(uid)
+            # Update status to indicate no matching players were found
             online_queue_status[uid] = {"status": "no_players"}
+        # If a new player joined during processing, start a new timeout task for them
+        if len(online_queue) == 1:
+            asyncio.create_task(online_queue_timeout(list(online_queue)))
 
 
 
@@ -172,22 +187,53 @@ async def find_online(user_id: int = Body(..., embed=True)):
     online_queue_status[user_id] = {"status":"waiting"}
     if len(online_queue) == 1:
         asyncio.create_task(online_queue_timeout(list(online_queue)))
-    if len(online_queue) == ONLINE_ROOM_SIZE:
-        players = list(online_queue)
-        for uid in players:
-            online_queue.remove(uid)
-        await start_online_game(players)
+    if len(online_queue) >= ONLINE_ROOM_SIZE:
+        while len(online_queue) >= ONLINE_ROOM_SIZE:
+            players = online_queue[:ONLINE_ROOM_SIZE]
+            for uid in players:
+                online_queue.remove(uid)
+            await start_online_game(players)
         return online_queue_status[user_id]
     return {"status":"waiting"}
 
 
+
 @router.post("/find_online_status")
 async def find_online_status(user_id: int = Body(..., embed=True)):
-    """Check the current matchmaking status for a user and print current queue"""
+    """
+    Check the current status of a user in the online matchmaking queue.
+    If the user is in the queue and an open room exists, add them to that room.
+    """
+    # If user is in queue and there's an available room, try to place them
+    if user_id in online_queue:
+        room = await search_open_online_room()
+        if room:
+            try:
+                # Add user to the found room
+                await add_user_to_room(user_id, room["assigned_id"])
+                # Remove user from the waiting queue
+                online_queue.remove(user_id)
+                # Update user's matchmaking status
+                online_queue_status[user_id] = {
+                    "status": "matched",
+                    "assigned_id": room["assigned_id"],
+                    "password": room["password"],
+                    "players": [user_id]
+                }
+                return online_queue_status[user_id]
+            except Exception:
+                # Continue if adding to room fails (e.g., race condition)
+                pass  
+
+    # Debugging information
     print(f"Current online_queue: {online_queue}")
     print(f"Current online_queue_status: {online_queue_status}")
+    
+    # Return the user's current status if they're in the tracking dictionary
     if user_id in online_queue_status:
         return online_queue_status[user_id]
+    
+    # Return default status if user is not in queue
     return {"status": "not_in_queue"}
 
 
