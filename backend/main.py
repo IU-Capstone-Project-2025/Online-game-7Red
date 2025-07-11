@@ -6,7 +6,6 @@ from backend.routers.game import router as game_router
 from backend.routers.game_bot import router as ai_game_router
 from backend.routers.settings import router as setting_router
 from backend.routers.avatar import router as avatar_router
-#from backend.routers.bot import router as bot_router
 
 #from backend.routers.game_bot import router as ai_game_router 
 from backend.database import database
