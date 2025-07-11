@@ -4,7 +4,7 @@ WORKDIR /app
 
 COPY . /app
 
-# ENV PYTHONPATH=/app для моего тестирования
+#ENV PYTHONPATH=/app 
 
 RUN pip install fastapi uvicorn "pydantic[email]" sqlalchemy databases python-dotenv passlib[bcrypt] bcrypt==4.0.1 asyncpg
 RUN pip install 'uvicorn[standard]' websockets
