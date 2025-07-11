@@ -204,9 +204,18 @@ class _OnlineSearchDialogState extends State<onlineSearchDialog> {
         await prefs?.setBool('aiGame', false);
         Navigator.pop(context);
         Navigator.pushNamed(context, '/waitingroom');
-      } if (responseBody['status'] == "waiting") {
+      } else if (responseBody['status'] == "waiting") {
         print('Wait, wait...');
-      } if (responseBody['status'] == "no_players") {
+      } else if (responseBody['status'] == "no_players") {
+        stopTimers();
+        Navigator.pop(context);
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text("Oops! No players found"),
+            backgroundColor: greyTimerColor,
+          ),
+        );
+      } else if (responseBody['status'] == "not_in_queue") {
         stopTimers();
         Navigator.pop(context);
         ScaffoldMessenger.of(context).showSnackBar(

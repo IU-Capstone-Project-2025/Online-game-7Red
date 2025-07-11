@@ -158,6 +158,19 @@ TextStyle resLitleStyle = TextStyle(
   color: grey3A3A3AColor,
 );
 
+TextStyle basicBoldTextStyle = const TextStyle(
+  fontSize: 15,
+  fontWeight: FontWeight.w600,
+  color: Color.fromARGB(255, 58, 58, 58)
+);
+
+TextStyle nicknameStyle = const TextStyle(
+  fontFamily: 'Poppins',
+  fontSize: 19,
+  fontWeight: FontWeight.w500,
+  color: Color.fromARGB(255, 58, 58, 58)
+);
+
 Color backInvisColor = const Color.fromARGB(125, 218, 209, 193);
 
 Color grey3A3A3AColor = const Color.fromARGB(255, 58, 58, 58);
