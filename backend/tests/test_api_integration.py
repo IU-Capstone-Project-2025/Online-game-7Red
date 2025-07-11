@@ -14,12 +14,12 @@ def test_signup_and_create_room():
             "repeated_password": "testpass",
             "nickname": "TestUser"
         }
-        response = client.post("/auth/signup", json=signup_data)
+        response = client.post("/api/auth/signup", json=signup_data)
         assert response.status_code == 200
         user_id = response.json()["user_id"]
 
         # Теперь создаём комнату с этим user_id
-        response = client.post("/rooms/create", json={"user_id": user_id})
+        response = client.post("/api/rooms/create", json={"user_id": user_id})
         assert response.status_code == 200
         data = response.json()
         assert "assigned_id" in data
@@ -36,21 +36,21 @@ def test_signup():
             "repeated_password": "testpass",
             "nickname": "TestUser"
         }
-        response = client.post("/auth/signup", json=signup_data)
+        response = client.post("/api/auth/signup", json=signup_data)
         assert response.status_code == 200
         data = response.json()
         assert data["message"] == "User reqistered succesfully"
         assert "user_id" in data
 
         # again register the same user
-        response = client.post("/auth/signup", json=signup_data)
+        response = client.post("/api/auth/signup", json=signup_data)
         assert response.status_code == 400
         assert response.json()["detail"] == "Email already registered"
         
         # with password != repeated_password
         signup_data["email"] = f"testuser_{int(time.time() * 1000)+1}@example.com"
         signup_data["repeated_password"] = "wrongpass"
-        response = client.post("/auth/signup", json=signup_data)
+        response = client.post("/api/auth/signup", json=signup_data)
         assert response.status_code == 400
         assert response.json()["detail"] == "Passwords do not match"
         
@@ -64,18 +64,18 @@ def test_player_is_ready():
             "nickname": "TestUser"
         }
         
-        response = client.post("/auth/signup", json=signup_data)
+        response = client.post("/api/auth/signup", json=signup_data)
         assert response.status_code == 200
         user_id = response.json()["user_id"]
         
         # create the room
-        response = client.post("/rooms/create", json={"user_id": user_id})
+        response = client.post("/api/rooms/create", json={"user_id": user_id})
         assert response.status_code == 200
         assigned_id = response.json()["assigned_id"]
         
         # send ready
         ready = {"user_id": user_id, "assigned_id": assigned_id}
-        response = client.post("/rooms/ready", json=ready)
+        response = client.post("/api/rooms/ready", json=ready)
         assert response.status_code == 200
         assert f"Player {user_id} is ready in room {assigned_id}" in response.json()["message"]
     
@@ -88,23 +88,23 @@ def test_leave_room():
             "repeated_password": "testpass",
             "nickname": "TestUser"
         }
-        response = client.post("/auth/signup", json=signup_data)
+        response = client.post("/api/auth/signup", json=signup_data)
         assert response.status_code == 200
         user_id = response.json()["user_id"]
 
         # create room
-        response = client.post("/rooms/create", json={"user_id": user_id})
+        response = client.post("/api/rooms/create", json={"user_id": user_id})
         assert response.status_code == 200
         assigned_id = response.json()["assigned_id"]
 
         # send ready
         ready = {"user_id": user_id, "assigned_id": assigned_id}
-        response = client.post("/rooms/ready", json=ready)
+        response = client.post("/api/rooms/ready", json=ready)
         assert response.status_code == 200
 
         # leave room
         leave = {"user_id": user_id, "assigned_id": assigned_id}
-        response = client.post("/rooms/leave", json=leave)
+        response = client.post("/api/rooms/leave", json=leave)
         assert response.status_code == 200
         assert f"User {user_id} left room {assigned_id}" in response.json()["message"]
 
@@ -117,7 +117,7 @@ def test_signin():
             "repeated_password": "testpass",
             "nickname": "TestUser"
         }
-        response = client.post("/auth/signup", json=signup_data)
+        response = client.post("/api/auth/signup", json=signup_data)
         assert response.status_code == 200
         user_id = response.json()["user_id"]
 
@@ -125,21 +125,21 @@ def test_signin():
             "email": unique_email,
             "password": "testpass"
         }
-        response = client.post("/auth/signin", json=signin_data)
+        response = client.post("/api/auth/signin", json=signin_data)
         assert response.status_code == 200
         data = response.json()
         assert data["message"] == "Sign in succesfully"
         assert data["user_id"] == user_id
         assert data["nickname"] == "TestUser"
 
-        response = client.post("/auth/signin", json={
+        response = client.post("/api/auth/signin", json={
             "email": unique_email,
             "password": "wrongpass"
         })
         assert response.status_code == 401
         assert response.json()["detail"] == "Invalid email or password"
 
-        response = client.post("/auth/signin", json={
+        response = client.post("/api/auth/signin", json={
             "email": "notfound@example.com",
             "password": "testpass"
         })
