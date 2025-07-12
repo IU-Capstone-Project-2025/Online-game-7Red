@@ -7,6 +7,7 @@ from backend.routers.game_bot import router as ai_game_router
 from backend.routers.settings import router as setting_router
 from backend.routers.avatar import router as avatar_router
 
+
 #from backend.routers.game_bot import router as ai_game_router 
 from backend.database import database
 from fastapi.middleware.cors import CORSMiddleware

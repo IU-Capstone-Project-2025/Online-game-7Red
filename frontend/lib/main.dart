@@ -11,6 +11,7 @@ import 'pages/game_page.dart';
 import 'pages/result_page.dart';
 import 'pages/rules_page.dart';
 import 'pages/statistics_page.dart';
+import 'pages/profile_page.dart';
 
 void main() {
   WidgetsFlutterBinding.ensureInitialized();
@@ -44,6 +45,7 @@ class MyApp extends StatelessWidget {
         '/result': (context) => ResultPage(),
         '/rules': (context) => RulesPage(),
         '/statistics': (context) => StatisticsPage(),
+        '/profile': (context) => ProfilePage(),
       },
     );
   }

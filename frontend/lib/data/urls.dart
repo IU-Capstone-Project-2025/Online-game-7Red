@@ -10,6 +10,9 @@ String roomNotReadyUrl = 'http://localhost:8000/rooms/not_ready';
 String leaveRoomUrl = 'http://localhost:8000/rooms/leave';
 String serverUrlPartUrl = 'ws://localhost:8000';
 String statisticsUrl = 'http://localhost:8000/settings/user_stats';
+String onlineSearchUrl = 'http://localhost:8000/rooms/find_online';
+String onlineStateUrl = 'http://localhost:8000/rooms/find_online_status';
+String onlineLeaveUrl = 'http://localhost:8000/rooms/cancel_find_online';
 
 // For server
 
@@ -23,3 +26,6 @@ String statisticsUrl = 'http://localhost:8000/settings/user_stats';
 // String leaveRoomUrl = 'http://192.145.30.253:8000/rooms/leave';
 // String serverUrlPartUrl = 'ws://192.145.30.253:8000';
 // String statisticsUrl = 'http://192.145.30.253:8000/settings/user_stats';
+// String onlineSearchUrl = 'http://192.145.30.253:8000/rooms/find_online';
+// String onlineStateUrl = 'http://192.145.30.253:8000/rooms/find_online_status';
+// String onlineLeaveUrl = 'http://192.145.30.253:8000/rooms/cancel_find_online';

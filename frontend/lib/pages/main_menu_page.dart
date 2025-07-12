@@ -54,7 +54,7 @@ class _MainMenuPageState extends State<MainMenuPage> {
   @override
   Widget build(BuildContext context) {
     final gameProvider = Provider.of<GameProvider>(context);
-    gameProvider.loadIdAndName();
+    gameProvider.loadMyPersonalInfo();
 
     return Scaffold(
       body: Container(
@@ -78,14 +78,9 @@ class _MainMenuPageState extends State<MainMenuPage> {
                   SizedBox(
                     width: 80,
                     height: 80,
-                    child: IconButton(
-                      onPressed: () {
-                        gameProvider.clearMyPersonalInfo();
-                        Navigator.pushNamed(context, '/');
-                      },
-                      icon: const Icon(Icons.door_back_door_outlined, size: 60),
-                    ),
+                    child: Icon(Icons.account_circle, size: 60, color: grey3A3A3AColor,),
                   ),
+                  Text(gameProvider.myName == "HaveNotName" ? "Loading..." : gameProvider.myName, style: nicknameStyle),
                   const Expanded(flex: 1, child: Text("")),
                   // Button to return to SettingsPage
                   SizedBox(
@@ -93,7 +88,7 @@ class _MainMenuPageState extends State<MainMenuPage> {
                     height: 80,
                     child: IconButton(
                       onPressed: () {
-                        //pass to settings
+                        Navigator.pushNamed(context, '/profile');
                       },
                       icon: const Icon(Icons.settings, size: 60),
                     ),
@@ -291,6 +286,7 @@ class _MainMenuPageState extends State<MainMenuPage> {
                                         Navigator.of(context).pop();
                                         // Show the online search dialog
                                         showDialog(
+                                          barrierDismissible: false, 
                                           context: context,
                                           builder: (context) => onlineSearchDialog(),
                                         );
