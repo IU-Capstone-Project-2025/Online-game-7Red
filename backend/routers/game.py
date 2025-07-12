@@ -176,12 +176,15 @@ async def game_websocket(
                 game.next_player() #changing current player to the next one
                 print(f'Cur player after {game.current_player}')
                 print(f"EXITED IDS {manager.exited_id[room_id] }")
+
+                is_active = True #variable for correctly handling switch between active/inactive states of a player
                 
                 #handling situations when some player exited the room before their turn
                 if game.current_player in manager.exited_id[room_id] and type_cur == "my_turn":
                     print("HERE 1", flush=True)
                     next_lose = True
                     manager.exited_id[room_id].remove(game.current_player)
+                    is_active = False
                     print(f'ids that exited after removal: {manager.exited_id[room_id]}', flush=True)
 
                 #handling situations when some player (pl 1) exited the room before their turn, and the player (pl 2) before (orfer: pl 2 -> pl 1) exited/timed out in their turn
@@ -189,6 +192,7 @@ async def game_websocket(
                     print("HERE 2", flush=True)
                     next_lose = True
                     manager.exited_id[room_id].remove(game.current_player)
+                    is_active = False
                     print(f'ids that exited after removal: {manager.exited_id[room_id]}', flush=True)
 
                 #normal situation when no players exited the game
@@ -211,7 +215,9 @@ async def game_websocket(
                         if next_player in manager.exited_id[room_id]:
                             next_lose = True
                             manager.exited_id[room_id].remove(next_player)
-
+                        elif not is_active:
+                            game.players[cur_player]["active"] = False
+                            next_lose = not game.check_winning_at_beginning(next_player)
                         else:
                             next_lose = not game.check_winning_at_beginning(next_player)
 

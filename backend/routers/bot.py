@@ -4,12 +4,28 @@ import uuid
 import numpy as np
 from ml.DQN import DQNAgent, Red7Env
 import torch
+from threading import Lock
 
 # Create FastAPI router for bot endpoints
 router = APIRouter(prefix="/bot", tags=["bot"])
 
 # Dictionary to store active game sessions
 sessions = {}
+session_lock = Lock()  # Lock for session access
+
+# Centralized bot instance
+central_bot = None
+bot_lock = Lock()  # Lock for bot access
+bot_initialization_lock = Lock() # Separate lock just for bot initialization
+
+def initialize_central_bot():
+    """Initialize the centralized bot instance in a thread-safe manner"""
+    global central_bot
+    if central_bot is None:
+        with bot_initialization_lock:
+            if central_bot is None:
+                central_bot = DQNAgent(device='cpu')
+                central_bot.load("ml/final_agent (4).pth")
 
 def to_native(val):
     """
@@ -79,18 +95,30 @@ def encode_card(card_str: str) -> int:
     
     return color_idx * 7 + value
 
-def create_new_session():
-    """
-    Create a new game session with environment and agent.
+# def create_new_session():
+#     """
+#     Create a new game session with environment and agent.
     
-    Returns:
-        String: New session ID
-    """
+#     Returns:
+#         String: New session ID
+#     """
+#     env = Red7Env(verbose=False)
+#     agent = DQNAgent(device='cpu')
+#     agent.load("ml/final_agent (4).pth")
+#     session_id = str(uuid.uuid4())
+#     sessions[session_id] = {"env": env, "agent": agent}
+#     return session_id
+
+def create_new_session():
+    """Create a new game session with environment."""
+    initialize_central_bot()
+    
     env = Red7Env(verbose=False)
-    agent = DQNAgent(device='cpu')
-    agent.load("ml/final_agent (4).pth")
     session_id = str(uuid.uuid4())
-    sessions[session_id] = {"env": env, "agent": agent}
+    
+    with session_lock:
+        sessions[session_id] = {"env": env}
+
     return session_id
 
 @router.post("/start")
@@ -102,9 +130,10 @@ async def start_bot_game():
         Dictionary with session ID and initial observation
     """
     session_id = create_new_session()
-    env = sessions[session_id]["env"]
-    obs = env.reset()
-    obs = to_native(obs)
+    with session_lock:
+        env = sessions[session_id]["env"]
+        obs = env.reset()
+        obs = to_native(obs)
 
     # Extract information from observation
     hand = obs.get("hand", [[]])[0]
@@ -154,10 +183,10 @@ async def bot_move(session_id: str = Body(...), action: list = Body(...)):
     Returns:
         Dictionary with updated observation, bot's action, and game state
     """
-    if session_id not in sessions:
-        raise HTTPException(status_code=404, detail="Session not found")
-    env = sessions[session_id]["env"]
-    agent = sessions[session_id]["agent"]
+    with session_lock:
+        if session_id not in sessions:
+            raise HTTPException(status_code=404, detail="Session not found")
+        env = sessions[session_id]["env"]
 
     # Process player's move
     obs, reward, done, _ = env.step(tuple(action))
@@ -167,6 +196,8 @@ async def bot_move(session_id: str = Body(...), action: list = Body(...)):
 
     # If game is over after player's move
     if done:
+        with session_lock:
+            sessions.pop(session_id, None)
         return {"obs": obs, "done": True, "winner": env.get_winner()}
 
     # Get bot's move
@@ -186,10 +217,11 @@ async def bot_move(session_id: str = Body(...), action: list = Body(...)):
     }
     
     # Move tensors to the same device as the model
-    device = next(agent.model.parameters()).device
-    obs_tensor = {k: v.to(device) for k, v in obs_tensor.items()}
+    with bot_lock:
+        device = next(central_bot.model.parameters()).device
+        obs_tensor = {k: v.to(device) for k, v in obs_tensor.items()}
+        bot_action = central_bot.select_action(obs_tensor, legal_mask)
     
-    bot_action = agent.select_action(obs_tensor, legal_mask)
     obs, reward, done, _ = env.step(bot_action)
     bot_rule_card = decode_card(bot_action[1]) if bot_action[1] != 0 else 0
     obs = enrich_obs(obs, bot_rule_card)
