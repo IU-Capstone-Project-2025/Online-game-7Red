@@ -10,6 +10,9 @@
 // String leaveRoomUrl = 'http://localhost:8000/rooms/leave';
 // String serverUrlPartUrl = 'ws://localhost:8000';
 // String statisticsUrl = 'http://localhost:8000/settings/user_stats';
+// String onlineSearchUrl = 'http://localhost:8000/rooms/find_online';
+// String onlineStateUrl = 'http://localhost:8000/rooms/find_online_status';
+// String onlineLeaveUrl = 'http://localhost:8000/rooms/cancel_find_online';
 
 // For server
 
@@ -23,3 +26,6 @@ String roomNotReadyUrl = '/api/rooms/not_ready';
 String leaveRoomUrl = '/api/rooms/leave';
 String serverUrlPartUrl = String.fromEnvironment('WS_URL', defaultValue: 'wss://localhost:8000/api');
 String statisticsUrl = '/api/settings/user_stats';
+String onlineSearchUrl = '/api/rooms/find_online';
+String onlineStateUrl = '/api/rooms/find_online_status';
+String onlineLeaveUrl = '/api/rooms/cancel_find_online';

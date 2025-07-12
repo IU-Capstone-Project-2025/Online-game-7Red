@@ -99,7 +99,8 @@ class _StatisticsPageState extends State<StatisticsPage> {
                     height: 60,
                     child: IconButton(
                       onPressed: () {
-                        Navigator.pushNamed(context, '/mainmenu');
+                        // Navigator.pushNamed(context, '/mainmenu');
+                        Navigator.pop(context);
                       },
                       icon: const Icon(Icons.arrow_back_rounded, size: 44),
                     ),
@@ -132,18 +133,26 @@ class _StatisticsPageState extends State<StatisticsPage> {
                         ),
                       Padding(padding: const EdgeInsets.only(top: 40)),
                       // Achievement 1
-                      Container(
-                        width: 240,
-                        height: 240,
-                        decoration: BoxDecoration(
-                          color: logSuccess ? (achievements[0] ? const Color.fromARGB(255, 123, 237, 127) : greyTimerColor) : greyTimerColor,
-                          borderRadius: BorderRadius.circular(15),
-                          border: Border.all(color: grey3A3A3AColor, width: 1),
+                      if (logSuccess)
+                        if (achievements[0]) 
+                          Image(
+                            image: AssetImage('lib/assets/7_days_streak.png'),
+                            width: 240,
+                            height: 240,
+                          ),
+                      if (logSuccess)
+                        if (!achievements[0]) 
+                          Image(
+                            image: AssetImage('lib/assets/7_days_streak_Black.png'),
+                            width: 240,
+                            height: 240,
+                          ),
+                      if (!logSuccess)
+                        Image(
+                          image: AssetImage('lib/assets/7_days_streak_Black.png'),
+                          width: 240,
+                          height: 240,
                         ),
-                        child: Center(
-                          child: Text("Achievement 1", style: basicTextStyle, textAlign: TextAlign.center,),
-                        ),
-                      ),
                       Padding(padding: const EdgeInsets.only(top: 20)),
                       Text("Log in to the game for\n7 consecutive days", style: basicTextStyle, textAlign: TextAlign.center,),
                     ],
@@ -165,18 +174,26 @@ class _StatisticsPageState extends State<StatisticsPage> {
                         ),
                       Padding(padding: const EdgeInsets.only(top: 40)),
                       // Achievement 2
-                      Container(
-                        width: 240,
-                        height: 240,
-                        decoration: BoxDecoration(
-                          color: logSuccess ? (achievements[1] ? const Color.fromARGB(255, 123, 237, 127) : greyTimerColor) : greyTimerColor,
-                          borderRadius: BorderRadius.circular(15),
-                          border: Border.all(color: grey3A3A3AColor, width: 1),
+                      if (logSuccess)
+                        if (achievements[1]) 
+                          Image(
+                            image: AssetImage('lib/assets/3_wins_over_the_bot.png'),
+                            width: 240,
+                            height: 240,
+                          ),
+                      if (logSuccess)
+                        if (!achievements[1]) 
+                          Image(
+                            image: AssetImage('lib/assets/3_wins_over_the_bot_Black.png'),
+                            width: 240,
+                            height: 240,
+                          ),
+                      if (!logSuccess)
+                        Image(
+                          image: AssetImage('lib/assets/3_wins_over_the_bot_Black.png'),
+                          width: 240,
+                          height: 240,
                         ),
-                        child: Center(
-                          child: Text("Achievement 2", style: basicTextStyle,),
-                        ),
-                      ),
                       Padding(padding: const EdgeInsets.only(top: 20)),
                       Text("Win the bot 3 times\n", style: basicTextStyle, textAlign: TextAlign.center,),
                     ],
@@ -198,18 +215,26 @@ class _StatisticsPageState extends State<StatisticsPage> {
                         ),
                       Padding(padding: const EdgeInsets.only(top: 40)),
                       // Achievement 3
-                      Container(
-                        width: 240,
-                        height: 240,
-                        decoration: BoxDecoration(
-                          color: logSuccess ? (achievements[2] ? const Color.fromARGB(255, 123, 237, 127) : greyTimerColor) : greyTimerColor,
-                          borderRadius: BorderRadius.circular(15),
-                          border: Border.all(color: grey3A3A3AColor, width: 1),
+                      if (logSuccess)
+                        if (achievements[2]) 
+                          Image(
+                            image: AssetImage('lib/assets/5_wins_streak.png'),
+                            width: 240,
+                            height: 240,
+                          ),
+                      if (logSuccess)
+                        if (!achievements[2]) 
+                          Image(
+                            image: AssetImage('lib/assets/5_wins_streak_Black.png'),
+                            width: 240,
+                            height: 240,
+                          ),
+                      if (!logSuccess)
+                        Image(
+                          image: AssetImage('lib/assets/5_wins_streak_Black.png'),
+                          width: 240,
+                          height: 240,
                         ),
-                        child: Center(
-                          child: Text("Achievement 3", style: basicTextStyle,),
-                        ),
-                      ),
                       Padding(padding: const EdgeInsets.only(top: 20)),
                       Text("Get a winstreak of 5 games\nin an online-mode", style: basicTextStyle, textAlign: TextAlign.center,),
                     ],

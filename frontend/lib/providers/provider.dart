@@ -86,10 +86,11 @@ class GameProvider extends ChangeNotifier {
   }
 
   // For loading the information about the user
-   void loadIdAndName() async {
+   void loadMyPersonalInfo() async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
     _myName = prefs.getString('myName') ?? 'HaveNotName';
     _myID = prefs.getInt('myID') ?? -1;
+    _email = prefs.getString('email') ?? 'NavNotEmail';
     notifyListeners();
   }
 
