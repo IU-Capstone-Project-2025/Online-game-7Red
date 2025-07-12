@@ -1,7 +1,7 @@
 from fastapi import APIRouter, Body, HTTPException
 from passlib.context import CryptContext
 from app.database import (
-    statistics, user_achievements, search_user_by_id, users, get_achievement_id_by_name, database, profiles
+    statistics, user_achievements, search_user_by_id, users, get_achievement_id_by_name, database, profiles, search_user_by_login
 )
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 router = APIRouter(prefix="/api/settings", tags=["settings"])
@@ -55,6 +55,18 @@ async def chenge_nickname(user_id: int = Body(...,embed=True), new_nickname: str
     update = profiles.update().where(profiles.c.user_id == user_id).values(name = new_nickname)
     await database.execute(update)
     return {"message": "Nickname updated successfully", "new_nickname": new_nickname}
+
+@router.post("/change_email")
+async def change_email(user_id: int = Body(..., embed=True), new_email: str = Body(..., embed=True)):
+    # Check if email already exists
+    exist = await search_user_by_login(new_email)
+    if exist:
+        raise HTTPException(status_code=400, detail="Email already registered")
+    # Update email in users table
+    update = users.update().where(users.c.user_id == user_id).values(login=new_email)
+    await database.execute(update)
+    return {"message": "Email updated successfully", "new_email": new_email}
+
 
 @router.post("/change_password")
 async def change_password(

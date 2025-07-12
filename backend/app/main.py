@@ -6,9 +6,6 @@ from app.routers.game import router as game_router
 from app.routers.game_bot import router as ai_game_router
 from app.routers.settings import router as setting_router
 from app.routers.avatar import router as avatar_router
-#from app.routers.bot import router as bot_router
-
-#from app.routers.game_bot import router as ai_game_router 
 from app.database import database
 from fastapi.middleware.cors import CORSMiddleware
 
