@@ -84,7 +84,7 @@ async def websocket_game(websocket: WebSocket, player_id: int):
             #if move type is time_out, player loses automatically
             elif type_cur == "time_out":
                 is_winning = False
-
+                final_winner = 1
             else:
                 print("something else happened...", flush=True)
                 continue 
@@ -99,7 +99,7 @@ async def websocket_game(websocket: WebSocket, player_id: int):
                 bot_response = await bot_move(session, action)
 
             #registering current round's winner
-            final_winner = bot_response["winner"]
+            final_winner = bot_response["winner"] if bot_response != None else None
             #checking whether or not bot loses at the beginning of its turn 
             if bot_response:
                 next_lose = True if bot_response["winner"] == 0 else False
@@ -161,7 +161,9 @@ async def websocket_game(websocket: WebSocket, player_id: int):
 
     #websocket disconnet handling
     except WebSocketDisconnect:
+        print(f"Open bot connections before: {active_connections}", flush=True)
         active_connections.pop(player_id, None)  #cleaning up inactive connections
+        print(f"Open bot connections after: {active_connections}", flush=True)
         #updating statistics in the database
         if final_winner == 0:
             await increment_bot_wins(player_id) 
