@@ -2,41 +2,92 @@ import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:provider/provider.dart';
+import 'package:email_validator/email_validator.dart';
 
 import '../data/styles.dart';
 import '../data/urls.dart';
+import '../providers/provider.dart';
 
 class changePersInfo extends StatefulWidget {
+  int changeNameEmail;
 
-  const changePersInfo({super.key});
+  changePersInfo({super.key, required this.changeNameEmail});
 
   @override
-  State<changePersInfo> createState() => _ChangePersInfoState();
+  State<changePersInfo> createState() => _ChangePersInfoState(changeNameEmail);
 }
 
 class _ChangePersInfoState extends State<changePersInfo> {
   final TextEditingController controller = TextEditingController();
-  final TextEditingController controller2 = TextEditingController();
   SharedPreferences? prefs;
+  int? changeNameEmail;
 
   String errNew = '';
   String postText = '';
 
-  int changeNameEmail = 0;
+  bool logSuccess = false;
+  
+  _ChangePersInfoState(int this.changeNameEmail);
 
-  @override
-  void initState() {
-    super.initState();
-    getInfo();
+  Future<void> changeNickname(int id, String new_nickname) async {
+
+    // Use url from urls.dart file
+    final url = Uri.parse(changeNicknameUrl);
+    final response = await http.post(
+      url,
+      headers: {'Content-Type': 'application/json', 'accept': 'application/json'},
+      body: jsonEncode({
+        'user_id': id,
+        'new_nickname': new_nickname,
+      }),
+    );
+
+    final responseBody = json.decode(response.body);
+
+    if (response.statusCode == 200 || response.statusCode == 201) {
+      setState(() {
+        logSuccess = true;
+      });
+    } else if (responseBody['detail'] == 'Profile not found') {
+      setState(() {
+        logSuccess = false;
+        postText = 'Profile not found';
+      });
+    }
   }
 
-  void getInfo() async {
-    prefs = await SharedPreferences.getInstance();
-    changeNameEmail = await prefs?.getInt('name/email') ?? 0;
+  Future<void> changeEmail(int id, String new_email) async {
+
+    // Use url from urls.dart file
+    final url = Uri.parse(changeEmailUrl);
+    final response = await http.post(
+      url,
+      headers: {'Content-Type': 'application/json', 'accept': 'application/json'},
+      body: jsonEncode({
+        'user_id': id,
+        'new_email': new_email,
+      }),
+    );
+
+    final responseBody = json.decode(response.body);
+
+    if (response.statusCode == 200 || response.statusCode == 201) {
+      setState(() {
+        logSuccess = true;
+      });
+    } else if (responseBody['detail'] == 'Email already registered') {
+      setState(() {
+        logSuccess = false;
+        postText = 'Email already registered';
+      });
+    }
   }
 
   @override
   Widget build(BuildContext context) {
+    final gameProvider = Provider.of<GameProvider>(context);
+
     return Dialog(
     child: Container(
       width: 352,
@@ -76,14 +127,15 @@ class _ChangePersInfoState extends State<changePersInfo> {
                   color: Colors.white,
                   borderRadius: BorderRadius.circular(6),
                 ),
-                child: TextField(
-                  decoration: const InputDecoration(
-                    border: OutlineInputBorder(
-                      borderSide: BorderSide.none,
-                    ),
+                child: Center(
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Padding(padding: const EdgeInsets.only(left: 15)),
+                      SelectableText(changeNameEmail == 1 ? gameProvider.myName : gameProvider.email, style: basicTextStyle,),
+                      Expanded(flex: 1, child: Text("")),
+                    ],
                   ),
-                  controller: controller,
-                  textAlignVertical: TextAlignVertical.top,
                 ),
               ),
               Padding(padding: const EdgeInsets.only(top: 17)),
@@ -112,7 +164,7 @@ class _ChangePersInfoState extends State<changePersInfo> {
                       borderSide: BorderSide.none,
                     ),
                   ),
-                  controller: controller2,
+                  controller: controller,
                   textAlignVertical: TextAlignVertical.top,
                 ),
               ),
@@ -149,14 +201,39 @@ class _ChangePersInfoState extends State<changePersInfo> {
                         errNew = '';
                       });
                       // Check if all fields are filled
-                      if (controller.text.isEmpty || controller2.text.isEmpty) {
+                      if (controller.text.isEmpty) {
                         setState(() {
                           postText = 'All fields are required';
                         });
                         return;
+                      } else if (changeNameEmail == 1 && controller.text.length > 10) {
+                        setState(() {
+                          errNew = '1-10 symbols';
+                        });
+                        return;
+                      } else if (changeNameEmail == 2 && !EmailValidator.validate(controller.text)) {
+                        setState(() {
+                          errNew = 'Invalid email';
+                        });
+                        return;
+                      } else {
+                        if (changeNameEmail == 1) {
+                          await changeNickname(gameProvider.myID, controller.text);
+                        } else {
+                          await changeEmail(gameProvider.myID, controller.text);
+                        }
+                      }
+                      if (logSuccess) {
+                        if (changeNameEmail == 1) {
+                          gameProvider.myName = controller.text;
+                        } else {
+                          gameProvider.email = controller.text;
+                        }
+                        gameProvider.saveMyPersonalInfo();
+                        Navigator.of(context).pop();
                       }
                     },
-                    child: const Text('SIGN  IN'),
+                    child: const Text('CHANGE'),
                   ),
                 ),
                 Padding(padding: const EdgeInsets.only(top: 5)),
