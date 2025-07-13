@@ -1,6 +1,6 @@
 from fastapi import APIRouter, Body, HTTPException
 from app.models import JoinRoomRequest
-from app.database import (assigned_id_exists, password_exist, create_game_room, add_user_to_room, 
+from app.database import (user_room, database, assigned_id_exists, password_exist, create_game_room, add_user_to_room, 
 search_game_room, remove_user_from_room, set_user_ready, get_room_players_and_ready, search_open_online_room)
 import random
 import asyncio
@@ -165,43 +165,54 @@ async def online_queue_timeout(initial_queue):
 
 @router.post("/find_online")
 async def find_online(user_id: int = Body(..., embed=True)):
-    # 1. Try to find a suitable existing room
+    # Try to find a suitable existing room
     room = await search_open_online_room()
     if room:
         try:
             await add_user_to_room(user_id, room["assigned_id"])
-            online_queue_status[user_id] = {
-                "status": "matched",
-                "assigned_id": room["assigned_id"],
-                "password": room["password"],
-                "players": [user_id] 
-            }
+            count_query = user_room.select().where(user_room.c.room_id == room["room_id"])
+            players = await database.fetch_all(count_query)
+            player_ids = [p["user_id"] for p in players]
+            for uid in player_ids:
+                online_queue_status[uid] = {
+                    "status": "matched",
+                    "assigned_id": room["assigned_id"],
+                    "password": room["password"],
+                    "players": player_ids
+                }
             return online_queue_status[user_id]
         except Exception:
-            pass  # If adding failed (e.g., race condition) - continue to next step
+            pass
 
-    # 2. If no suitable room exists - use standard queue
+    # If no suitable room exists - use standard queue
     if user_id in online_queue:
         return {"status": online_queue_status.get(user_id, "waiting")}
     online_queue.append(user_id)
-    online_queue_status[user_id] = {"status":"waiting"}
+    online_queue_status[user_id] = {"status": "waiting"}
     if len(online_queue) == 1:
         asyncio.create_task(online_queue_timeout(list(online_queue)))
-    # if len(online_queue) >= ONLINE_ROOM_SIZE:
-    #     while len(online_queue) >= ONLINE_ROOM_SIZE:
-    #         players = online_queue[:ONLINE_ROOM_SIZE]
-    #         for uid in players:
-    #             online_queue.remove(uid)
-    #         await start_online_game(players)
-    #     return online_queue_status[user_id]
-    # return {"status":"waiting"}
-    if len(online_queue) >= 2:
+    # Cycle for creating room
+    while len(online_queue) >= ONLINE_ROOM_SIZE:
         players = online_queue[:ONLINE_ROOM_SIZE]
         for uid in players:
             online_queue.remove(uid)
         await start_online_game(players)
-        return online_queue_status[user_id]
-    return {"status":"waiting"}
+        # Update status for all players
+        for uid in players:
+            if uid == user_id:
+                return online_queue_status[uid]
+    if 2 <= len(online_queue) <= ONLINE_ROOM_SIZE:
+        players = list(online_queue)
+        for uid in players:
+            online_queue.remove(uid)
+        await start_online_game(players)
+        if user_id in players:
+            return online_queue_status[user_id]
+    if len(online_queue) == 1:
+        asyncio.create_task(online_queue_timeout(list(online_queue)))
+    
+    return {"status": "waiting"}
+
 
 
 
