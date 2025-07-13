@@ -13,6 +13,8 @@ String statisticsUrl = 'http://localhost:8000/settings/user_stats';
 String onlineSearchUrl = 'http://localhost:8000/rooms/find_online';
 String onlineStateUrl = 'http://localhost:8000/rooms/find_online_status';
 String onlineLeaveUrl = 'http://localhost:8000/rooms/cancel_find_online';
+String changeNicknameUrl = 'http://localhost:8000/settings/change_nickname';
+String changeEmailUrl = 'http://localhost:8000/settings/change_email';
 
 // For server
 

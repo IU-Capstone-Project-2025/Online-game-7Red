@@ -136,7 +136,7 @@ class _ProfilePageState extends State<ProfilePage> {
                                             // TODO: change name
                                             showDialog(
                                               context: context,
-                                              builder: (context) => changePersInfo(),
+                                              builder: (context) => changePersInfo(changeNameEmail: 1),
                                             );
                                           },
                                           icon: const Icon(Icons.edit_rounded, size: 20),
@@ -173,7 +173,7 @@ class _ProfilePageState extends State<ProfilePage> {
                                             // TODO: change email
                                             showDialog(
                                               context: context,
-                                              builder: (context) => changePersInfo(),
+                                              builder: (context) => changePersInfo(changeNameEmail: 2),
                                             );
                                           },
                                           icon: const Icon(Icons.edit_rounded, size: 20),
@@ -342,7 +342,7 @@ class _ProfilePageState extends State<ProfilePage> {
                                         BorderSide(color: grey3A3A3AColor, width: 2),
                                       ),
                                     ),
-                                    onPressed: () {
+                                    onPressed: () async{
                                       gameProvider.clearMyPersonalInfo();
                                       Navigator.pushNamed(context, '/');
                                     },

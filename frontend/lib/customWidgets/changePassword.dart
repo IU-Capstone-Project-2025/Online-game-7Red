@@ -225,7 +225,7 @@ class _ChangePasswordState extends State<changePassword> {
                         return;
                       }
                     },
-                    child: const Text('SIGN  IN'),
+                    child: const Text('CHANGE'),
                   ),
                 ),
                 Padding(padding: const EdgeInsets.only(top: 5)),
