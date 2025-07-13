@@ -28,7 +28,7 @@ class GameManager:
         async with self._init_lock:
             if room_id not in self.active_games:
                 try:
-                    print(f"[DEBUG] Initializing new game for room {room_id}")
+                    print(f"[In function create_game] Initializing new game for room {room_id}")
                     game = Red7GameState(room_id)
                     
                     #initializing game state
@@ -44,12 +44,12 @@ class GameManager:
                         "final_winner": None
                     }
                     
-                    print(f"[DEBUG] Game initialized for room {room_id}")
+                    print(f"[In function create_game] Game initialized for room {room_id}")
                     return game
                 
                 #exception handling
                 except Exception as e:
-                    print(f"[ERROR] Game initialization failed: {e}")
+                    print(f"[In function create_game] Game initialization failed: {e}")
                     if room_id in self.active_games:
                         del self.active_games[room_id]
                     raise
@@ -82,7 +82,7 @@ async def game_websocket(
             #creating a game
             game = await manager.create_game(room_id)
             
-            print(f"names: {game.players_name_list}, ids: {game.players_id_list}, my_hand: {game.players[player_id]}", flush=True) 
+            print(f"[Player ({game.players[player_id]['name']}, {player_id}) got data] names: {game.players_name_list}, ids: {game.players_id_list}, my_hand: {game.players[player_id]}", flush=True) 
 
             #sending initial game state
             await websocket.send_json({
@@ -112,14 +112,15 @@ async def game_websocket(
                 new_hand = data["my_hand"]
                 new_palette = data["pallete"]
 
-                print(f"Got from front {type_cur}, {player_id}, {room_id}, {my_palette_ch}, {new_rule}, {new_hand}, {new_palette}", flush=True)
-                print(f"turn {type_cur}, player_id {player_id}, game.current_player {game.current_player}", flush=True)
+                print(f"Got from frontend turn_type-{type_cur}, player_id-{player_id}, room_id-{room_id}, palette_change-{my_palette_ch}, rule_change-{new_rule}, new_hand-{new_hand}, new_palette-{new_palette}", flush=True)
+                print(f"Turn: {type_cur}, player_id: {player_id}, game.current_player: {game.current_player}", flush=True)
 
                 #according to the move type, checking the correctness of player's move (whether or not a player makes a winning move in their turn)
                 if  type_cur == "my_turn" and game.current_player == player_id:
                     async with manager._state_lock:  #acquire lock before accessing game state
                         #doing a particular move check if player's dictionary of possible moves is empty (happens on the very first move of a player)
                         if not game.players[player_id]["possible_moves"]:
+                            print("Checking the move on its own (using check_move)", flush=True)
                             is_winning = game.check_move(
                                 player_id=player_id,
                                 new_rule=new_rule,
@@ -129,23 +130,25 @@ async def game_websocket(
 
                         #doing a move check in dictionary of possible moves
                         else:
-                            print("Check in pos moves", flush=True)
+                            print("Checking in dictionary of possible moves", flush=True)
                             is_winning = game.check_in_possible_moves(
                                 player_id=player_id,
                                 new_rule=new_rule,
                                 new_hand=new_hand,
                                 new_palette=new_palette
                             )
-                            print(f"check happened, output {is_winning}", flush=True)
+                        print(f"Check happened, output of is_winning condition: {is_winning}", flush=True)
                     
                     #if the move is correct, sending message to frontend
                     if is_winning:
+                        print(f"Player made a correct turn, sending 'right_turn' to frontend!", flush=True)
                         await websocket.send_json({"type": "right_turn"})
                     #if the move is incorrect, sending message to the frontend and going to the beginning of the while loop (recieving another move attempt from frontend from the same player)
                     else:
-                        print(f"old_r {game.cur_rule_card} new_r {new_rule} pal_ch {my_palette_ch}", flush=True)
+                        print(f"Player tried to make an incorrect move!", flush=True)
                         try:
-                            print("[DEBUG] Sending 'wrong_turn' response...", flush=True)
+                            print("Sending 'wrong_turn' response with data:", flush=True)
+                            print(f"old_rule: {game.cur_rule_card}, new_rule: {new_rule}, palette_change: {my_palette_ch}", flush=True)
                             await asyncio.wait_for(
                                 websocket.send_json({
                                     "type": "wrong_turn",
@@ -155,7 +158,7 @@ async def game_websocket(
                                 }),
                                 timeout=5.0
                             )
-                            print("[DEBUG] 'wrong_turn' sent successfully!", flush=True)
+                            print("'wrong_turn' sent successfully!", flush=True)
                         except asyncio.TimeoutError:
                             print("[ERROR] Frontend timed out! Closing connection.", flush=True)
                             await websocket.close()
@@ -172,79 +175,99 @@ async def game_websocket(
                     #is_winning = True
                     print(f"this is type now: {type_cur}", flush=True)
 
-                print(f'Cur player before {game.current_player}')
+                #print(f'Cur player before {game.current_player}')
+                prev_player = game.current_player
                 game.next_player() #changing current player to the next one
-                print(f'Cur player after {game.current_player}')
-                print(f"EXITED IDS {manager.exited_id[room_id] }")
+                #print(f'Cur player after {game.current_player}')
+                print(f"List of EXITED IDS: {manager.exited_id[room_id]}")
 
                 is_active = True #variable for correctly handling switch between active/inactive states of a player
                 
                 #handling situations when some player exited the room before their turn
                 if game.current_player in manager.exited_id[room_id] and type_cur == "my_turn":
-                    print("HERE 1", flush=True)
+                    print(f"Player {game.current_player} exited the room before their turn!", flush=True)
                     next_lose = True
                     manager.exited_id[room_id].remove(game.current_player)
                     is_active = False
-                    print(f'ids that exited after removal: {manager.exited_id[room_id]}', flush=True)
+                    print(f"Player {game.current_player} was removed from EXITED IDS", flush=True)
+                    print(f'EXITED IDS after removal: {manager.exited_id[room_id]}', flush=True)
 
                 #handling situations when some player (pl 1) exited the room before their turn, and the player (pl 2) before (orfer: pl 2 -> pl 1) exited/timed out in their turn
                 elif game.current_player in manager.exited_id[room_id] and type_cur == "time_out" and len(game.players_id_list) > 2:
-                    print("HERE 2", flush=True)
+                    print(f"Player {game.current_player} exited the room, but the player {prev_player} timed out", flush=True)
                     next_lose = True
                     manager.exited_id[room_id].remove(game.current_player)
                     is_active = False
-                    print(f'ids that exited after removal: {manager.exited_id[room_id]}', flush=True)
+                    print(f"Player {game.current_player} was removed from EXITED IDS", flush=True)
+                    print(f'EXITED IDS after removal: {manager.exited_id[room_id]}', flush=True)
 
                 #normal situation when no players exited the game
                 else:
-                    print("OR HERE", flush=True)
+                    print("No one exited the game not on their turn", flush=True)
+                    if type_cur == "time_out":
+                        game.players[player_id]['active'] = False
+                        next_lose = not game.check_winning_at_beginning(game.current_player)
+                        game.players[player_id]['active'] = True
                     next_lose = not game.check_winning_at_beginning(game.current_player)
 
                 #sending message about player's made move to the frontend
                 await broadcast_game_state(game, player_id, is_winning, my_palette_ch, new_rule, next_lose)
 
                 #handling of the case when players continuously lose at the beginning of their turns (without an opportynity to make a move)
-                max_checks = len(game.players_id_list)
+                active_players = [pid for pid in game.players_id_list if game.players[pid]["active"]]
+                max_checks = len(active_players)
                 while next_lose and max_checks > 0:
-                    print(max_checks)
                     max_checks -= 1
+                    print(f"Players that got next_lose = True sequentially: {len(active_players) - max_checks}", flush=True)
                     cur_player = game.current_player
                     game.next_player()
                     next_player = game.current_player
                     if game.players[next_player]["active"]:
                         if next_player in manager.exited_id[room_id]:
+                            print(f"Next player {next_player} is in EXITED IDS", flush=True)
                             next_lose = True
                             manager.exited_id[room_id].remove(next_player)
                         elif not is_active:
+                            print(f"Current player {cur_player} was in EXITED IDS and became inactive", flush=True)
                             game.players[cur_player]["active"] = False
                             next_lose = not game.check_winning_at_beginning(next_player)
                         else:
-                            next_lose = not game.check_winning_at_beginning(next_player)
+                            print("No exited players need handling", flush=True)
+                            if type_cur == "time_out":
+                                game.players[cur_player]['active'] = False
+                                next_lose = not game.check_winning_at_beginning(next_player)
+                                game.players[cur_player]['active'] = True
+                            else:
+                                next_lose = not game.check_winning_at_beginning(next_player)
 
-                        try:
-                            print("SSSHHH", flush=True)
-                            print(f"Next lose in loop {next_lose}", flush=True)
-                        except Exception as e:
-                            print(f"CRASH BETWEEN PRINTS: {e}", flush=True)
+
+                        print(f"Will the next player lose at the beginning: {next_lose}", flush=True)
+
                         await broadcast_game_state(game, cur_player, False, None, None, next_lose)
                     else:
-                        print(game.players, flush=True)
+                        print("The player has inactive state (game.players[next_player]['active'] != True)!", flush=True)
                 
         #websocket disconnet handling
         except WebSocketDisconnect:
-            print(f"exit state: {manager.commonVar[room_id]['exit_was']}", flush=True)
+            print(f"Player {player_id} entered WebSocketDisconnect", flush=True)
+            print(f"Did anyone exit the game: {manager.commonVar[room_id]['exit_was']}", flush=True)
             next_player_id = get_next_player_id(game, player_id)
+            active_players = [pid for pid in game.players_id_list if game.players[pid]["active"]]
+
             if not manager.commonVar[room_id]['exit_was']:
                 print("Changed state in disconnect", flush=True)
+                print(f'Active players before: {active_players}')
                 game.players[player_id]["active"] = False
+                print(f"Player {player_id} became inactive", flush=True)
                 
             elif next_player_id in manager.exited_id[room_id] and manager.commonVar[room_id]['type_cur'] == "time_out":
-                print("Cexit_was true and type time_out", flush=True)
-                active_players = [pid for pid in game.players_id_list if game.players[pid]["active"]]
-                print(f'active players before in here: {active_players}')
+                print("Situation when a player timed out and the next player exited happened", flush=True)
+                print(f'Active players before: {active_players}')
                 game.players[next_player_id]["active"] = False
-                active_players = [pid for pid in game.players_id_list if game.players[pid]["active"]]
-                print(f'active players in here: {active_players}')
+                print(f"Player {player_id} became inactive", flush=True)
+
+            active_players = [pid for pid in game.players_id_list if game.players[pid]["active"]]
+            print(f'Active players now: {active_players}')
                 
             connection_active = False
             break
@@ -258,23 +281,24 @@ async def game_websocket(
         
         #handling of the game's end for players
         finally:
-            print(f"{manager.connections}", flush=True)
-            print(f"{manager.active_games}", flush=True)
+            print(f"In manager.connections before finally-block: {manager.connections}", flush=True)
+            print(f"In manager.active_games before finally-block: {manager.active_games}", flush=True)
             if game.assigned_id not in manager.active_games:
                 return
             #getting the winner's id
             cur_winner = manager.commonVar[game.assigned_id]["final_winner"]
             #getting the list of active players
             active_players = [pid for pid in game.players_id_list if game.players[pid]["active"]]
-            print(f"ACTIVE PLAYERS {active_players}", flush=True)
+            print(f"Active players in finally-block {active_players}", flush=True)
             #if a player is in the dictionary with connections, deleting the player
             if player_id in manager.connections:
                 del manager.connections[player_id]
                 connection_active = False
-                print(f"Cur_winner: {cur_winner}, list of exuted players: {manager.exited_id[room_id]}", flush=True)
+                print(f"Current_winner: {cur_winner}, list of exited players: {manager.exited_id[room_id]}", flush=True)
 
                 #updating statistics in the database
                 if (cur_winner == player_id and (player_id not in manager.exited_id[room_id])) or (cur_winner == None and len(active_players) == 0):
+                    print(f"Player {player_id} won!", flush=True)
                     await update_win_streak(player_id, True)
                     await check_and_award_win_streak(player_id)
                 else:
@@ -292,50 +316,35 @@ async def game_websocket(
                 del manager.commonVar[assigned_id]
                 #updating room's state in database
                 await update_room_state(str(assigned_id), "finished")
+                print(f"The game in room {assigned_id} finished! Room state was updated, room data was cleaned")
 
-            print(f"{manager.connections}", flush=True)
-            print(f"{manager.active_games}", flush=True)
+            print(f"In manager.connections after finally-block: {manager.connections}", flush=True)
+            print(f"In manager.active_games after finally-block: {manager.active_games}", flush=True)
     
 #function to send messages to the frontend after a player made an appropriate move
 async def broadcast_game_state(game: Red7GameState, cur_player_id: int, is_winning: bool, my_palette_ch: str, new_rule: str, next_lose: bool):
     """Send updated game state to all players in room"""
     if not game:
         return
+    print("Sending a message via broadcast_game_state", flush=True)
+    print(f"Data: is_winning-{is_winning}, current_player-{cur_player_id}, palette_change-{my_palette_ch}, rule_change-{new_rule}, next_lose-{next_lose}", flush=True)
 
-    print(f"is_win {is_winning}, cur_player {cur_player_id}, pal_ch {my_palette_ch}, rule {new_rule}, next_lose {next_lose}", flush=True)
-
-    print(f"NO PRINT WHYY", flush=True)
     #getting all the active players
     active_players = [pid for pid in game.players_id_list if game.players[pid]["active"]]
 
-    #hadling the case of only one active player in a room
-    if len(active_players) == 1:
-        print(f'active players now {active_players}', flush=True)
-        for player_id in game.players_id_list:
-            if player_id in manager.connections:
-                await manager.connections[player_id].send_json({
-                    "type": "change_turn",
-                    "lose": False,
-                    "id_did": cur_player_id,
-                    "his_pallete_ch": my_palette_ch,
-                    "rule_ch": new_rule,
-                    "next_lose": False
-                })
-
     #sending a message about a player's move to every active player in the room
-    else:
-        for player_id in game.players_id_list:
-            if player_id in manager.connections:
-                await manager.connections[player_id].send_json({
-                    "type": "change_turn",
-                    "lose": 0 if is_winning else 1,
-                    "id_did": cur_player_id,
-                    "his_pallete_ch": my_palette_ch,
-                    "rule_ch": new_rule,
-                    "next_lose": 1 if next_lose else 0
-                })
+    for player_id in game.players_id_list:
+        if player_id in manager.connections:
+            await manager.connections[player_id].send_json({
+                "type": "change_turn",
+                "lose": 0 if is_winning else 1,
+                "id_did": cur_player_id,
+                "his_pallete_ch": my_palette_ch,
+                "rule_ch": new_rule,
+                "next_lose": 1 if next_lose else 0
+            })
 
-    print(active_players, flush=True)
+    print(f"Checking active players in broadcast_game_state after sending a message: {active_players}", flush=True)
 
     #if a player made a losing move, changing player's active state to False
     if not is_winning:
@@ -348,7 +357,7 @@ async def broadcast_game_state(game: Red7GameState, cur_player_id: int, is_winni
         manager.commonVar[game.assigned_id]["final_winner"] = cur_player_id
         
     active_players = [pid for pid in game.players_id_list if game.players[pid]["active"]]
-    print(active_players, flush=True)
+    print(f"Checking active players in broadcast_game_state after updating players' states: {active_players}", flush=True)
 
 #function that gets the id of the next player according to the given player id
 def get_next_player_id(game: Red7GameState, cur_player_id: int):
@@ -360,5 +369,5 @@ def get_next_player_id(game: Red7GameState, cur_player_id: int):
     else:
         next_value =  my_list[0]
         next_pl_ind = 0
-    print(f"After {cur_player_id} goes {next_value}", flush=True)
+    print(f"[In function get_next_player_id] After {cur_player_id} goes {next_value}", flush=True)
     return next_value, next_pl_ind
