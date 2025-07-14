@@ -4,6 +4,7 @@ from app.database import (assigned_id_exists, password_exist, create_game_room, 
 search_game_room, remove_user_from_room, set_user_ready, get_room_players_and_ready, search_open_online_room)
 import random
 import asyncio
+import logging
 
 
 router = APIRouter(prefix="/api/rooms", tags=["rooms"])
@@ -226,8 +227,8 @@ async def find_online_status(user_id: int = Body(..., embed=True)):
                 pass  
 
     # Debugging information
-    print(f"Current online_queue: {online_queue}")
-    print(f"Current online_queue_status: {online_queue_status}")
+    logging.info(f"[In function find_online_status] Current online_queue: {online_queue}")
+    logging.info(f"[In function find_online_status] Current online_queue_status: {online_queue_status}")
     
     # Return the user's current status if they're in the tracking dictionary
     if user_id in online_queue_status:

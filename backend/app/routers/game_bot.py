@@ -4,6 +4,7 @@ from typing import Dict
 from app.database import get_profile_name_by_user_id, increment_bot_wins, check_and_award_bot_wins
 from app.routers.bot import start_bot_game, bot_move, encode_card, decode_card
 from app.red7state import Red7GameState
+import logging
 
 #creating FastAPI router for endpoints for game with bot
 router = APIRouter(prefix="/api/ai_game", tags=["AI Game"])
@@ -46,13 +47,13 @@ async def websocket_game(websocket: WebSocket, player_id: int):
             new_hand = data["my_hand"]
             new_palette = data["pallete"]
 
-            print(f"Got from frontend turn_type-{type_cur}, player_id-{player_id}, palette_change-{my_palette_ch}, rule_change-{new_rule}, new_hand-{new_hand}, new_palette-{new_palette}")
+            logging.info(f"Got from frontend turn_type-{type_cur}, player_id-{player_id}, palette_change-{my_palette_ch}, rule_change-{new_rule}, new_hand-{new_hand}, new_palette-{new_palette}")
 
             #according to the move type, checking the correctness of player's move (whether or not a player makes a winning move in their turn)
             if type_cur == "my_turn":
                 #doing a particular move check if player's dictionary of possible moves is empty (happens on the very first move of a player)
                 if not game.players[player_id]["possible_moves"]:
-                    print("Checking the move on its own (using check_move)", flush=True)
+                    logging.info("Checking the move on its own (using check_move)")
                     is_winning = game.check_move(
                         player_id=player_id,
                         new_rule=new_rule,
@@ -62,24 +63,24 @@ async def websocket_game(websocket: WebSocket, player_id: int):
 
                 #doing a move check in dictionary of possible moves
                 else:
-                    print("Checking in dictionary of possible moves", flush=True)
+                    logging.info("Checking in dictionary of possible moves")
                     is_winning = game.check_in_possible_moves(
                         player_id=player_id,
                         new_rule=new_rule,
                         new_hand=new_hand,
                         new_palette=new_palette
                     )
-                print(f"Check happened, output of is_winning condition: {is_winning}", flush=True)
+                logging.info(f"Check happened, output of is_winning condition: {is_winning}")
                 
                 #if the move is correct, sending message to frontend
                 if is_winning:
-                    print(f"Player made a correct turn, sending 'right_turn' to frontend!", flush=True)
+                    logging.info(f"Player made a correct turn, sending 'right_turn' to frontend!")
                     await websocket.send_json({"type": "right_turn"})
                 #if the move is incorrect, sending message to the frontend and going to the beginning of the while loop (recieving another move attempt from frontend from the same player)
                 else:
-                    print(f"Player tried to make an incorrect move!", flush=True)
-                    print("Sending 'wrong_turn' response with data:", flush=True)
-                    print(f"old_rule: {game.cur_rule_card}, new_rule: {new_rule}, palette_change: {my_palette_ch}", flush=True)
+                    logging.info(f"Player tried to make an incorrect move!")
+                    logging.info("Sending 'wrong_turn' response with data:")
+                    logging.info(f"old_rule: {game.cur_rule_card}, new_rule: {new_rule}, palette_change: {my_palette_ch}")
                     await websocket.send_json({"type": "wrong_turn", 
                                                "my_pallete_ch": my_palette_ch,
                                                "rule_ch": new_rule,
@@ -90,16 +91,16 @@ async def websocket_game(websocket: WebSocket, player_id: int):
             elif type_cur == "time_out":
                 is_winning = False
                 final_winner = 1
-                print(f"Player {player_id} timed out", flush=True)
+                logging.info(f"Player {player_id} timed out")
             else:
-                print("something else happened...", flush=True)
+                logging.info("something else happened...")
                 continue 
 
             bot_response = None
             #if player makes correct move, response from bot is recieved
             if type_cur == "my_turn" and is_winning:
-                print(f"Player's {player_id} turn", flush=True)
-                print(f"Player {player_id} is winning", flush=True)
+                logging.info(f"Player's {player_id} turn")
+                logging.info(f"Player {player_id} is winning")
                 card_play = encode_card(my_palette_ch) if my_palette_ch is not None else 0
                 rule_change = encode_card(new_rule) if new_rule is not None else 0
                 action = [card_play, rule_change]
@@ -114,7 +115,7 @@ async def websocket_game(websocket: WebSocket, player_id: int):
                 next_lose = False
             #sending message about player's made move to the frontend
             await broadcast_game_state(game, player_id, is_winning, my_palette_ch, new_rule, next_lose, player_id)
-            print(f"Bot's response to player's move: {bot_response}", flush=True)
+            logging.info(f"Bot's response to player's move: {bot_response}")
 
             #handling bot turn if applicable (it only exists if player won on their turn)
             if bot_response:
@@ -135,8 +136,8 @@ async def websocket_game(websocket: WebSocket, player_id: int):
                     await broadcast_game_state(game, -1, is_winning, pal_ch, rule_ch, next_lose, player_id)
                 #if bot made a move that ends the game, sending a message about it to the frontend
                 else:
-                    print(f'Game is over (game with player {player_id})!', flush=True)
-                    print(f"Winner is {'player' if bot_response['winner'] == 0 else 'bot'}")
+                    logging.info(f'Game is over (game with player {player_id})!')
+                    logging.info(f"Winner is {'player' if bot_response['winner'] == 0 else 'bot'}")
                     is_winning = True if bot_response["winner"] == 1 else False
                     await broadcast_game_state(game, -1, is_winning, None, None, is_winning, player_id)
 
@@ -150,17 +151,17 @@ async def websocket_game(websocket: WebSocket, player_id: int):
                 if game.players[next_player]["active"]:
                     next_lose = not game.check_winning_at_beginning(next_player)
                     
-                    print(f"Will the next player lose at the beginning: {next_lose}", flush=True)
+                    logging.info(f"Will the next player lose at the beginning: {next_lose}")
                     await broadcast_game_state(game, cur_player, False, None, None, next_lose)
                 else:
-                    print("The player has inactive state (game.players[next_player]['active'] != True)!", flush=True)
+                    logging.info("The player has inactive state (game.players[next_player]['active'] != True)!")
 
     #websocket disconnet handling
     except WebSocketDisconnect:
-        print(f"Player {player_id} entered WebSocketDisconnect", flush=True)
-        print(f"Open bot connections before: {active_connections}", flush=True)
+        logging.info(f"Player {player_id} entered WebSocketDisconnect")
+        logging.info(f"Open bot connections before: {active_connections}")
         active_connections.pop(player_id, None)  #cleaning up inactive connections
-        print(f"Open bot connections after: {active_connections}", flush=True)
+        logging.info(f"Open bot connections after: {active_connections}")
         #updating statistics in the database
         if final_winner == 0:
             await increment_bot_wins(player_id) 
@@ -176,8 +177,8 @@ async def broadcast_game_state(game: Red7GameState, cur_player_id: int, is_winni
     if not game:
         return
 
-    print("Sending a message via broadcast_game_state", flush=True)
-    print(f"Data: is_winning-{is_winning}, current_player-{cur_player_id}, palette_change-{my_palette_ch}, rule_change-{new_rule}, next_lose-{next_lose}", flush=True)
+    logging.info("Sending a message via broadcast_game_state")
+    logging.info(f"Data: is_winning-{is_winning}, current_player-{cur_player_id}, palette_change-{my_palette_ch}, rule_change-{new_rule}, next_lose-{next_lose}")
 
     if not is_winning:
         game.players[cur_player_id]["active"] = False

@@ -5,6 +5,7 @@ from app.database import get_room_players_ids_and_names
 import random
 from collections import defaultdict
 import random
+import logging
 
 
 #card colors and values
@@ -49,10 +50,10 @@ class Red7GameState:
     #function to get players' information from database
     async def get_room_players_info_from_db(self):
         """Load players from database with proper error handling"""
-        print(f"[In funcion get_room_players_info_from_db] Starting to fetch players for room {self.assigned_id}", flush=True)
+        logging.info(f"[In funcion get_room_players_info_from_db] Starting to fetch players for room {self.assigned_id}")
         
         names, ids = await get_room_players_ids_and_names(str(self.assigned_id))
-        print(f"[In funcion get_room_players_info_from_db] Received from DB - names: {names}, ids: {ids}", flush=True)
+        logging.info(f"[In funcion get_room_players_info_from_db] Received from DB - names: {names}, ids: {ids}")
         
         if not names or not ids:
             raise ValueError("Empty data returned from database")
@@ -64,7 +65,7 @@ class Red7GameState:
         self.players_name_list = list(self.players_name_list)
         self.players_id_list = list(self.players_id_list)
         
-        print(f"[In funcion get_room_players_info_from_db] Final player list - names: {self.players_name_list}, ids: {self.players_id_list}", flush=True)
+        logging.info(f"[In funcion get_room_players_info_from_db] Final player list - names: {self.players_name_list}, ids: {self.players_id_list}")
             
     #function to convert string representation of a card to tuple
     def card_to_tuple(self, card: str) -> tuple[int, int]:
@@ -164,7 +165,7 @@ class Red7GameState:
     def next_player(self):
         """Move to the next active player"""
         players = [pid for pid, p in self.players.items() if p["active"]]
-        print(f"[In funcion next_player] Current active players: {players}", flush=True)
+        logging.info(f"[In funcion next_player] Current active players: {players}")
         if not players:
             return False
             
@@ -173,9 +174,9 @@ class Red7GameState:
         prev_player = self.current_player
         self.current_player = players[next_index]
         prev_player_name, cur_player_name = self.players[prev_player]["name"], self.players[self.current_player]["name"]
-        print(f"[In funcion next_player] Player was changed successfully!", flush=True)
-        print(f"[In funcion next_player] Player before: ({prev_player_name}, {prev_player})", flush=True)
-        print(f"[In funcion next_player] Player now: ({cur_player_name}, {self.current_player})", flush=True)
+        logging.info(f"[In funcion next_player] Player was changed successfully!")
+        logging.info(f"[In funcion next_player] Player before: ({prev_player_name}, {prev_player})")
+        logging.info(f"[In funcion next_player] Player now: ({cur_player_name}, {self.current_player})")
         return True
 
     #checking if a player can make a move after previous player's turn
@@ -255,8 +256,8 @@ class Red7GameState:
 
         #saving player's possible moves
         self.players[player_id]["possible_moves"] = winning_moves
-        print(f"[In funcion check_winning_at_beginning] Possible moves at the beginning were checked for player {player_id}", flush=True)
-        print(f"[In funcion check_winning_at_beginning] Number of possible moves: {len(winning_moves)}", flush=True)
+        logging.info(f"[In funcion check_winning_at_beginning] Possible moves at the beginning were checked for player {player_id}")
+        logging.info(f"[In funcion check_winning_at_beginning] Number of possible moves: {len(winning_moves)}")
         return len(winning_moves) > 0
     
     #function that checks a move in possible_moves dictionary
@@ -290,17 +291,17 @@ class Red7GameState:
                     self.cur_rule_card = new_rule
                     self.current_rule = self.rule_to_int(self.cur_rule_card[0])
                 #print(f"Rule at the end of check_in_possible_moves: {self.cur_rule_card}", flush=True)
-                print("In check_possible_moves found exact match", flush=True)
+                logging.info("In check_possible_moves found exact match")
                 #return True
                 return True
             
         #exception handling
         except Exception as e:
-            print(f"Move validation crashed: {e}", flush=True)
+            logging.info(f"Move validation crashed: {e}")
             return False 
     
         #return False if no matches were found
-        print("In check_possible_moves didn't find exact match", flush=True)
+        logging.info("In check_possible_moves didn't find exact match")
         return False
 
     #function to check a move's correctness according to the game's rules
