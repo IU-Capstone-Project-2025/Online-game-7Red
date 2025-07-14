@@ -35,7 +35,7 @@ The application includes the following core components:
 2. Access to the website at:
  [http://localhost:8080](http://localhost:8080)
 
-3. Access the interactive Swagger UI at: [http://192.145.30.253:8000/docs](http://localhost:8000/docs)
+3. Access the interactive Swagger UI at: [http://192.145.30.253:8000/docs](http://192.145.30.253:8000/docs)
 
 ## To play in a 2-4 player game mode using docker (on your local machine to test something), do the following:
 
