@@ -19,7 +19,12 @@ async def lifespan(app: FastAPI):
     await database.disconnect()
 
 # Create FastAPI application instance with database lifecycle management
-app = FastAPI(lifespan=lifespan)
+app = FastAPI(
+    docs_url="/api/docs",
+    redoc_url="/api/redoc",
+    openapi_url="/api/openapi.json",
+    lifespan=lifespan,
+)
 
 # Add CORS middleware to allow cross-origin requests
 app.add_middleware(
