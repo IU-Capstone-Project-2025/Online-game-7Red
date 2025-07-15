@@ -9,16 +9,16 @@ import '../data/styles.dart';
 import '../data/urls.dart';
 import '../providers/provider.dart';
 
-class changePersInfo extends StatefulWidget {
-  int changeNameEmail;
+class ChangePersInfo extends StatefulWidget {
+  final int changeNameEmail;
 
-  changePersInfo({super.key, required this.changeNameEmail});
+  ChangePersInfo({super.key, required this.changeNameEmail});
 
   @override
-  State<changePersInfo> createState() => _ChangePersInfoState(changeNameEmail);
+  State<ChangePersInfo> createState() => _ChangePersInfoState(changeNameEmail);
 }
 
-class _ChangePersInfoState extends State<changePersInfo> {
+class _ChangePersInfoState extends State<ChangePersInfo> {
   final TextEditingController controller = TextEditingController();
   SharedPreferences? prefs;
   int? changeNameEmail;

@@ -1,14 +1,12 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flame/game.dart';
-import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:circular_countdown_timer/circular_countdown_timer.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 
 import '../data/styles.dart';
-import '../providers/provider.dart';
 import '../customWidgets/cards.dart';
 import '../socket/web_socket.dart';
 import '../data/player.dart';
@@ -776,7 +774,7 @@ class _GameRoomPageState extends State<GameRoomPage> {
 
   Future<void> leaveRoom(int id, String room_id) async {
     final url = Uri.parse('$leaveRoomUrl');
-    final response = await http.post(
+    await http.post(
       url,
       headers: {'Content-Type': 'application/json', 'accept': 'application/json'},
       body: jsonEncode({
@@ -814,7 +812,6 @@ class _GameRoomPageState extends State<GameRoomPage> {
   
   @override
   Widget build(BuildContext context) {
-    final gameProvider = Provider.of<GameProvider>(context);
 
     return Scaffold(
       body: Container(

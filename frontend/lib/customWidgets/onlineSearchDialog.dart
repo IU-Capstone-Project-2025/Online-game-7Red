@@ -233,7 +233,7 @@ class _OnlineSearchDialogState extends State<onlineSearchDialog> {
   Future<void> leaveTheRoom(int id) async {
     // Use url from urls.dart file
     final url = Uri.parse('$onlineLeaveUrl');
-    final response = await http.post(
+    await http.post(
       url,
       headers: {'Content-Type': 'application/json', 'accept': 'application/json'},
       body: jsonEncode({

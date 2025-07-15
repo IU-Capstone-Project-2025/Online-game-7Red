@@ -1,14 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:frontend/customWidgets/changePassword.dart';
-import 'package:http/http.dart' as http;
-import 'dart:convert';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:provider/provider.dart';
 
 import '../data/styles.dart';
-import '../data/urls.dart';
 import '../providers/provider.dart';
 import '../customWidgets/changePersInfo.dart';
+import '../customWidgets/confirmExit.dart';
 
 class ProfilePage extends StatefulWidget {
   const ProfilePage({super.key});
@@ -136,7 +134,7 @@ class _ProfilePageState extends State<ProfilePage> {
                                             // TODO: change name
                                             showDialog(
                                               context: context,
-                                              builder: (context) => changePersInfo(changeNameEmail: 1),
+                                              builder: (context) => ChangePersInfo(changeNameEmail: 1),
                                             );
                                           },
                                           icon: const Icon(Icons.edit_rounded, size: 20),
@@ -173,7 +171,7 @@ class _ProfilePageState extends State<ProfilePage> {
                                             // TODO: change email
                                             showDialog(
                                               context: context,
-                                              builder: (context) => changePersInfo(changeNameEmail: 2),
+                                              builder: (context) => ChangePersInfo(changeNameEmail: 2),
                                             );
                                           },
                                           icon: const Icon(Icons.edit_rounded, size: 20),
@@ -343,8 +341,10 @@ class _ProfilePageState extends State<ProfilePage> {
                                       ),
                                     ),
                                     onPressed: () async{
-                                      gameProvider.clearMyPersonalInfo();
-                                      Navigator.pushNamed(context, '/');
+                                      showDialog(
+                                        context: context,
+                                        builder: (context) => confirmExit(),
+                                      );
                                     },
                                     child: Column(
                                       children: [
