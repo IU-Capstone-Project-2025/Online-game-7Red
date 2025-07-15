@@ -63,7 +63,7 @@ async def change_email(user_id: int = Body(..., embed=True), new_email: str = Bo
     if exist:
         raise HTTPException(status_code=400, detail="Email already registered")
     # Update email in users table
-    update = users.update().where(users.c.user_id == user_id).values(login=new_email)
+    update = users.update().where(users.c.id == user_id).values(login=new_email)
     await database.execute(update)
     return {"message": "Email updated successfully", "new_email": new_email}
 
@@ -87,6 +87,6 @@ async def change_password(
         raise HTTPException(status_code=400, detail="Passwords do not match")
     # Hash and save the new password
     hashed_password = pwd_context.hash(new_password)
-    update = users.update().where(users.c.user_id == user_id).values(password=hashed_password)
+    update = users.update().where(users.c.id == user_id).values(password=hashed_password)
     await database.execute(update)
     return {"message": "Password updated successfully"}
