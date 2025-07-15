@@ -171,6 +171,20 @@ TextStyle nicknameStyle = const TextStyle(
   color: Color.fromARGB(255, 58, 58, 58)
 );
 
+TextStyle onlineRoomStyle = TextStyle(
+  fontFamily: 'Poppins',
+  fontSize: 40,
+  fontWeight: FontWeight.w800,
+  color: grey3A3A3AColor,
+);
+
+TextStyle onlineRoomStyleGreen = TextStyle(
+  fontFamily: 'Poppins',
+  fontSize: 40,
+  fontWeight: FontWeight.w800,
+  color: greenKiwi,
+);
+
 Color backInvisColor = const Color.fromARGB(125, 218, 209, 193);
 
 Color grey3A3A3AColor = const Color.fromARGB(255, 58, 58, 58);
@@ -200,6 +214,8 @@ Color violetCard = const Color.fromARGB(255, 202, 75, 253);
 Color handInvisColor = const Color.fromARGB(58, 212, 197, 172);
 
 Color greyButtonColor = const Color.fromARGB(255, 186, 180, 170);
+
+Color greenKiwi = Color.fromARGB(255, 38, 141, 41);
 
 const greenTimerColor = Color(0xFF87B25A);
 
