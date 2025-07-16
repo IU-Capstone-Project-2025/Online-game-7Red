@@ -68,6 +68,11 @@ class _GameRoomPageState extends State<GameRoomPage> {
 
   bool aiGame = false;
 
+  Timer? _delayTimer;
+  Timer? _delayTimerWin;
+  int delay = 5;
+  int delayWin = 5;
+
   @override
   void initState() {
     super.initState();
@@ -246,17 +251,17 @@ class _GameRoomPageState extends State<GameRoomPage> {
       // Check if player lose 
       if (message['lose'] == 1) {
         // If he lose his pallete will be empty
-        if (gamemode == 2) {
+        if (gamemode == 2 && _activePlayers.length != 2) {
           if (player.id == playerUp!.id) {
             playerUp!.pallete = [];
           }
-        } else if (gamemode == 3) {
+        } else if (gamemode == 3 && _activePlayers.length != 2) {
           if (player.id == playerRight!.id) {
             playerRight!.pallete = [];
           } else if (player.id == playerLeft!.id) {
             playerLeft!.pallete = [];
           }
-        } else if (gamemode == 4) {
+        } else if (gamemode == 4 && _activePlayers.length != 2) {
           if (player.id == playerRight!.id) {
             playerRight!.pallete = [];
           } else if (player.id == playerUp!.id) {
@@ -341,25 +346,59 @@ class _GameRoomPageState extends State<GameRoomPage> {
         _players[_players.indexOf(_players.firstWhere((p) => p.id == _currentPlayerId))].place = 1;
         _webSocket.disconnect();
         // Win
-        goToResults();
+        ScaffoldMessenger.of(
+            context,
+          ).showSnackBar(SnackBar(content: Text('Game is over!')));
+        delayWin = 5;
+        _delayTimer = Timer.periodic(Duration(seconds: 1), (timer) {
+          if (delayWin > 0) {
+            setState(() => delayWin--);
+          } else {
+            timer.cancel();
+            setState(() {
+              _pallete = [];
+              _myHand = [];
+            });
+            goToResults();
+          }
+        });
         return;
       }
 
       // check if the next player is me
       if (_players.firstWhere((p) => p.id == _currentPlayerId).isMe) {
         // Check if this user lose
-        if (_nextLose == 1) {
+        if (_nextLose == 1 && _activePlayers.length != 2) {
           _turnTimer?.cancel();
-          _pallete = [];
-          _myHand = [];
           youLose = true;
           myPlace = _activePlayers.length;
           // set a place for the looser
           _players[_players.indexOf(_players.firstWhere((p) => p.id == _currentPlayerId))].place = _activePlayers.length;
           // Loose
-          loosing();
+          ScaffoldMessenger.of(
+            context,
+          ).showSnackBar(SnackBar(content: Text('You are loose')));
+          delay = 5;
+          _delayTimer = Timer.periodic(Duration(seconds: 1), (timer) {
+            if (delay > 0) {
+              setState(() => delay--);
+            } else {
+              timer.cancel();
+              setState(() {
+                _pallete = [];
+                _myHand = [];
+              });
+              loosing();
+            }
+          });
           return;
-          
+        }
+        if (_nextLose == 1 && _activePlayers.length == 2) {
+          _turnTimer?.cancel();
+          youLose = true;
+          myPlace = _activePlayers.length;
+          // set a place for the looser
+          _players[_players.indexOf(_players.firstWhere((p) => p.id == _currentPlayerId))].place = _activePlayers.length;
         }
         // Start my turn
         myTurn = true;
