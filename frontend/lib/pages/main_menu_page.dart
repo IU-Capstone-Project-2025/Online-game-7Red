@@ -80,7 +80,7 @@ class _MainMenuPageState extends State<MainMenuPage> {
                     height: 80,
                     child: Icon(Icons.account_circle, size: 60, color: grey3A3A3AColor,),
                   ),
-                  Text(gameProvider.myName == "HaveNotName" ? "Loading..." : gameProvider.myName, style: nicknameStyle),
+                  Text(gameProvider.myName == "HaveNotName" ? gameProvider.localizations!.getString("loading", gameProvider.languageCode) : gameProvider.myName, style: nicknameStyle),
                   const Expanded(flex: 1, child: Text("")),
                   // Button to return to SettingsPage
                   SizedBox(
@@ -203,7 +203,7 @@ class _MainMenuPageState extends State<MainMenuPage> {
                                           const Expanded(flex: 1, child: Text(""),),
                                           Icon(Icons.create, size: 80),
                                           const Expanded(flex: 1, child: Text(""),),
-                                          Text("Create private room", style: buttonTextStyle, textAlign: TextAlign.center,),
+                                          Text(gameProvider.localizations!.getString("main_menu_create_private_room", gameProvider.languageCode), style: buttonTextStyle, textAlign: TextAlign.center,),
                                           const Expanded(flex: 1, child: Text(""),),
                                         ],
                                       ),
@@ -250,7 +250,7 @@ class _MainMenuPageState extends State<MainMenuPage> {
                                           const Expanded(flex: 1, child: Text(""),),
                                           Icon(Icons.key, size: 80),
                                           const Expanded(flex: 1, child: Text(""),),
-                                          Text("Connect private room", style: buttonTextStyle, textAlign: TextAlign.center,),
+                                          Text(gameProvider.localizations!.getString("connect_private_room", gameProvider.languageCode), style: buttonTextStyle, textAlign: TextAlign.center,),
                                           const Expanded(flex: 1, child: Text(""),),
                                         ],
                                       ),
@@ -296,7 +296,7 @@ class _MainMenuPageState extends State<MainMenuPage> {
                                           const Expanded(flex: 1, child: Text(""),),
                                           Icon(Icons.search, size: 80),
                                           const Expanded(flex: 1, child: Text(""),),
-                                          Text("Random opponents", style: buttonTextStyle, textAlign: TextAlign.center,),
+                                          Text(gameProvider.localizations!.getString("main_menu_random_opponents", gameProvider.languageCode), style: buttonTextStyle, textAlign: TextAlign.center,),
                                           const Expanded(flex: 1, child: Text(""),),
                                         ],
                                       ),
@@ -339,7 +339,7 @@ class _MainMenuPageState extends State<MainMenuPage> {
                                           const Expanded(flex: 1, child: Text(""),),
                                           Icon(Icons.smart_toy, size: 80),
                                           const Expanded(flex: 1, child: Text(""),),
-                                          Text("Vs Bot", style: buttonTextStyle, textAlign: TextAlign.center,),
+                                          Text(gameProvider.localizations!.getString("main_menu_vs_bot", gameProvider.languageCode), style: buttonTextStyle, textAlign: TextAlign.center,),
                                           const Expanded(flex: 1, child: Text(""),),
                                           Padding(padding: const EdgeInsets.only(bottom: 15)),
                                         ],
@@ -355,7 +355,7 @@ class _MainMenuPageState extends State<MainMenuPage> {
                     }
                   );
                   },
-                  child: const Text('START NEW GAME'),
+                  child: Text(gameProvider.localizations!.getString("main_menu_start_new_game", gameProvider.languageCode)),
                 ),
               ),
               Expanded(flex: 4, child: Text("")),

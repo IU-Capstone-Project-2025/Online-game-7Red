@@ -1,9 +1,6 @@
 import 'package:flutter/material.dart';
 import '../data/styles.dart';
 
-import 'package:circular_countdown_timer/circular_countdown_timer.dart';
-final _countDownController = CountDownController();
-
 class WelkomePage extends StatefulWidget {
   const WelkomePage({super.key});
 

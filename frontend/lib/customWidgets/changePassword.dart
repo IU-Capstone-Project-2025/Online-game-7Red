@@ -2,9 +2,11 @@ import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:provider/provider.dart';
 
 import '../data/styles.dart';
 import '../data/urls.dart';
+import '../providers/provider.dart';
 
 class changePassword extends StatefulWidget {
 
@@ -20,7 +22,9 @@ class _ChangePasswordState extends State<changePassword> {
   final TextEditingController controller3 = TextEditingController();
   SharedPreferences? prefs;
 
-  String errNew = '';
+  String errOld = '';
+  String errNew1 = '';
+  String errNew2 = '';
   String postText = '';
 
   bool obscure1 = true;
@@ -38,8 +42,49 @@ class _ChangePasswordState extends State<changePassword> {
     prefs = await SharedPreferences.getInstance();
   }
 
+  Future<void> changePassword(int id, String prev, String newP) async {
+
+    // Use url from urls.dart file
+    final url = Uri.parse(changePasswordUrl);
+    final response = await http.post(
+      url,
+      headers: {'Content-Type': 'application/json', 'accept': 'application/json'},
+      body: jsonEncode({
+        'user_id': id,
+        'prev_password': prev,
+        'new_password': newP,
+        'repeated_password': newP,
+      }),
+    );
+
+    final responseBody = json.decode(response.body);
+
+    if (response.statusCode == 200 || response.statusCode == 201) {
+      setState(() {
+        logSuccess = true;
+      });
+    } else if (responseBody['detail'] == 'User not found') {
+      setState(() {
+        logSuccess = false;
+        postText = 'User not found';
+      });
+    } else if (responseBody['detail'] == 'Previous password is incorrect') {
+      setState(() {
+        logSuccess = false;
+        postText = 'Incorrect password';
+      });
+    } else if (responseBody['detail'] == 'Passwords do not match') {
+      setState(() {
+        logSuccess = false;
+        postText = 'Passwords different';
+      });
+    } 
+  }
+
   @override
   Widget build(BuildContext context) {
+    final gameProvider = Provider.of<GameProvider>(context);
+
     return Dialog(
     child: Container(
       width: 352,
@@ -68,6 +113,8 @@ class _ChangePasswordState extends State<changePassword> {
                   Padding(padding: const EdgeInsets.only(left: 47)),
                   Text("Previous password", style: basicTextStyle,),
                   const Expanded(flex: 1, child: Text("")),
+                  Text(errOld, style: errorTextStyle, textAlign: TextAlign.right),
+                  Padding(padding: const EdgeInsets.only(right: 47)),
                 ]
               ),
               Padding(padding: const EdgeInsets.only(top: 5)),
@@ -108,7 +155,7 @@ class _ChangePasswordState extends State<changePassword> {
                   Padding(padding: const EdgeInsets.only(left: 47)),
                   Text("New password ", style: basicTextStyle),
                   const Expanded(flex: 1, child: Text("")),
-                  Text(errNew, style: errorTextStyle, textAlign: TextAlign.right),
+                  Text(errNew1, style: errorTextStyle, textAlign: TextAlign.right),
                   Padding(padding: const EdgeInsets.only(right: 47)),
                 ]
               ),
@@ -150,7 +197,7 @@ class _ChangePasswordState extends State<changePassword> {
                   Padding(padding: const EdgeInsets.only(left: 47)),
                   Text("Repeat password", style: basicTextStyle),
                   const Expanded(flex: 1, child: Text("")),
-                  Text(errNew, style: errorTextStyle, textAlign: TextAlign.right),
+                  Text(errNew2, style: errorTextStyle, textAlign: TextAlign.right),
                   Padding(padding: const EdgeInsets.only(right: 47)),
                 ]
               ),
@@ -215,8 +262,11 @@ class _ChangePasswordState extends State<changePassword> {
                       // Reset error messages
                       setState(() {
                         postText = '';
-                        errNew = '';
+                        errOld = '';
+                        errNew1 = '';
+                        errNew2 = '';
                       });
+                      
                       // Check if all fields are filled
                       if (controller.text.isEmpty || controller2.text.isEmpty || controller3.text.isEmpty) {
                         setState(() {
@@ -224,13 +274,39 @@ class _ChangePasswordState extends State<changePassword> {
                         });
                         return;
                       }
+                      else if (controller.text.length > 16 || controller.text.length < 6) {
+                        setState(() {
+                          errOld = '6-16 symbols';
+                        });
+                        return;
+                      }
+                      else if (controller2.text.length > 16 || controller2.text.length < 6) {
+                        setState(() {
+                          errNew1 = '6-16 symbols';
+                        });
+                        return;
+                      }
+                      // Check if repeated password is valid
+                      else if (controller2.text != controller3.text) {
+                        setState(() {
+                          errNew2 = 'Different';
+                        });
+                        return;
+                      } else {
+                        await changePassword(gameProvider.myID, controller.text, controller2.text);
+                        if (logSuccess) {
+                          gameProvider.password = controller2.text;
+                          gameProvider.saveMyPersonalInfo();
+                          Navigator.pop(context);
+                        }
+                      }
                     },
-                    child: const Text('SIGN  IN'),
+                    child: const Text('CHANGE'),
                   ),
                 ),
                 Padding(padding: const EdgeInsets.only(top: 5)),
                 // For error messages
-                Text("$postText", style: errorTextStyle,),
+                Text(postText, style: errorTextStyle,),
                 Padding(padding: const EdgeInsets.only(top: 5)),
               ],
             ),

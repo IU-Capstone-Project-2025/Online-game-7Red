@@ -29,3 +29,6 @@ String statisticsUrl = '/api/settings/user_stats';
 String onlineSearchUrl = '/api/rooms/find_online';
 String onlineStateUrl = '/api/rooms/find_online_status';
 String onlineLeaveUrl = '/api/rooms/cancel_find_online';
+String changeNicknameUrl = '/api/settings/change_nickname';
+String changeEmailUrl = '/api/settings/change_email';
+String changePasswordUrl = '/api/settings/change_password';

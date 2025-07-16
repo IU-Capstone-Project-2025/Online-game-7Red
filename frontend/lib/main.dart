@@ -13,13 +13,15 @@ import 'pages/rules_page.dart';
 import 'pages/statistics_page.dart';
 import 'pages/profile_page.dart';
 
-void main() {
+void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  final gameProvider = GameProvider();
+  await gameProvider.initialize();
 
   runApp(
     // Add provider to share data between pages
     MultiProvider(
-      providers: [ChangeNotifierProvider(create: (_) => GameProvider())],
+      providers: [ChangeNotifierProvider(create: (_) => gameProvider)],
       child: const MyApp(),
     ),
   );

@@ -13,7 +13,7 @@ router = APIRouter(prefix="/api/rooms", tags=["rooms"])
 online_queue = []  # Queue of users waiting for online match
 online_queue_status = {}  # Status tracking for users in queue
 ONLINE_ROOM_SIZE = 4  # Number of players required for an online room
-ONLINE_WAIT_SECONDS = 60  # Maximum wait time before starting a game with fewer players
+ONLINE_WAIT_SECONDS = 58  # Maximum wait time before starting a game with fewer players
 
 
 
@@ -134,38 +134,28 @@ async def start_online_game(players):
     return assigned_id, password
 
 
+online_queue_timer = None
+
 async def online_queue_timeout(initial_queue):
-    # Wait for the defined time limit before processing the queue
+    global online_queue_timer
     await asyncio.sleep(ONLINE_WAIT_SECONDS)
-    
-    # Get the list of users still waiting in the queue
+    online_queue_timer = None
     still_waiting = list(online_queue)
-    
-    # If we have at least 2 players waiting, create a game
     if len(still_waiting) >= 2:
-        # Remove all waiting users from the queue
         for uid in still_waiting:
             online_queue.remove(uid)
-        # Create a game room for these players
         await start_online_game(still_waiting)
-        # If a new player joined during processing, start a new timeout task for them
-        if len(online_queue) == 1:
-            asyncio.create_task(online_queue_timeout(list(online_queue)))
     else:
-        # Not enough players to form a game
         for uid in still_waiting:
             online_queue.remove(uid)
-            # Update status to indicate no matching players were found
             online_queue_status[uid] = {"status": "no_players"}
-        # If a new player joined during processing, start a new timeout task for them
-        if len(online_queue) == 1:
-            asyncio.create_task(online_queue_timeout(list(online_queue)))
 
 
 
 
 @router.post("/find_online")
 async def find_online(user_id: int = Body(..., embed=True)):
+    global online_queue_timer
     # 1. Try to find a suitable existing room
     room = await search_open_online_room()
     if room:
@@ -186,15 +176,27 @@ async def find_online(user_id: int = Body(..., embed=True)):
         return {"status": online_queue_status.get(user_id, "waiting")}
     online_queue.append(user_id)
     online_queue_status[user_id] = {"status":"waiting"}
-    if len(online_queue) == 1:
-        asyncio.create_task(online_queue_timeout(list(online_queue)))
-    if len(online_queue) >= ONLINE_ROOM_SIZE:
-        while len(online_queue) >= ONLINE_ROOM_SIZE:
-            players = online_queue[:ONLINE_ROOM_SIZE]
-            for uid in players:
-                online_queue.remove(uid)
-            await start_online_game(players)
+    
+    # if len(online_queue) >= ONLINE_ROOM_SIZE:
+    #     while len(online_queue) >= ONLINE_ROOM_SIZE:
+    #         players = online_queue[:ONLINE_ROOM_SIZE]
+    #         for uid in players:
+    #             online_queue.remove(uid)
+    #         await start_online_game(players)
+    #     return online_queue_status[user_id]
+    # return {"status":"waiting"}
+    if len(online_queue) >= 2:
+        players = online_queue[:ONLINE_ROOM_SIZE]
+        for uid in players:
+            online_queue.remove(uid)
+        await start_online_game(players)
         return online_queue_status[user_id]
+    
+    if len(online_queue) < ONLINE_ROOM_SIZE:
+        if online_queue_timer is not None:
+            online_queue_timer.cancel()
+        if len(online_queue) > 0:
+            online_queue_timer = asyncio.create_task(online_queue_timeout(list(online_queue)))
     return {"status":"waiting"}
 
 

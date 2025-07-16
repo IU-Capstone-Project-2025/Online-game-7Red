@@ -2,7 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:provider/provider.dart';
 
+import '../providers/provider.dart';
 import '../data/styles.dart';
 import '../data/urls.dart';
 
@@ -76,6 +78,8 @@ class _StatisticsPageState extends State<StatisticsPage> {
 
   @override
   Widget build(BuildContext context) {
+    final gameProvider = Provider.of<GameProvider>(context);
+
     return Scaffold(
       body: Container(
         decoration: BoxDecoration(
@@ -106,7 +110,7 @@ class _StatisticsPageState extends State<StatisticsPage> {
                     ),
                   ),
                   const Expanded(flex: 1, child: Text("")),
-                  Text("Statistics", style: titleBigStyle,),
+                  Text(gameProvider.localizations!.getString("main_menu_show_statistics", gameProvider.languageCode), style: titleBigStyle,),
                   const Expanded(flex: 1, child: Text("")),
                   Padding(padding: const EdgeInsets.only(right: 75)),
                 ],
@@ -123,13 +127,13 @@ class _StatisticsPageState extends State<StatisticsPage> {
                       // Winstrick info
                       Icon(Icons.local_fire_department, color: grey3A3A3AColor, size: 100,),
                       Padding(padding: const EdgeInsets.only(top: 15)),
-                      Text("Winstrick", style: titleStyle,),
+                      Text(gameProvider.localizations!.getString("statistics_winstrick", gameProvider.languageCode), style: titleStyle,),
                       if (logSuccess)
                         Text(winstrick.toString(), style: statsBigStyle,)
                       else 
                         Padding(
                           padding: const EdgeInsets.all(31),
-                          child: Text("Loading...", style: titleStyle,),
+                          child: Text(gameProvider.localizations!.getString("loading", gameProvider.languageCode), style: titleStyle,),
                         ),
                       Padding(padding: const EdgeInsets.only(top: 40)),
                       // Achievement 1
@@ -154,7 +158,7 @@ class _StatisticsPageState extends State<StatisticsPage> {
                           height: 240,
                         ),
                       Padding(padding: const EdgeInsets.only(top: 20)),
-                      Text("Log in to the game for\n7 consecutive days", style: basicTextStyle, textAlign: TextAlign.center,),
+                      Text(gameProvider.localizations!.getString("statistics_achievement_1", gameProvider.languageCode), style: basicTextStyle, textAlign: TextAlign.center,),
                     ],
                   ),
                   Expanded(flex: 1, child: Text(""),),
@@ -164,13 +168,13 @@ class _StatisticsPageState extends State<StatisticsPage> {
                       // Number of games info
                       Icon(Icons.stadium, color: grey3A3A3AColor, size: 100,),
                       Padding(padding: const EdgeInsets.only(top: 15)),
-                      Text("Number of games", style: titleStyle,),
+                      Text(gameProvider.localizations!.getString("statistics_number_of_games", gameProvider.languageCode), style: titleStyle,),
                       if (logSuccess)
                         Text(num_of_games.toString(), style: statsBigStyle,)
                       else 
                         Padding(
                           padding: const EdgeInsets.all(31),
-                          child: Text("Loading...", style: titleStyle,),
+                          child: Text(gameProvider.localizations!.getString("loading", gameProvider.languageCode), style: titleStyle,),
                         ),
                       Padding(padding: const EdgeInsets.only(top: 40)),
                       // Achievement 2
@@ -195,7 +199,7 @@ class _StatisticsPageState extends State<StatisticsPage> {
                           height: 240,
                         ),
                       Padding(padding: const EdgeInsets.only(top: 20)),
-                      Text("Win the bot 3 times\n", style: basicTextStyle, textAlign: TextAlign.center,),
+                      Text(gameProvider.localizations!.getString("statistics_achievement_2", gameProvider.languageCode), style: basicTextStyle, textAlign: TextAlign.center,),
                     ],
                   ),
                   Expanded(flex: 1, child: Text(""),),
@@ -205,13 +209,13 @@ class _StatisticsPageState extends State<StatisticsPage> {
                       // Winrate info
                       Icon(Icons.percent, color: grey3A3A3AColor, size: 100,),
                       Padding(padding: const EdgeInsets.only(top: 15)),
-                      Text("Winrate", style: titleStyle,),
+                      Text(gameProvider.localizations!.getString("statistics_winrate", gameProvider.languageCode), style: titleStyle,),
                       if (logSuccess)
                         Text(winrate.toString(), style: statsBigStyle,)
                       else 
                         Padding(
                           padding: const EdgeInsets.all(31),
-                          child: Text("Loading...", style: titleStyle,),
+                          child: Text(gameProvider.localizations!.getString("loading", gameProvider.languageCode), style: titleStyle,),
                         ),
                       Padding(padding: const EdgeInsets.only(top: 40)),
                       // Achievement 3
@@ -236,7 +240,7 @@ class _StatisticsPageState extends State<StatisticsPage> {
                           height: 240,
                         ),
                       Padding(padding: const EdgeInsets.only(top: 20)),
-                      Text("Get a winstreak of 5 games\nin an online-mode", style: basicTextStyle, textAlign: TextAlign.center,),
+                      Text(gameProvider.localizations!.getString("statistics_achievement_3", gameProvider.languageCode), style: basicTextStyle, textAlign: TextAlign.center,),
                     ],
                   ),
                   Expanded(flex: 7, child: Text(""),),

@@ -40,8 +40,8 @@ class CentralCardWidget extends StatelessWidget {
   Widget build(BuildContext context) {
     setColor();
     return Container(
-      height: 84,
-      width: 60,
+      height: 76,
+      width: 54,
       decoration:  BoxDecoration(
         color: color,
         borderRadius: BorderRadius.circular(5),
@@ -50,8 +50,8 @@ class CentralCardWidget extends StatelessWidget {
       child: Center(
         // Add additional line to card for prettier look
         child: Container(
-          height: 76,
-          width: 52,
+          height: 69,
+          width: 47,
           decoration:  BoxDecoration(
             color: invisColor,
             borderRadius: BorderRadius.circular(5),
@@ -108,8 +108,8 @@ class HandCardWidget extends StatelessWidget {
   Widget build(BuildContext context) {
     setColor();
     return Container(
-      height: 106,
-      width: 71,
+      height: 95,
+      width: 64,
       decoration:  BoxDecoration(
         color: color,
         borderRadius: BorderRadius.circular(5),
@@ -118,8 +118,8 @@ class HandCardWidget extends StatelessWidget {
       child: Center(
         // Add additional line to card for prettier look
         child: Container(
-          height: 98,
-          width: 63,
+          height: 88,
+          width: 57,
           decoration:  BoxDecoration(
             color: invisColor,
             borderRadius: BorderRadius.circular(5),
@@ -176,8 +176,8 @@ class LeftCardWidget extends StatelessWidget {
   Widget build(BuildContext context) {
     setColor();
     return Container(
-      height: 60,
-      width: 84,
+      height: 54,
+      width: 76,
       decoration:  BoxDecoration(
         color: color,
         borderRadius: BorderRadius.circular(5),
@@ -186,8 +186,8 @@ class LeftCardWidget extends StatelessWidget {
       child: Center(
         // Add additional line to card for prettier look
         child: Container(
-          height: 52,
-          width: 76,
+          height: 47,
+          width: 69,
           decoration:  BoxDecoration(
             color: invisColor,
             borderRadius: BorderRadius.circular(5),
@@ -197,7 +197,7 @@ class LeftCardWidget extends StatelessWidget {
             child: Row(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                Padding(padding: const EdgeInsets.only(left: 16)),
+                Padding(padding: const EdgeInsets.only(left: 14.4)),
                 // Rotate card for get an illusion that it is flipped and it is another person's card
                 Transform.rotate(
                   angle: 1.57,
@@ -254,8 +254,8 @@ class RightCardWidget extends StatelessWidget {
   Widget build(BuildContext context) {
     setColor();
     return Container(
-      height: 60,
-      width: 84,
+      height: 54,
+      width: 76,
       decoration:  BoxDecoration(
         color: color,
         borderRadius: BorderRadius.circular(5),
@@ -264,8 +264,8 @@ class RightCardWidget extends StatelessWidget {
       child: Center(
         // Add additional line to card for prettier look
         child: Container(
-          height: 52,
-          width: 76,
+          height: 47,
+          width: 69,
           decoration:  BoxDecoration(
             color: invisColor,
             borderRadius: BorderRadius.circular(5),
@@ -283,7 +283,7 @@ class RightCardWidget extends StatelessWidget {
                     style: otherCardNumStyle,
                   ),
                 ),
-                Padding(padding: const EdgeInsets.only(left: 16)),
+                Padding(padding: const EdgeInsets.only(left: 14.4)),
               ],
             ),
           ),
