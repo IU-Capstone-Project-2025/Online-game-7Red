@@ -268,7 +268,7 @@ class _GameRoomPageState extends State<GameRoomPage> {
         // Remove player from active players, kill his timer
         _players[_players.indexOf(player)].place = _activePlayers.length;
         _activePlayers.remove(message['id_did']);
-        timersDied.add(timers[_players.indexOf(player) + 1]);
+        timersDied.add(timers[(_players.indexOf(player) + 1) % _players.length]);
       } else {
         // Add card to player pallete
         if (message['his_pallete_ch'] != null) {
