@@ -865,7 +865,7 @@ class _GameRoomPageState extends State<GameRoomPage> {
             crossAxisAlignment: CrossAxisAlignment.center,
             children: [
 //--------------------UPBAR----------------------------------------------------------------------------------------------------------
-              Padding(padding: const EdgeInsets.only(top: 15)),
+              Padding(padding: const EdgeInsets.only(top: 13)),
               Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
@@ -890,9 +890,9 @@ class _GameRoomPageState extends State<GameRoomPage> {
                       duration: 60,
                       isReverse: true,
                       fillColor: greenTimerColor,
-                      height: 74,
-                      width: 74,
-                      strokeWidth: 8,
+                      height: 67,
+                      width: 67,
+                      strokeWidth: 7,
                       onComplete: () {
                         // later
                       },
@@ -902,15 +902,15 @@ class _GameRoomPageState extends State<GameRoomPage> {
                       autoStart: false,
                       textStyle: invisTextStyle,
                       ),
-                      Icon(Icons.account_circle, size: 80, color: grey3A3A3AColor,),
+                      Icon(Icons.account_circle, size: 72, color: grey3A3A3AColor,),
                     ],
                   ),
                   if (gamemode == 2 || gamemode == 4)
-                  Padding(padding: const EdgeInsets.only(right: 15),),
+                  Padding(padding: const EdgeInsets.only(right: 13),),
                   if (gamemode == 2 || gamemode == 4)
                   Column(
                     children: [
-                      Padding(padding: const EdgeInsets.only(top: 40)),
+                      Padding(padding: const EdgeInsets.only(top: 36)),
                       Row(
                         children: [
                           Icon(playerUp != null ? getNumOfCardsIcon(playerUp!.numOfCards) : Icons.filter_7, size: 24, color: grey3A3A3AColor,),
@@ -924,6 +924,7 @@ class _GameRoomPageState extends State<GameRoomPage> {
                   Padding(padding: const EdgeInsets.only(left: 95)),
                 ],
               ),
+              Padding(padding: const EdgeInsets.only(top: 5)),
 //--------------------PALLETES----------------------------------------------------------------------------------------------------------
               Row(
                 mainAxisAlignment: MainAxisAlignment.center,
@@ -941,8 +942,8 @@ class _GameRoomPageState extends State<GameRoomPage> {
                           duration: 60,
                           isReverse: true,
                           fillColor: greenTimerColor,
-                          height: 74,
-                          width: 74,
+                          height: 67,
+                          width: 67,
                           strokeWidth: 8,
                           onComplete: () {
                             // later
@@ -953,7 +954,7 @@ class _GameRoomPageState extends State<GameRoomPage> {
                           autoStart: false,
                           textStyle: invisTextStyle,
                           ),
-                          Icon(Icons.account_circle, size: 80, color: grey3A3A3AColor,),
+                          Icon(Icons.account_circle, size: 72, color: grey3A3A3AColor,),
                         ],
                       ),
                       Padding(padding: const EdgeInsets.only(top: 5)),
@@ -971,30 +972,30 @@ class _GameRoomPageState extends State<GameRoomPage> {
                   Column(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      Padding(padding: const EdgeInsets.only(top: 30)),
+                      Padding(padding: const EdgeInsets.only(top: 27)),
                       for (int i = 0; i < (playerLeft != null ? playerLeft!.pallete.length : 0); i++)
                         Column(
                           children: [
                             LeftCardWidget(card: playerLeft!.pallete[i]),
-                            Padding(padding: const EdgeInsets.only(top: 9)),
+                            Padding(padding: const EdgeInsets.only(top: 8)),
                           ],
                         ),
                       for (int i = playerLeft != null ? playerLeft!.pallete.length : 0; i < 7; i++)
                         Column(
                           children: [
                             Container(
-                              height: 60,
-                              width: 84,
+                              height: 54,
+                              width: 76,
                               decoration:  BoxDecoration(
                                 color: invisColor,
                                 borderRadius: BorderRadius.circular(5),
                                 border: Border.all(color: grey3A3A3AColor, width: 1.5),
                               ),
                             ),
-                            Padding(padding: const EdgeInsets.only(top: 9)),
+                            Padding(padding: const EdgeInsets.only(top: 8)),
                           ],
                         ),
-                      Padding(padding: const EdgeInsets.only(bottom: 21)),
+                      Padding(padding: const EdgeInsets.only(bottom: 19)),
                     ],
                   ),
 //--------------------CENTER-PLAYERS----------------------------------------------------------------------------------------------------------
@@ -1003,9 +1004,9 @@ class _GameRoomPageState extends State<GameRoomPage> {
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
                       if (gamemode == 2)
-                        Padding(padding: const EdgeInsets.only(top: 20)),
+                        Padding(padding: const EdgeInsets.only(top: 18)),
                       if (gamemode == 3)
-                        Padding(padding: const EdgeInsets.only(top: 100)),
+                        Padding(padding: const EdgeInsets.only(top: 90)),
                       if (gamemode == 2 || gamemode == 4)
                       Row(
                         mainAxisAlignment: MainAxisAlignment.center,
@@ -1014,36 +1015,36 @@ class _GameRoomPageState extends State<GameRoomPage> {
                                 Row(
                                   children: [
                                     CentralCardWidget(card: playerUp!.pallete[i]),
-                                    Padding(padding: const EdgeInsets.only(left: 18)),
+                                    Padding(padding: const EdgeInsets.only(left: 16)),
                                   ],
                                 ),
                           for (int i = playerUp != null ? playerUp!.pallete.length : 0; i < 7; i++)
                             Row(
                               children: [
                                 Container(
-                                  height: 84,
-                                  width: 60,
+                                  height: 76,
+                                  width: 54,
                                   decoration:  BoxDecoration(
                                     color: invisColor,
                                     borderRadius: BorderRadius.circular(5),
                                     border: Border.all(color: grey3A3A3AColor, width: 1.5),
                                   ),
                                 ),
-                                Padding(padding: const EdgeInsets.only(left: 18)),
+                                Padding(padding: const EdgeInsets.only(left: 16)),
                               ],
                             )
                         ],
                       ),
-                      Padding(padding: const EdgeInsets.only(top: 75)),
+                      Padding(padding: const EdgeInsets.only(top: 74)),
                       Row(
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
                           Image(
                             image: AssetImage('lib/assets/rules_pallete.png'),
-                            width: 345,
-                            height: 179,
+                            width: 310,
+                            height: 161,
                           ),
-                          Padding(padding: const EdgeInsets.only(left: 32)),
+                          Padding(padding: const EdgeInsets.only(left: 29)),
                           DragTarget<String>(
                             onWillAcceptWithDetails: (data) {
                               return !ruleChanged;
@@ -1061,7 +1062,7 @@ class _GameRoomPageState extends State<GameRoomPage> {
                           ),
                         ],
                       ),
-                      Padding(padding: const EdgeInsets.only(top: 75)),
+                      Padding(padding: const EdgeInsets.only(top: 74)),
                       DragTarget<String>(
                         onWillAcceptWithDetails: (data) {
                           return !palleteChanged;
@@ -1082,22 +1083,22 @@ class _GameRoomPageState extends State<GameRoomPage> {
                                 Row(
                                   children: [
                                     CentralCardWidget(card: _pallete[i]),
-                                    Padding(padding: const EdgeInsets.only(left: 18)),
+                                    Padding(padding: const EdgeInsets.only(left: 16)),
                                   ],
                                 ),
                               for (int i = _pallete.length; i < 7; i++)
                                 Row(
                                   children: [
                                     Container(
-                                      height: 84,
-                                      width: 60,
+                                      height: 76,
+                                      width: 54,
                                       decoration:  BoxDecoration(
                                         color: invisColor,
                                         borderRadius: BorderRadius.circular(5),
                                         border: Border.all(color: grey3A3A3AColor, width: 1.5),
                                       ),
                                     ),
-                                    Padding(padding: const EdgeInsets.only(left: 18)),
+                                    Padding(padding: const EdgeInsets.only(left: 16)),
                                   ],
                                 )
                             ],
@@ -1112,30 +1113,30 @@ class _GameRoomPageState extends State<GameRoomPage> {
                   Column(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      Padding(padding: const EdgeInsets.only(top: 30)),
+                      Padding(padding: const EdgeInsets.only(top: 27)),
                       for (int i = 0; i < (playerRight != null ? playerRight!.pallete.length : 0); i++)
                         Column(
                           children: [
                             RightCardWidget(card: playerRight!.pallete[i]),
-                            Padding(padding: const EdgeInsets.only(top: 9)),
+                            Padding(padding: const EdgeInsets.only(top: 8)),
                           ],
                         ),
                       for (int i = playerRight != null ? playerRight!.pallete.length : 0; i < 7; i++)
                         Column(
                           children: [
                             Container(
-                              height: 60,
-                              width: 84,
+                              height: 54,
+                              width: 76,
                               decoration:  BoxDecoration(
                                 color: invisColor,
                                 borderRadius: BorderRadius.circular(5),
                                 border: Border.all(color: grey3A3A3AColor, width: 1.5),
                               ),
                             ),
-                            Padding(padding: const EdgeInsets.only(top: 9)),
+                            Padding(padding: const EdgeInsets.only(top: 8)),
                           ],
                         ),
-                      Padding(padding: const EdgeInsets.only(bottom: 21)),
+                      Padding(padding: const EdgeInsets.only(bottom: 19)),
                     ],
                   ),
                   if (gamemode == 3 || gamemode == 4)
@@ -1152,9 +1153,9 @@ class _GameRoomPageState extends State<GameRoomPage> {
                           duration: 60,
                           isReverse: true,
                           fillColor: greenTimerColor,
-                          height: 74,
-                          width: 74,
-                          strokeWidth: 8,
+                          height: 67,
+                          width: 67,
+                          strokeWidth: 7,
                           onComplete: () {
                             // later
                           },
@@ -1164,7 +1165,7 @@ class _GameRoomPageState extends State<GameRoomPage> {
                           autoStart: false,
                           textStyle: invisTextStyle,
                           ),
-                          Icon(Icons.account_circle, size: 80, color: grey3A3A3AColor,),
+                          Icon(Icons.account_circle, size: 72, color: grey3A3A3AColor,),
                         ],
                       ),
                       Padding(padding: const EdgeInsets.only(top: 5)),
@@ -1179,115 +1180,138 @@ class _GameRoomPageState extends State<GameRoomPage> {
                 ],
               ),
 //--------------------HAND----------------------------------------------------------------------------------------------------------
-              Expanded(flex: 1, child: Text("")),
-              Container(
-                height: 155,
-                decoration:  BoxDecoration(
-                  color: handInvisColor,
-                ),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Expanded(flex: 1, child: Text("")),
-                    Stack(
-                      alignment: Alignment.center,
-                      children: [
-                        CircularCountDownTimer(
-                        controller: _countDownControllerDown,
-                        duration: 60,
-                        isReverse: true,
-                        fillColor: greenTimerColor,
-                        height: 74,
-                        width: 74,
-                        strokeWidth: 8,
-                        onComplete: () {
-                          // later
-                        },
-                        strokeCap: StrokeCap.round,
-                        isReverseAnimation: true,
-                        ringColor: greyTimerColor,
-                        autoStart: false,
-                        textStyle: invisTextStyle,
-                        ),
-                        Icon(Icons.account_circle, size: 80, color: grey3A3A3AColor,),
-                      ],
-                    ),
-                    Padding(padding: const EdgeInsets.only(left: 29)),
-                    for (int i = 0; i < _myHand.length; i++)
-                      Row(
-                        children: [
-                          Draggable<String>(
-                            data: _myHand[i],
-                            feedback: CentralCardWidget(card: _myHand[i]),
-                            childWhenDragging: Container(
-                              height: 106,
-                              width: 71,
-                              decoration:  BoxDecoration(
-                                color: invisColor,
-                                borderRadius: BorderRadius.circular(5),
-                                border: Border.all(color: grey3A3A3AColor, width: 1.5),
+              // Expanded(flex: 1, child: Text("")),
+              Padding(padding: const EdgeInsets.only(top: 10)),
+              Expanded(
+                // flex: 17,
+                child: Container(
+                  height: 155,
+                  decoration:  BoxDecoration(
+                    color: handInvisColor,
+                  ),
+                  child: Column(
+                    children: [
+                      Expanded(flex: 1, child: Text("")),
+                      Expanded(
+                        flex: 7,
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Expanded(flex: 1, child: Text("")),
+                            Column(
+                              children: [
+                                Padding(padding: const EdgeInsets.only(top: 10)),
+                                Stack(
+                                  alignment: Alignment.center,
+                                  children: [
+                                    CircularCountDownTimer(
+                                    controller: _countDownControllerDown,
+                                    duration: 60,
+                                    isReverse: true,
+                                    fillColor: greenTimerColor,
+                                    height: 67,
+                                    width: 67,
+                                    strokeWidth: 7,
+                                    onComplete: () {
+                                      // later
+                                    },
+                                    strokeCap: StrokeCap.round,
+                                    isReverseAnimation: true,
+                                    ringColor: greyTimerColor,
+                                    autoStart: false,
+                                    textStyle: invisTextStyle,
+                                    ),
+                                    Icon(Icons.account_circle, size: 72, color: grey3A3A3AColor,),
+                                  ],
+                                ),
+                              ],
+                            ),
+                            Padding(padding: const EdgeInsets.only(left: 29)),
+                            for (int i = 0; i < _myHand.length; i++)
+                              Row(
+                                children: [
+                                  Draggable<String>(
+                                    data: _myHand[i],
+                                    feedback: CentralCardWidget(card: _myHand[i]),
+                                    childWhenDragging: Container(
+                                      height: 95,
+                                      width: 64,
+                                      decoration:  BoxDecoration(
+                                        color: invisColor,
+                                        borderRadius: BorderRadius.circular(5),
+                                        border: Border.all(color: grey3A3A3AColor, width: 1.5),
+                                      ),
+                                    ),
+                                    child: HandCardWidget(card: _myHand[i]),
+                                  ),
+                                  Padding(padding: const EdgeInsets.only(left: 16)),
+                                ],
                               ),
+                            for (int i = _myHand.length; i < 7; i++)
+                              Row(
+                                children: [
+                                  Container(
+                                    height: 95,
+                                    width: 64,
+                                    decoration:  BoxDecoration(
+                                      color: invisColor,
+                                      borderRadius: BorderRadius.circular(5),
+                                      border: Border.all(color: grey3A3A3AColor, width: 1.5),
+                                    ),
+                                  ),
+                                  Padding(padding: const EdgeInsets.only(left: 16)),
+                                ],
+                              ),
+                            Padding(padding: const EdgeInsets.only(left: 11)),
+                            if (myAllTurn)
+                              Column(
+                                children: [
+                                  Padding(padding: const EdgeInsets.only(top: 20)),
+                                  SizedBox(
+                                    width: 105,
+                                    height: 50,
+                                    child: 
+                                    ElevatedButton(
+                                      style: ButtonStyle(
+                                        backgroundColor: WidgetStateProperty.all<Color>(myTurn ? buttonColor : greyButtonColor),
+                                        textStyle: WidgetStateProperty.all<TextStyle>(myTurn ? buttonTextStyle : buttonWhiteTextStyle),
+                                        foregroundColor: WidgetStateProperty.all<Color>(myTurn ? grey3A3A3AColor : Colors.white),
+                                        shape: WidgetStateProperty.all<RoundedRectangleBorder>(RoundedRectangleBorder(borderRadius: BorderRadius.circular(30),),),
+                                        side: WidgetStateProperty.all<BorderSide>(BorderSide(color: grey3A3A3AColor, width: 1),),
+                                      ),
+                                      onPressed: () {
+                                        if (myAllTurn && myTurn) {
+                                          _submitTurn();
+                                        }
+                                      },
+                                    child: Text('SUBMIT'),
+                                    ),
+                                  ),
+                                ],
+                              )
+                            else 
+                              SizedBox(
+                                height: 105,
+                                width: 50,
+                                child: Text(''),
+                              ),
+                            Expanded(flex: 1, child: Text("")),
+                            IconButton(
+                              icon: Icon(Icons.help_outline, size: 40, color: grey3A3A3AColor,),
+                              onPressed: () {
+                                showDialog(
+                                  context: context,
+                                  builder: (context) => RuleDialog(),
+                                );
+                              },
                             ),
-                            child: HandCardWidget(card: _myHand[i]),
-                          ),
-                          Padding(padding: const EdgeInsets.only(left: 18)),
-                        ],
-                      ),
-                    for (int i = _myHand.length; i < 7; i++)
-                      Row(
-                        children: [
-                          Container(
-                            height: 106,
-                            width: 71,
-                            decoration:  BoxDecoration(
-                              color: invisColor,
-                              borderRadius: BorderRadius.circular(5),
-                              border: Border.all(color: grey3A3A3AColor, width: 1.5),
-                            ),
-                          ),
-                          Padding(padding: const EdgeInsets.only(left: 18)),
-                        ],
-                      ),
-                    Padding(padding: const EdgeInsets.only(left: 11)),
-                    if (myAllTurn)
-                      SizedBox(
-                        width: 105,
-                        height: 50,
-                        child: 
-                        ElevatedButton(
-                          style: ButtonStyle(
-                            backgroundColor: WidgetStateProperty.all<Color>(myTurn ? buttonColor : greyButtonColor),
-                            textStyle: WidgetStateProperty.all<TextStyle>(myTurn ? buttonTextStyle : buttonWhiteTextStyle),
-                            foregroundColor: WidgetStateProperty.all<Color>(myTurn ? grey3A3A3AColor : Colors.white),
-                            shape: WidgetStateProperty.all<RoundedRectangleBorder>(RoundedRectangleBorder(borderRadius: BorderRadius.circular(30),),),
-                            side: WidgetStateProperty.all<BorderSide>(BorderSide(color: grey3A3A3AColor, width: 1),),
-                          ),
-                          onPressed: () {
-                            if (myAllTurn && myTurn) {
-                              _submitTurn();
-                            }
-                          },
-                        child: Text('SUBMIT'),
+                            Padding(padding: const EdgeInsets.only(right: 15), child: Text(""),),
+                          ],
                         ),
-                      )
-                    else 
-                      SizedBox(
-                        height: 105,
-                        width: 50,
-                        child: Text(''),
                       ),
-                    Expanded(flex: 1, child: Text("")),
-                    IconButton(
-                      icon: Icon(Icons.help_outline, size: 40, color: grey3A3A3AColor,),
-                      onPressed: () {
-                        showDialog(
-                          context: context,
-                          builder: (context) => RuleDialog(),
-                        );
-                      },
-                    ),
-                    Padding(padding: const EdgeInsets.only(right: 15), child: Text(""),),
-                  ],
+                    ],
+                  ),
                 ),
               )
             ],

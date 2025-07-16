@@ -51,14 +51,14 @@ TextStyle bigNumberStyle = const TextStyle(
 
 TextStyle cardNumStyle = const TextStyle(
   fontFamily: 'Awesome5',
-  fontSize: 48,
+  fontSize: 39,
   fontWeight: FontWeight.w500,
   color: Colors.white
 );
 
 TextStyle otherCardNumStyle = const TextStyle(
   fontFamily: 'Awesome5',
-  fontSize: 45,
+  fontSize: 40,
   fontWeight: FontWeight.w500,
   color: Colors.white
 );
