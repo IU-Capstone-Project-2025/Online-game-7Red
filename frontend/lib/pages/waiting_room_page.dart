@@ -18,6 +18,7 @@ class WaitingRoomPage extends StatefulWidget {
 }
 
 class _WaitingRoomPageState extends State<WaitingRoomPage> {
+  SharedPreferences? prefs;
 
   bool logSuccess = false;
 
@@ -32,6 +33,8 @@ class _WaitingRoomPageState extends State<WaitingRoomPage> {
   Timer? _pollingTimer;
 
   bool ready = false;
+
+  bool onlineGame = false;
 
   @override
   void initState() {
@@ -48,10 +51,11 @@ class _WaitingRoomPageState extends State<WaitingRoomPage> {
 
   // Function for polling backend for room state (what players are in the room, they are ready or not)
   void _startPolling() async {
-    SharedPreferences prefs = await SharedPreferences.getInstance();
+    prefs = await SharedPreferences.getInstance();
     // await assigned_room = Future.value(prefs.getString('roomId') ?? '00000');
-    room_id = prefs.getString('roomId') ?? '00000';
-    ready = prefs.getBool('ready') ?? false;
+    room_id = prefs!.getString('roomId') ?? '00000';
+    ready = prefs!.getBool('ready') ?? false;
+    onlineGame = prefs!.getBool('onlineGame') ?? false;
 
     await _fetchPlayers();
     
@@ -83,9 +87,9 @@ class _WaitingRoomPageState extends State<WaitingRoomPage> {
         ready_players = List<String>.from(responseBody['ready_players']);
         // Check if all players are ready and there are at least two players to navigate to the game room
         if (ready_players.length == players.length && ready_players.length >= 2) {
-          SharedPreferences prefs = await SharedPreferences.getInstance();
-          await prefs.remove('ready');
-          await prefs.setInt('playerNum', ready_players.length);
+          await prefs!.remove('ready');
+          await prefs!.remove('onlineGame');
+          await prefs!.setInt('playerNum', ready_players.length);
           Navigator.pushNamed(context, '/gameroom');
           _pollingTimer?.cancel();
         }
@@ -218,6 +222,7 @@ class _WaitingRoomPageState extends State<WaitingRoomPage> {
                         await leaveRoom(gameProvider.myID, gameProvider.roomId);
                         // If the http-request was successful, navigate to MainMenuPage
                         if (logSuccess) {
+                          await prefs!.remove('onlineGame');
                           gameProvider.clearRoomInfo();
                           gameProvider.clearReady();
                           Navigator.pushNamed(context, '/mainmenu');
@@ -240,17 +245,39 @@ class _WaitingRoomPageState extends State<WaitingRoomPage> {
                     width: 160,
                     height: 160,
                   ),
+                  if (onlineGame)
+                    Padding(padding: const EdgeInsets.only(left: 35)),
+                  if (onlineGame)
+                    Container(
+                      height: 160,
+                      width: 4,
+                      decoration: BoxDecoration(
+                        color: grey3A3A3AColor,
+                        borderRadius: BorderRadius.circular(10), 
+                      ),
+                    ),
                   Padding(padding: const EdgeInsets.only(left: 35)),
-                  Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Text("Room", style: boldTextStyle),
-                      SelectableText(room_id, style: bigNumberStyle),
-                      Padding(padding: const EdgeInsets.only(top: 10)),
-                      Text("Password", style: boldTextStyle),
-                      SelectableText(gameProvider.roomPassword, style: bigNumberStyle),
-                    ],
-                  )
+                  if (!onlineGame)
+                    Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Text("Room", style: boldTextStyle),
+                        SelectableText(room_id, style: bigNumberStyle),
+                        Padding(padding: const EdgeInsets.only(top: 10)),
+                        Text("Password", style: boldTextStyle),
+                        SelectableText(gameProvider.roomPassword, style: bigNumberStyle),
+                      ],
+                    ),
+                  if (onlineGame)
+                    Column(
+                      mainAxisAlignment: MainAxisAlignment.start,
+                      children: [
+                        Padding(padding: const EdgeInsets.only(top: 20)),
+                        Text("Online", style: onlineRoomStyleGreen),
+                        // Padding(padding: const EdgeInsets.only(top: 5)),
+                        Text("Room", style: onlineRoomStyle),
+                      ],
+                    )
                 ],
               ),
               const Expanded(flex: 1, child: Text("")),
@@ -326,7 +353,6 @@ class _WaitingRoomPageState extends State<WaitingRoomPage> {
                         gameProvider.ready = ready;
                       });
                       gameProvider.saveReady();
-                      
                     }
                 },
                 child: ready ? const Text('UNREADY') : const Text('GET READY'),

@@ -35,7 +35,7 @@ The application includes the following core components:
 2. Access to the website at:
  [http://localhost:8080](http://localhost:8080)
 
-3. Access the interactive Swagger UI at: [http://192.145.30.253:8000/docs](http://localhost:8000/docs)
+3. Access the interactive Swagger UI at: [https://7red.ru/api/docs](https://7red.ru/api/docs)
 
 ## To play in a 2-4 player game mode using docker (on your local machine to test something), do the following:
 
@@ -59,7 +59,7 @@ The application includes the following core components:
 
 ## To play in a 2-4 player game mode online, do the following:
 1. Open browser tab at:
- [http://192.145.30.253:8080/](http://192.145.30.253:8080/)
+ [https://7red.ru](https://7red.ru)
 
 2. Log in into account (using Sign In or Sign Up)
 
@@ -71,7 +71,7 @@ The application includes the following core components:
 
 ## To play with bot, do the following:
 1. Open browser tab at:
- [http://192.145.30.253:8080/](http://192.145.30.253:8080/)
+ [https://7red.ru](https://7red.ru)
 
 2. Log in into account (using Sign In or Sign Up)
 

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
+import 'package:provider/provider.dart';
 
 import '../data/styles.dart';
 import '../providers/provider.dart';
@@ -63,28 +64,30 @@ class _ConnectDialogState extends State<ConnectDialog> {
     } else if (responseBody['detail'] == 'Game already started') {
       setState(() {
         logSuccess = false;
-        postText = 'Game already started';
+        postText = Provider.of<GameProvider>(context).localizations!.getString('error_game_already_started', Provider.of<GameProvider>(context).languageCode);
       });
     } else if (responseBody['detail'] == 'User already in the room') {
       setState(() {
         logSuccess = false;
-        postText = 'User already in the room';
+        postText = Provider.of<GameProvider>(context).localizations!.getString('error_user_already_in_room', Provider.of<GameProvider>(context).languageCode);
       });
     } else if (responseBody['detail'] == 'Room is full') {
       setState(() {
         logSuccess = false;
-        postText = 'Room is full';
+        postText = Provider.of<GameProvider>(context).localizations!.getString('error_room_is_full', Provider.of<GameProvider>(context).languageCode);
       });
     } else {
       setState(() {
         logSuccess = false;
-        postText = 'Invalid ID or Password';
+        postText = Provider.of<GameProvider>(context).localizations!.getString('error_invalid_id_or_password', Provider.of<GameProvider>(context).languageCode);
       });
     }
   }
 
   @override
   Widget build(BuildContext context) {
+    final gameProvider = Provider.of<GameProvider>(context);
+
     return Dialog(
       child: Container(
         width: 420,
@@ -113,7 +116,7 @@ class _ConnectDialogState extends State<ConnectDialog> {
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
                   Padding(padding: const EdgeInsets.only(left: 47)),
-                  Text("ID of the game-room", style: basicTextStyle,),
+                  Text(gameProvider.localizations!.getString('id_game_room', gameProvider.languageCode), style: basicTextStyle,),
                   const Expanded(flex: 1, child: Text("")),
                 ]
               ),
@@ -140,7 +143,7 @@ class _ConnectDialogState extends State<ConnectDialog> {
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
                   Padding(padding: const EdgeInsets.only(left: 47)),
-                  Text("Password", style: basicTextStyle),
+                  Text(gameProvider.localizations!.getString('password', gameProvider.languageCode), style: basicTextStyle),
                   const Expanded(flex: 1, child: Text("")),
                 ]
               ),
@@ -208,7 +211,7 @@ class _ConnectDialogState extends State<ConnectDialog> {
                     // Check if the text fields are empty
                     if (controller.text.isEmpty || controller2.text.isEmpty) {
                       setState(() {
-                        postText = "All fields are required";
+                        postText = gameProvider.localizations!.getString('error_all_fields_required', gameProvider.languageCode);
                       });
                       return;
                     }
@@ -222,7 +225,7 @@ class _ConnectDialogState extends State<ConnectDialog> {
                       Navigator.pushNamed(context, '/waitingroom');
                     }
                   },
-                  child: const Text('CONNECT'),
+                  child: Text(gameProvider.localizations!.getString("connect_private_room", gameProvider.languageCode)),
                 ),
               ),
               Padding(padding: const EdgeInsets.only(top: 10)),

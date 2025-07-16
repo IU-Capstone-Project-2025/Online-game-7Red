@@ -30,6 +30,7 @@ flutter:
     - lib/assets/rule1.png
     - lib/assets/leftButton.png
     - lib/assets/rightButton.png
+    - lib/assets/localization.json
   fonts:
     - family: Poppins
       fonts:

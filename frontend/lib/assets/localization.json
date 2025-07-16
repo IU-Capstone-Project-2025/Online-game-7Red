@@ -1,0 +1,659 @@
+[   
+    {
+        "id": "welcome",
+        "en": "Welcome to the game!",
+        "ru": "Добро пожаловать в игру!"
+
+    },
+    {
+        "id": "sign_in_botton",
+        "en": "SIGN  IN",
+        "ru": "ВОЙТИ"
+    },
+    {
+        "id": "already_have_account",
+        "en": "If you already have an account",
+        "ru": "Если у Вас уже есть аккаунт"
+    },
+    { 
+        "id": "sign_up_botton",
+        "en": "SIGN  UP",
+        "ru": "ЗАРЕГИСТРИРОВАТЬСЯ"
+    },
+    {
+        "id": "create_account",
+        "en": "If you want to create an account",
+        "ru": "Если Вы хотите создать аккаунт"
+    },
+    {
+        "id": "sign_in_title",
+        "en": "Sign in to 7Red",
+        "ru": "Войти в 7Red"
+    },
+    {
+        "id": "email",
+        "en": "Email address",
+        "ru": "Электронная почта"
+    },
+    {
+        "id": "password",
+        "en": "Password",
+        "ru": "Пароль"
+    },
+    {
+        "id": "error_all_fields_required",
+        "en": "All fields are required",
+        "ru": "Все поля обязательны"
+    },
+    {
+        "id": "sign_in_error_invalid_email",
+        "en": "Invalid email",
+        "ru": "Некорректный email"
+    },
+    {
+        "id": "sign_in_error_invalid_credentials",
+        "en": "Invalid email or password",
+        "ru": "Неверный email или пароль"
+    },
+    {
+        "id": "sign_up_title",
+        "en": "Sign up to 7Red",
+        "ru": "Зарегистрироваться в 7Red"
+    },
+    {
+        "id": "nickname",
+        "en": "Nickname",
+        "ru": "Имя пользователя"
+    },
+    {
+        "id": "sign_up_repeat_password",
+        "en": "Repeat password",
+        "ru": "Повторите пароль"
+    },
+    {
+        "id": "sign_up_error_nickname_length",
+        "en": "1-10 symbols",
+        "ru": "1-10 символов"
+    },
+    {
+        "id": "sign_up_error_password_length",
+        "en": "6-16 symbols",
+        "ru": "6-16 символов"
+    },
+    {
+        "id": "sign_up_error_passwords_different",
+        "en": "Different",
+        "ru": "Пароли не совпадают"
+    },
+    {
+        "id": "sign_up_error_email_already_in_use",
+        "en": "(already in use)",
+        "ru": "(уже используется)"
+    },
+    {
+        "id": "loading",
+        "en": "Loading...",
+        "ru": "Загрузка..."
+    },
+    {
+        "id": "main_menu_create_private_room",
+        "en": "Create private room",
+        "ru": "Создать комнату"
+    },
+    {
+        "id": "connect_private_room",
+        "en": "Connect private room",
+        "ru": "Подключиться к комнате"
+    },
+    {
+        "id": "main_menu_random_opponents",
+        "en": "Random opponents",
+        "ru": "Случайные соперники"
+    },
+    {
+        "id": "main_menu_vs_bot",
+        "en": "Vs Bot",
+        "ru": "Против бота"
+    },
+    {
+        "id": "main_menu_start_new_game",
+        "en": "START NEW GAME",
+        "ru": "НАЧАТЬ НОВУЮ ИГРУ"
+    },
+    {
+        "id": "main_menu_show_rules",
+        "en": "Rules",
+        "ru": "Правила"
+    },
+    {
+        "id": "main_menu_show_statistics",
+        "en": "Statistics",
+        "ru": "Статистика"
+    },
+    {
+        "id": "settings",
+        "en": "Settings",
+        "ru": "Настройки"
+    },
+    {
+        "id": "waiting_room_title",
+        "en": "Waiting Room",
+        "ru": "Комната ожидания"
+    },
+    {
+        "id": "waiting_room_room",
+        "en": "Room",
+        "ru": "Комната"
+    },
+    {
+        "id": "waiting_room_ready",
+        "en": "GET READY",
+        "ru": "ГОТОВ"
+    },
+    {
+        "id": "waiting_room_unready",
+        "en": "UNREADY",
+        "ru": "НЕ ГОТОВ"
+    },
+    {
+        "id": "room_leave",
+        "en": "Leave the room",
+        "ru": "Покинуть комнату"
+    },
+    {
+        "id": "game_submit",
+        "en": "SUBMIT",
+        "ru": "ОТПРАВИТЬ"
+    },
+    {
+        "id": "game_spectator",
+        "en": "Spectator",
+        "ru": "Наблюдать"
+    },
+    {
+        "id": "game_confirm_exit",
+        "en": "Are you sure you want to exit?\nYou will not be able to return to\nthe game",
+        "ru": "Вы уверены, что хотите выйти?\nВы не сможете вернуться в игру"
+    },
+    {
+        "id": "game_place",
+        "en": "place",
+        "ru": "место"
+    },
+    {
+        "id": "game_first_place",
+        "en": "1st",
+        "ru": "1-е"
+    },
+    {
+        "id": "game_second_place",
+        "en": "2nd",
+        "ru": "2-е"
+    },
+    {
+        "id": "game_third_place",
+        "en": "3rd",
+        "ru": "3-е"
+    },
+    {
+        "id": "game_fourth_place",
+        "en": "4th",
+        "ru": "4-е"
+    },
+    {
+        "id": "waiting",
+        "en": "Waiting...",
+        "ru": "Ожидание..."
+    },
+    {
+        "id": "play_again",
+        "en": "Play again",
+        "ru": "Сыграть ещё раз"
+    },
+    {
+        "id": "result_place",
+        "en": "Place",
+        "ru": "Место"
+    },
+    {
+        "id": "result_time",
+        "en": "Time",
+        "ru": "Время"
+    },
+    {
+        "id": "statistics_title",
+        "en": "Statistics",
+        "ru": "Статистика"
+    },
+    {
+        "id": "statistics_winstrick",
+        "en": "Winstrick",
+        "ru": "Серия побед"
+    },
+    {
+        "id": "statistics_number_of_games",
+        "en": "Number of games",
+        "ru": "Количество игр"
+    },
+    {
+        "id": "statistics_winrate",
+        "en": "Winrate",
+        "ru": "Процент побед"
+    },
+    {
+        "id": "statistics_achievement_1",
+        "en": "Log in to the game for\n7 consecutive days",
+        "ru": "Зайдите в игру 7 дней\nподряд"
+    },
+    {
+        "id": "statistics_achievement_2",
+        "en": "Win the bot 3 times\n",
+        "ru": "Победите бота 3 раза\n"
+    },
+    {
+        "id": "statistics_achievement_3",
+        "en": "Get a winstreak of 5 games\nin an online-mode",
+        "ru": "Сделайте серию из 5 побед\nв онлайн-режиме"
+    },
+    {
+        "id": "profile_dark_mode",
+        "en": "Dark mode",
+        "ru": "Тёмная тема"
+    },
+    {
+        "id": "profile_language",
+        "en": "Language",
+        "ru": "Язык"
+    },
+    {
+        "id": "profile_log_out",
+        "en": "LOG OUT",
+        "ru": "ВЫЙТИ"
+    },
+    {
+        "id": "rules_title",
+        "en": "Rules",
+        "ru": "Правила"
+    },
+    {
+        "id": "rules_deck",
+        "en": "Deck",
+        "ru": "Колода"
+    },
+    {
+        "id": "rules_deck_49_cards",
+        "en": "• A total of 49 unique cards",
+        "ru": "• Всего 49 уникальных карт"
+    },
+    {
+        "id": "rules_deck_card_value_color",
+        "en": "• Each card has a value (number) and a color",
+        "ru": "• Каждая карта имеет номинал (цифру) и цвет"
+    },
+    {
+        "id": "rules_deck_card_values",
+        "en": "• Card values: from 1 to 7",
+        "ru": "• Номиналы карт: от 1 до 7"
+    },
+    {
+        "id": "rules_deck_colors",
+        "en": "• Colors: 7 colors of the rainbow (each color includes",
+        "ru": "• Цвета: 7 цветов радуги (каждый цвет представлен картами"
+    },
+    {
+        "id": "rules_deck_cards_of_all_values",
+        "en": "   cards of all values)",
+        "ru": "   всех номиналов)"
+    },
+    {
+        "id": "rules_game_start",
+        "en": "Game start",
+        "ru": "Начало игры"
+    },
+    {
+        "id": "rules_game_start_deal",
+        "en": "• Each player is dealt 7 cards",
+        "ru": "• Каждый игрок получает 7 карт на руку"
+    },
+    {
+        "id": "rules_game_start_palette",
+        "en": "• The cards lying on the table in front of you are your palette.",
+        "ru": "• Карты лежащие на столе перед вами -  это ваша палетка."
+    },
+    {
+        "id": "rules_game_start_palette_empty",
+        "en": "   Initially, it is empty for all players",
+        "ru": "   Изначально она у всех пустая"
+    },
+    {
+        "id": "rules_game_start_canvas",
+        "en": "• A starting card is placed in the center — this is the canvas",
+        "ru": "• В центр стола выкладывается начальная карта — это холст"
+    },
+    {
+        "id": "rules_game_start_rule",
+        "en": "• The top card of the canvas determines the current rule by which",
+        "ru": "• Верхняя карта холста определяет текущее правило,"
+    },
+    {
+        "id": "rules_game_start_players_can_win",
+        "en": "   players can win.",
+        "ru": "   по которому игроки могут выиграть."
+    },
+    {
+        "id": "rules_gameplay",
+        "en": "Gameplay",
+        "ru": "Ход игры"
+    },
+    {
+        "id": "rules_gameplay_actions",
+        "en": "On your turn, you must perform one of the following actions:",
+        "ru": "В свой ход игрок должен выполнить одно из действий:"
+    },
+    {
+        "id": "rules_gameplay_action1",
+        "en": "1.  Play a card into your palette (face-up).",
+        "ru": "1.  Выложить карту в свою палитру (лицевой стороной вверх)."
+    },
+    {
+        "id": "rules_gameplay_action2",
+        "en": "2. Play a card to the canvas to change the current rule.",
+        "ru": "2. Выложить карту на холст, чтобы изменить текущее правило."
+    },
+    {
+        "id": "rules_gameplay_action2_leading",
+        "en": "      • You must be leading under the new rule.",
+        "ru": "      • Вы должны лидировать по новому правилу."
+    },
+    {
+        "id": "rules_gameplay_action3",
+        "en": "3. Play a card into your palette and then to the canvas to change",
+        "ru": "3. Выложить карту в палитру и затем на холст, чтобы изменить"
+    },
+    {
+        "id": "rules_gameplay_action3_rule",
+        "en": "   the rule.",
+        "ru": "   правило."
+    },
+    {
+        "id": "rules_gameplay_action3_leading",
+        "en": "      • You must be leading under the new rule.",
+        "ru": "      • Вы должны лидировать по новому правилу."
+    },
+    {
+        "id": "rules_leader_title",
+        "en": "Determining the Leader",
+        "ru": "Определение лидера"
+    },
+    {
+        "id": "rules_leader_palette_match",
+        "en": "• You are leading if your palette contains more cards that match",
+        "ru": "• Вы лидируете, если в вашей палитре больше карт, отвечающих "
+    },
+    {
+        "id": "rules_leader_palette_match_rule",
+        "en": "   the current rule than any other player. Other cards in your",
+        "ru": "   текущему правилу, чем у других игроков. Остальные карты"
+    },
+    {
+        "id": "rules_leader_palette_do_not_count",
+        "en": "   palette do not count.",
+        "ru": "   палитры не учитываются."
+    },
+    {
+        "id": "rules_leader_tied",
+        "en": "• If tied, the leader is the player with the highest card that",
+        "ru": "• При равенстве лидирует игрок с самой старшей,"
+    },
+    {
+        "id": "rules_leader_tied_match_rule",
+        "en": "   matches the rule:",
+        "ru": "   отвечающей правилу, картой:"
+    },
+    {
+        "id": "rules_leader_compare_value",
+        "en": "      - First compare by value.",
+        "ru": "      - Сначала сравниваются номиналы."
+    },
+    {
+        "id": "rules_leader_compare_color",
+        "en": "      - If values are equal, compare colors in the order: Red > ",
+        "ru": "      - При равных номиналах старшинство определяется по цвету в порядке: Красный > "
+    },
+    {
+        "id": "rules_leader_compare_color_order",
+        "en": "         Orange > Yellow > Green > Blue > Indigo> Purple.",
+        "ru": "         Оранжевый > Жёлтый > Зелёный > Голубой > Синий > Фиолетовый."
+    },
+    {
+        "id": "rules_leader_no_cards_match",
+        "en": "      - If you have no cards matching the rule (e.g., under the ",
+        "ru": "      - Если у вас нет карт, подходящих под правило (например, "
+    },
+    {
+        "id": "rules_leader_no_cards_match_rule",
+        "en": "         Green or Purple rule), you cannot be the leader.",
+        "ru": "         Зелёное или Фиолетовое), вы не можете лидировать."
+    },
+    {
+        "id": "rules_win_loss_title",
+        "en": "Win and Loss Conditions",
+        "ru": "Условия победы и поражения"
+    },
+    {
+        "id": "rules_win_loss_not_leading",
+        "en": "• If you are not leading under the current rule at the end of",
+        "ru": "• Если в конце хода вы не лидируете по текущему правилу -"
+    },
+    {
+        "id": "rules_win_loss_lose_eliminated",
+        "en": "   your turn, you lose and are eliminated from the round.",
+        "ru": "   вы проигрываете и выбываете из раунда."
+    },
+    {
+        "id": "rules_win_loss_place_cards",
+        "en": "• Place all your cards (from hand and palette) face down in ",
+        "ru": "• Положите все свои карты (с руки и из палитры) рубашкой вверх"
+    },
+    {
+        "id": "rules_win_loss_front_of_you",
+        "en": "   front of you.",
+        "ru": "   перед собой."
+    },
+    {
+        "id": "rules_win_loss_no_cards_hand",
+        "en": "• If at the start of your turn you have no cards in hand — you",
+        "ru": "• Если в начале вашего хода у вас нет карт на руке — вы"
+    },
+    {
+        "id": "rules_win_loss_lose_eliminated_start",
+        "en": "   lose and are eliminated.",
+        "ru": "   проигрываете и выбываете."
+    },
+    {
+        "id": "rules_win_loss_last_player",
+        "en": "• If you are the last remaining player at the start of your",
+        "ru": "• Если в начале хода вы — последний оставшийся в игре,"
+    },
+    {
+        "id": "rules_win_loss_win_round",
+        "en": "   turn — you win the round!",
+        "ru": "   то побеждаете в раунде!"
+    },
+    {
+        "id": "rules_color_rules_title",
+        "en": "Color Rules",
+        "ru": "Правила по цветам"
+    },
+    {
+        "id": "rules_color_red",
+        "en": "• Red — Highest card wins.",
+        "ru": "• Красный — Старшая карта."
+    },
+    {
+        "id": "rules_color_orange",
+        "en": "• Orange — Most cards of the same value.",
+        "ru": "• Оранжевый — Больше всего карт одного номинала."
+    },
+    {
+        "id": "rules_color_yellow",
+        "en": "• Yellow — Most cards of the same color.",
+        "ru": "• Жёлтый — Больше всего карт одного цвета."
+    },
+    {
+        "id": "rules_color_green",
+        "en": "• Green — Most even-numbered cards.",
+        "ru": "• Зелёный — Больше всего чётных карт."
+    },
+    {
+        "id": "rules_color_blue",
+        "en": "• Blue — Most cards of different colors.",
+        "ru": "• Голубой — Больше всего карт разных цветов."
+    },
+    {
+        "id": "rules_color_indigo",
+        "en": "• Indigo — Longest sequence of consecutive numbers (e.g., 4, 5, 6).",
+        "ru": "• Синий — Больше всего карт, идущих по порядку (например, 4, 5, 6)."
+    },
+    {
+        "id": "rules_color_purple",
+        "en": "• Purple — Most cards with value less than 4.",
+        "ru": "• Фиолетовый — Больше всего карт номиналом меньше 4."
+    },
+    {
+        "id": "rule_slide_1",
+        "en": "Each card has a value (a number from 1 to 7) and a color\n(one of the 7 colors of the rainbow). There are 49 unique\ncards in total.",
+        "ru": "У каждой карты есть номинал (цифра от 1 до 7) и цвет \n(один из 7 цветов радуги). Всего 49 уникальных карт."
+    },
+    {
+        "id": "rule_slide_2",
+        "en": "At the start of the game, each player is dealt 7 cards\ninto their hand.",
+        "ru": "В начале игры каждый игрок получает 7 карт в руку."
+    },
+    {
+        "id": "rule_slide_3",
+        "en": "The number of cards in your opponents’ hands is shown\nnext to their names.",
+        "ru": "Количество карт в руке у твоих противников отображается\nрядом с их именами."
+    },
+    {
+        "id": "rule_slide_4",
+        "en": "In the center lies a card (the canvas), which determines the\ncurrent rule (the game always starts with the Red rule),\nalong with a reference showing all possible rules.",
+        "ru": "В центре находится карта (холст), которая определяет\nтекущее правило (игра всегда начинается с Красного правила),\nа и подсказка со всеми возможными правилами."
+    },
+    {
+        "id": "rule_slide_5",
+        "en": "The cards lying on the table in front of you are your\npalette. Initially, it is empty for all players.",
+        "ru": "Карты лежащие на столе перед вами -  это ваша палетка.\nИзначально она у всех пустая."
+    },
+    {
+        "id": "rule_slide_6",
+        "en": "All players take turns in a clockwise order. The first playeris\nchosen at random. Each turn lasts while the timer runs (60\nseconds). The winner is the last remaining player in the game.",
+        "ru": "Все игроки ходят по кругу. Первый игрок\nопределяется случайно. Ход игрока длится пока идет его таймер (60 секунд).\nПобедителем считается тот игрок, кто остался в игре последним."
+    },
+    {
+        "id": "rule_slide_7",
+        "en": "At the end of their turn, the player must be winning according\nto the current rule, or else they lose. If the results are\ntied, the leader is determined by the highest card.",
+        "ru": "В конце своего хода игрок должен лидировать по текущему правилу,\nиначе он проигрывает. Если результаты по правилу равны, то лидерство определяется по старшей карте."
+    },
+    {
+        "id": "rule_slide_8",
+        "en": "The highest card is determined first by value; if equal, then\nthe card whose color is closer to red is considered higher.",
+        "ru": "Старшая карта определяется сначала по наибольшему номиналу,\nоднако если они равны, старшей считается та карта, чей цвет ближе к красному."
+    },
+    {
+        "id": "rule_slide_9",
+        "en": "On your turn, you may play a card to your palette, change the\nrule (by playing to the canvas), or do both. To confirm your\nmove, click the \"Confirm\" button.",
+        "ru": "Каждый на своём ходу может сыграть карту в свою палетку, поменять правило\n(сыграв карту на холст), либо сделать и то и другое. Чтобы подтвердить свой ход,\nнажмите кнопку “Отправить”."
+    },
+    {
+        "id": "online_search_title",
+        "en": "Searching your opponents...",
+        "ru": "Поиск соперников..."
+    },
+    {
+        "id": "online_search_cancel",
+        "en": "CANCEL",
+        "ru": "ОТМЕНИТЬ"
+    },
+    {
+        "id": "online_search_no_players",
+        "en": "Oops! No players found",
+        "ru": "Упс! Игроки не найдены"
+    },
+    {
+        "id": "online_search_hint",
+        "en": "Hints about important points in the rules will change here",
+        "ru": "Подсказки по важным моментам правил будут появляться здесь"
+    },
+    {
+        "id": "id_game_room",
+        "en": "ID of the game-room",
+        "ru": "ID игровой комнаты"
+    },
+    {
+        "id": "connect_dialog_connect_button",
+        "en": "CONNECT",
+        "ru": "ПОДКЛЮЧИТЬСЯ"
+    },
+    {
+        "id": "error_game_already_started",
+        "en": "Game already started",
+        "ru": "Игра уже началась"
+    },
+    {
+        "id": "error_user_already_in_room",
+        "en": "User already in the room",
+        "ru": "Пользователь уже в комнате"
+    },
+    {
+        "id": "error_room_is_full",
+        "en": "Room is full",
+        "ru": "Комната заполнена"
+    },
+    {
+        "id": "error_invalid_id_or_password",
+        "en": "Invalid ID or Password",
+        "ru": "Неверный ID или пароль"
+    },
+    {
+        "id": "change_pers_info_title",
+        "en": "Change personal info",
+        "ru": "Изменить личные данные"
+    },
+    {
+        "id": "change_pers_info_previous",
+        "en": "Previous",
+        "ru": "Предыдущее"
+    },
+    {
+        "id": "change_pers_info_new",
+        "en": "New",
+        "ru": "Новое"
+    },
+    {
+        "id": "change_pers_info_button",
+        "en": "CHANGE",
+        "ru": "ИЗМЕНИТЬ"
+    },
+    {
+        "id": "change_password_title",
+        "en": "Change password",
+        "ru": "Изменить пароль"
+    },
+    {
+        "id": "change_password_previous",
+        "en": "Previous password",
+        "ru": "Предыдущий пароль"
+    },
+    {
+        "id": "change_password_new",
+        "en": "New password",
+        "ru": "Новый пароль"
+    },
+    {
+        "id": "change_password_repeat",
+        "en": "Repeat password",
+        "ru": "Повторите пароль"
+    }
+
+]

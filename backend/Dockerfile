@@ -4,17 +4,16 @@ WORKDIR /app
 
 COPY . /app
 
-RUN pip install fastapi uvicorn "pydantic[email]" sqlalchemy databases python-dotenv passlib[bcrypt] bcrypt==4.0.1 asyncpg
-RUN pip install 'uvicorn[standard]' websockets
+COPY requirements.txt . 
+RUN pip install --no-cache-dir -r requirements.txt
 
-CMD ["uvicorn", "backend.main:app", "--host", "0.0.0.0", "--port", "8000"]
+
+CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "80"]
 
 # FROM python:3.11-slim
 
 # WORKDIR /app
 
-COPY requirements.txt . 
-RUN pip install --no-cache-dir -r requirements.txt
 
 
 # COPY backend/ /app/backend

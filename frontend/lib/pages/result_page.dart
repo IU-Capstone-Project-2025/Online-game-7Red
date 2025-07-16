@@ -45,7 +45,7 @@ class _ResultPageState extends State<ResultPage> {
   // Function to leave the room
   Future<void> leaveRoom(int id, String room_id) async {
     final url = Uri.parse('$leaveRoomUrl');
-    final response = await http.post(
+    await http.post(
       url,
       headers: {'Content-Type': 'application/json', 'accept': 'application/json'},
       body: jsonEncode({

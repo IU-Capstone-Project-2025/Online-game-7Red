@@ -14,6 +14,9 @@ RUN git clone --single-branch --branch stable --depth 1 https://github.com/flutt
 # Настройка пути для Flutter и Dart SDK
 ENV PATH="$PATH:/flutter/bin:/flutter/bin/cache/dart-sdk/bin"
 
+ARG WS_URL
+ENV WS_URL $WS_URL
+
 # Активируем Flutter Web
 RUN flutter channel stable && \
     flutter upgrade && \
@@ -24,10 +27,12 @@ COPY . /app
 WORKDIR /app
 
 # Устанавливаем зависимости и собираем приложение
-RUN flutter pub get && flutter build web --release --target=lib/main.dart
+RUN flutter pub get && flutter build web --release --target=lib/main.dart --dart-define=WS_URL=$WS_URL
 
 # Копируем собранные файлы в папку, обслуживаемую Nginx
 RUN cp -r build/web/* /var/www/html
+
+COPY nginx.conf /etc/nginx/sites-enabled/default
 
 # Открываем порт 80 для Nginx
 EXPOSE 80
