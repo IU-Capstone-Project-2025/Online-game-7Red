@@ -9,7 +9,7 @@ from asyncio import Lock
 room_add_lock = Lock()
 
 # Load environment variables from .env file
-load_dotenv(os.path.join(os.path.dirname(__file__), '../database/.env'))
+load_dotenv(os.path.join(os.path.dirname(__file__), '../../.env'))
 
 # Get database URL from environment variables
 DATABASE_URL = os.getenv("DATABASE_URL")
