@@ -9,7 +9,7 @@ TextStyle titleStyle = const TextStyle(
 
 TextStyle buttonTextStyle = const TextStyle(
   fontFamily: 'Awesome5',
-  fontSize: 13,
+  fontSize: 12,
   fontWeight: FontWeight.w600,
   color: Color.fromARGB(255, 58, 58, 58),
   letterSpacing: 1.0,

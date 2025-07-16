@@ -33,7 +33,7 @@
     {
         "id": "email",
         "en": "Email address",
-        "ru": "Адрес электронной почты"
+        "ru": "Электронная почта"
     },
     {
         "id": "password",
@@ -98,12 +98,12 @@
     {
         "id": "main_menu_create_private_room",
         "en": "Create private room",
-        "ru": "Создать приватную комнату"
+        "ru": "Создать комнату"
     },
     {
         "id": "connect_private_room",
         "en": "Connect private room",
-        "ru": "Подключиться к приватной комнате"
+        "ru": "Подключиться к комнате"
     },
     {
         "id": "main_menu_random_opponents",
@@ -243,7 +243,7 @@
     {
         "id": "statistics_achievement_1",
         "en": "Log in to the game for\n7 consecutive days",
-        "ru": "Зайдите в игру 7 дней подряд"
+        "ru": "Зайдите в игру 7 дней\nподряд"
     },
     {
         "id": "statistics_achievement_2",

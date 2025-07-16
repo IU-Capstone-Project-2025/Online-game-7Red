@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+import '../data/localization.dart';
 
 // Provider
 class GameProvider extends ChangeNotifier {
@@ -74,6 +75,30 @@ class GameProvider extends ChangeNotifier {
   set playerNum(int value) {
     _playerNum = value;
     notifyListeners();
+  }
+
+  String _languageCode = 'en';
+  String get languageCode => _languageCode;
+
+  AppLocalizations? _localizations;
+  AppLocalizations? get localizations => _localizations;
+
+  void toggleLanguage() async{
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    _languageCode = _languageCode == 'ru' ? 'en' : 'ru';
+    await prefs.setString('languageCode', _languageCode);
+    notifyListeners();
+  }
+
+  Future<void> loadLanguage() async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    _languageCode = prefs.getString('languageCode') ?? 'en';
+    notifyListeners();
+  }
+
+  Future<void> initialize() async {
+    await loadLanguage();
+    _localizations = await AppLocalizations.load();
   }
 
   // For saving the information about the user after registration/signin

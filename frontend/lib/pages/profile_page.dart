@@ -23,6 +23,7 @@ class _ProfilePageState extends State<ProfilePage> {
   @override
   Widget build(BuildContext context) {
     final gameProvider = Provider.of<GameProvider>(context);
+    // gameProvider.localizations!.getString("", gameProvider.languageCode)
     gameProvider.loadMyPersonalInfo();
 
     return Scaffold(
@@ -55,7 +56,7 @@ class _ProfilePageState extends State<ProfilePage> {
                     ),
                   ),
                   const Expanded(flex: 1, child: Text("")),
-                  Text("Settings", style: titleBigStyle,),
+                  Text(gameProvider.localizations!.getString("settings", gameProvider.languageCode), style: titleBigStyle,),
                   const Expanded(flex: 1, child: Text("")),
                   Padding(padding: const EdgeInsets.only(right: 75)),
                 ],
@@ -109,9 +110,13 @@ class _ProfilePageState extends State<ProfilePage> {
                                 Expanded(flex: 1, child: Text("")),
                                 // - - - - - Nickname - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
                                 Row(
+                                  mainAxisAlignment: MainAxisAlignment.start,
                                   children: [
-                                    Text("Nickname", style: basicBoldTextStyle),
-                                    Padding(padding: const EdgeInsets.only(left: 250)),
+                                    Text(gameProvider.localizations!.getString("nickname", gameProvider.languageCode), style: basicBoldTextStyle),
+                                    if (gameProvider.languageCode == 'en')
+                                      Padding(padding: const EdgeInsets.only(left: 250)),
+                                    if (gameProvider.languageCode == 'ru')
+                                      Padding(padding: const EdgeInsets.only(left: 183)),
                                   ],
                                 ),
                                 Padding(padding: const EdgeInsets.only(top: 7)),
@@ -147,8 +152,11 @@ class _ProfilePageState extends State<ProfilePage> {
                                 // - - - - - Email - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
                                 Row(
                                   children: [
-                                    Text("Email address", style: basicBoldTextStyle),
-                                    Padding(padding: const EdgeInsets.only(left: 225)),
+                                    Text(gameProvider.localizations!.getString("email", gameProvider.languageCode), style: basicBoldTextStyle),
+                                    if (gameProvider.languageCode == 'en')
+                                      Padding(padding: const EdgeInsets.only(left: 225)),
+                                    if (gameProvider.languageCode == 'ru')
+                                      Padding(padding: const EdgeInsets.only(left: 181)),
                                   ],
                                 ),
                                 Padding(padding: const EdgeInsets.only(top: 7)),
@@ -184,8 +192,11 @@ class _ProfilePageState extends State<ProfilePage> {
                                 // - - - - - Password - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
                                 Row(
                                   children: [
-                                    Text("Password", style: basicBoldTextStyle),
-                                    Padding(padding: const EdgeInsets.only(left: 250)),
+                                    Text(gameProvider.localizations!.getString("password", gameProvider.languageCode), style: basicBoldTextStyle),
+                                    if (gameProvider.languageCode == 'en')
+                                      Padding(padding: const EdgeInsets.only(left: 250)),
+                                    if (gameProvider.languageCode == 'ru')
+                                      Padding(padding: const EdgeInsets.only(left: 265)),
                                   ],
                                 ),
                                 Padding(padding: const EdgeInsets.only(top: 7)),
@@ -268,7 +279,7 @@ class _ProfilePageState extends State<ProfilePage> {
                                         const Expanded(flex: 1, child: Text(""),),
                                         Icon(Icons.sunny, size: 60),
                                         const Expanded(flex: 1, child: Text(""),),
-                                        Text("Dark mode", style: buttonTextStyle, textAlign: TextAlign.center,),
+                                        Text(gameProvider.localizations!.getString("profile_dark_mode", gameProvider.languageCode), style: buttonTextStyle, textAlign: TextAlign.center,),
                                         const Expanded(flex: 1, child: Text(""),),
                                       ],
                                     ),
@@ -301,14 +312,14 @@ class _ProfilePageState extends State<ProfilePage> {
                                       ),
                                     ),
                                     onPressed: () {
-                                      
+                                      gameProvider.toggleLanguage();
                                     },
                                     child: Column(
                                       children: [
                                         const Expanded(flex: 1, child: Text(""),),
                                         Icon(Icons.language, size: 60),
                                         const Expanded(flex: 1, child: Text(""),),
-                                        Text("Language", style: buttonTextStyle, textAlign: TextAlign.center,),
+                                        Text(gameProvider.localizations!.getString("profile_language", gameProvider.languageCode), style: buttonTextStyle, textAlign: TextAlign.center,),
                                         const Expanded(flex: 1, child: Text(""),),
                                       ],
                                     ),
@@ -351,7 +362,7 @@ class _ProfilePageState extends State<ProfilePage> {
                                         const Expanded(flex: 1, child: Text(""),),
                                         Icon(Icons.logout, size: 60),
                                         const Expanded(flex: 1, child: Text(""),),
-                                        Text("LOG OUT", style: buttonTextStyle, textAlign: TextAlign.center,),
+                                        Text(gameProvider.localizations!.getString("profile_log_out", gameProvider.languageCode), style: buttonTextStyle, textAlign: TextAlign.center,),
                                         const Expanded(flex: 1, child: Text(""),),
                                       ],
                                     ),
