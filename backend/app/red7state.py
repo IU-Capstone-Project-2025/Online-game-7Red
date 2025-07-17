@@ -263,7 +263,6 @@ class Red7GameState:
     #function that checks a move in possible_moves dictionary
     def check_in_possible_moves(self, player_id: int, new_rule: str, new_hand: List[str], new_palette: List[str]) -> bool:
         try:
-            #print(f"Rule at the beginning of check_in_possible_moves: {self.cur_rule_card}", flush=True)
             #retrieving possible moves from dictionary
             moves = self.players[player_id]["possible_moves"]
             if not moves:
@@ -290,7 +289,6 @@ class Red7GameState:
                 if new_rule is not None:
                     self.cur_rule_card = new_rule
                     self.current_rule = self.rule_to_int(self.cur_rule_card[0])
-                #print(f"Rule at the end of check_in_possible_moves: {self.cur_rule_card}", flush=True)
                 logging.info("In check_possible_moves found exact match")
                 #return True
                 return True

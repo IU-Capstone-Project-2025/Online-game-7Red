@@ -95,20 +95,6 @@ def encode_card(card_str: str) -> int:
     
     return color_idx * 7 + value
 
-# def create_new_session():
-#     """
-#     Create a new game session with environment and agent.
-    
-#     Returns:
-#         String: New session ID
-#     """
-#     env = Red7Env(verbose=False)
-#     agent = DQNAgent(device='cpu')
-#     agent.load("ml/final_agent (4).pth")
-#     session_id = str(uuid.uuid4())
-#     sessions[session_id] = {"env": env, "agent": agent}
-#     return session_id
-
 def create_new_session():
     """Create a new game session with environment."""
     initialize_central_bot()

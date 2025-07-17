@@ -177,14 +177,6 @@ async def find_online(user_id: int = Body(..., embed=True)):
     online_queue.append(user_id)
     online_queue_status[user_id] = {"status":"waiting"}
     
-    # if len(online_queue) >= ONLINE_ROOM_SIZE:
-    #     while len(online_queue) >= ONLINE_ROOM_SIZE:
-    #         players = online_queue[:ONLINE_ROOM_SIZE]
-    #         for uid in players:
-    #             online_queue.remove(uid)
-    #         await start_online_game(players)
-    #     return online_queue_status[user_id]
-    # return {"status":"waiting"}
     if len(online_queue) >= 2:
         players = online_queue[:ONLINE_ROOM_SIZE]
         for uid in players:

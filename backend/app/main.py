@@ -7,7 +7,7 @@ def setup_logging():
     log_dir = "logs"
     os.makedirs(log_dir, exist_ok=True)
     
-    # Unified handler for ALL logs
+    # Unified handler for all logs
     file_handler = RotatingFileHandler(
         filename=os.path.join(log_dir, 'server.log'),
         maxBytes=5*1024*1024,  # 5MB
