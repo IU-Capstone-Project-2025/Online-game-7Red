@@ -129,7 +129,7 @@ The application includes the following core components:
 
       5. If you want to log out of your account, use the same button
 
-   5.5 DQN Testing in Console (if you want to see bot's cards):
+   5.5 **DQN Testing** in Console (if you want to see bot's cards):
 
       1. Upload the file DON.py
 
