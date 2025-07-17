@@ -1,6 +1,5 @@
 # Online-game-7Red
-
-## Project Description
+## Project description
 
 The application includes the following core components:
 
@@ -32,7 +31,7 @@ The application includes the following core components:
 
 2. Access the **game website** at: [https://7red.ru](https://7red.ru)
 
-3. Log in and play! (For any questions, refer to **Testing Scenarios** in **Docker Usage Instructions** below)
+3. Log in and play! (In case of any questions, refer to **Testing Scenarios** in **Docker Usage Instructions** below)
 
 ## Docker Usage Instructions (for code testing)
 
@@ -49,12 +48,14 @@ The application includes the following core components:
 4. **Build and start the project** with Docker, using:
 
    **Option A: Using Pre-built Images from DockerHub spalkkina/7red** 
+
    Build and start all services with  
    ```sh
    docker-compose up --build
    ```
-   
+
    **Option B: Local Development Build**
+
    Use the local development configuration 
    ```sh
    docker-compose -f docker-compose.local.yml up --build
