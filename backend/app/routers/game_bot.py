@@ -139,7 +139,15 @@ async def websocket_game(websocket: WebSocket, player_id: int):
                     logging.info(f'Game is over (game with player {player_id})!')
                     logging.info(f"Winner is {'player' if bot_response['winner'] == 0 else 'bot'}")
                     is_winning = True if bot_response["winner"] == 1 else False
-                    await broadcast_game_state(game, -1, is_winning, None, None, is_winning, player_id)
+                    #if bot wins
+                    if is_winning:
+                        pal_ch = decode_card(bot_response["bot_action"][0]) if bot_response["bot_action"][0] != 0 else None
+                        rule_ch = decode_card(bot_response["bot_action"][1]) if bot_response["bot_action"][1] != 0 else None
+                        await broadcast_game_state(game, -1, is_winning, pal_ch, rule_ch, is_winning, player_id)
+                        await broadcast_game_state(game, player_id, False, None, None, False, player_id)
+                    #if player wins
+                    else:
+                        await broadcast_game_state(game, -1, is_winning, None, None, is_winning, player_id)
 
             #handling of the case when players continuously lose at the beginning of their turns (without an opportynity to make a move)
             max_checks = len(game.players_id_list)

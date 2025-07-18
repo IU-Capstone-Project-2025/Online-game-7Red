@@ -61,6 +61,8 @@ The application includes the following core components:
    docker-compose -f docker-compose.local.yml up --build
    ```
 
+   **Local access to the website at**: [http://localhost:8080](http://localhost:8080)
+
 5. **Testing Scenarios**:
 
    5.1 For **Multiplayer Testing**:
