@@ -79,7 +79,7 @@ class _GameRoomPageState extends State<GameRoomPage> {
   void initState() {
     super.initState();
     // connect to web socket immediately
-    _connectToWebSocket();
+    _connectToWebSocket(); 
   }
 
   void _connectToWebSocket() async{

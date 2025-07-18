@@ -553,22 +553,22 @@
     {
         "id": "rule_slide_6",
         "en": "All players take turns in a clockwise order. The first playeris\nchosen at random. Each turn lasts while the timer runs (60\nseconds). The winner is the last remaining player in the game.",
-        "ru": "Все игроки ходят по кругу. Первый игрок\nопределяется случайно. Ход игрока длится пока идет его таймер (60 секунд).\nПобедителем считается тот игрок, кто остался в игре последним."
+        "ru": "Все игроки ходят по кругу. Первый игрок определяется случайно.\nХод игрока длится пока идет его таймер (60 секунд).\nПобедителем считается тот игрок, кто остался в игре последним."
     },
     {
         "id": "rule_slide_7",
         "en": "At the end of their turn, the player must be winning according\nto the current rule, or else they lose. If the results are\ntied, the leader is determined by the highest card.",
-        "ru": "В конце своего хода игрок должен лидировать по текущему правилу,\nиначе он проигрывает. Если результаты по правилу равны, то лидерство определяется по старшей карте."
+        "ru": "В конце своего хода игрок должен лидировать по текущему\nправилу, иначе он проигрывает. Если результаты по правилу\nравны, то лидерство определяется по старшей карте."
     },
     {
         "id": "rule_slide_8",
         "en": "The highest card is determined first by value; if equal, then\nthe card whose color is closer to red is considered higher.",
-        "ru": "Старшая карта определяется сначала по наибольшему номиналу,\nоднако если они равны, старшей считается та карта, чей цвет ближе к красному."
+        "ru": "Старшая карта определяется сначала по наибольшему номиналу,\nоднако если они равны, старшей считается та карта, чей цвет\nближе к красному."
     },
     {
         "id": "rule_slide_9",
         "en": "On your turn, you may play a card to your palette, change the\nrule (by playing to the canvas), or do both. To confirm your\nmove, click the \"Confirm\" button.",
-        "ru": "Каждый на своём ходу может сыграть карту в свою палетку, поменять правило\n(сыграв карту на холст), либо сделать и то и другое. Чтобы подтвердить свой ход,\nнажмите кнопку “Отправить”."
+        "ru": "Каждый на своём ходу может сыграть карту в свою палетку,\nпоменять правило (сыграв карту на холст), либо сделать и то и\nдругое. Чтобы подтвердить свой ход, нажмите кнопку “Отправить”."
     },
     {
         "id": "online_search_title",
