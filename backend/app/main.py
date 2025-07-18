@@ -1,3 +1,45 @@
+import logging
+from logging.handlers import RotatingFileHandler
+import sys
+import os
+
+def setup_logging():
+    log_dir = "logs"
+    os.makedirs(log_dir, exist_ok=True)
+    
+    # Unified handler for all logs
+    file_handler = RotatingFileHandler(
+        filename=os.path.join(log_dir, 'server.log'),
+        maxBytes=5*1024*1024,  # 5MB
+        backupCount=3,
+        encoding='utf-8'
+    )
+    file_handler.setFormatter(
+        logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+    )
+
+    # Console handler (for real-time viewing)
+    console_handler = logging.StreamHandler(sys.stdout)
+    console_handler.setFormatter(
+        logging.Formatter('%(asctime)s - %(message)s')
+    )
+
+    # Configure root logger (captures everything)
+    logging.basicConfig(
+        level=logging.INFO,
+        handlers=[file_handler, console_handler]
+    )
+
+    # Redirect Uvicorn access logs to root logger
+    uvicorn_access = logging.getLogger("uvicorn.access")
+    uvicorn_access.handlers.clear()
+    uvicorn_access.addHandler(file_handler)
+    uvicorn_access.addHandler(console_handler)
+    uvicorn_access.propagate = False
+
+setup_logging()
+
+
 from fastapi import FastAPI
 from contextlib import asynccontextmanager
 from app.routers.auth import router as auth_router
@@ -19,7 +61,12 @@ async def lifespan(app: FastAPI):
     await database.disconnect()
 
 # Create FastAPI application instance with database lifecycle management
-app = FastAPI(lifespan=lifespan)
+app = FastAPI(
+    docs_url="/api/docs",
+    redoc_url="/api/redoc",
+    openapi_url="/api/openapi.json",
+    lifespan=lifespan,
+)
 
 # Add CORS middleware to allow cross-origin requests
 app.add_middleware(

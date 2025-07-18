@@ -4,7 +4,6 @@ import torch.nn.functional as F
 import torch.optim as optim
 import random
 import numpy as np
-#import matplotlib.pyplot as plt
 from collections import deque
 from ml.enviroment import Red7Env, get_winning_moves
 
