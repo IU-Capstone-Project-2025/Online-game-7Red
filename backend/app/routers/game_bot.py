@@ -144,9 +144,12 @@ async def websocket_game(websocket: WebSocket, player_id: int):
                     is_winning = True if bot_response["winner"] == 1 else False
                     #if bot wins
                     if is_winning:
-                        pal_ch = decode_card(bot_response["bot_action"][0]) if bot_response["bot_action"][0] != 0 else None
-                        rule_ch = decode_card(bot_response["bot_action"][1]) if bot_response["bot_action"][1] != 0 else None
-                        await broadcast_game_state(game, -1, is_winning, pal_ch, rule_ch, is_winning, player_id)
+                        if bot_response.get("bot_action"):
+                            pal_ch = decode_card(bot_response["bot_action"][0]) if bot_response["bot_action"][0] != 0 else None
+                            rule_ch = decode_card(bot_response["bot_action"][1]) if bot_response["bot_action"][1] != 0 else None
+                            await broadcast_game_state(game, -1, is_winning, pal_ch, rule_ch, is_winning, player_id)
+                        else:
+                            await broadcast_game_state(game, -1, is_winning, None, None, is_winning, player_id)
                         await broadcast_game_state(game, player_id, False, None, None, False, player_id)
                     #if player wins
                     else:
