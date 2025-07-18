@@ -48,7 +48,7 @@
     {
         "id": "sign_in_error_invalid_email",
         "en": "Invalid email",
-        "ru": "Некорректный email"
+        "ru": "Некорректная"
     },
     {
         "id": "sign_in_error_invalid_credentials",
@@ -83,12 +83,12 @@
     {
         "id": "sign_up_error_passwords_different",
         "en": "Different",
-        "ru": "Пароли не совпадают"
+        "ru": "Не совпадает"
     },
     {
         "id": "sign_up_error_email_already_in_use",
-        "en": "(already in use)",
-        "ru": "(уже используется)"
+        "en": "already in use",
+        "ru": "уже используется"
     },
     {
         "id": "loading",
@@ -163,7 +163,7 @@
     {
         "id": "game_submit",
         "en": "SUBMIT",
-        "ru": "ОТПРАВИТЬ"
+        "ru": "Сходить"
     },
     {
         "id": "game_spectator",
@@ -298,12 +298,12 @@
     {
         "id": "rules_deck_colors",
         "en": "• Colors: 7 colors of the rainbow (each color includes",
-        "ru": "• Цвета: 7 цветов радуги (каждый цвет представлен картами"
+        "ru": "• Цвета: 7 цветов радуги (каждый цвет представлен "
     },
     {
         "id": "rules_deck_cards_of_all_values",
         "en": "   cards of all values)",
-        "ru": "   всех номиналов)"
+        "ru": "   картами всех номиналов)"
     },
     {
         "id": "rules_game_start",
@@ -418,12 +418,17 @@
     {
         "id": "rules_leader_compare_color",
         "en": "      - If values are equal, compare colors in the order: Red > ",
-        "ru": "      - При равных номиналах старшинство определяется по цвету в порядке: Красный > "
+        "ru": "      - При равных номиналах старшинство определяется по цвету"
     },
     {
         "id": "rules_leader_compare_color_order",
         "en": "         Orange > Yellow > Green > Blue > Indigo> Purple.",
-        "ru": "         Оранжевый > Жёлтый > Зелёный > Голубой > Синий > Фиолетовый."
+        "ru": "         в порядке: Красный > Оранжевый > Жёлтый > Зелёный >"
+    },
+    {
+        "id": "rules_leader_compare_color_order_2",
+        "en": "      ",
+        "ru": "         Голубой > Синий > Фиолетовый."
     },
     {
         "id": "rules_leader_no_cards_match",
@@ -453,12 +458,12 @@
     {
         "id": "rules_win_loss_place_cards",
         "en": "• Place all your cards (from hand and palette) face down in ",
-        "ru": "• Положите все свои карты (с руки и из палитры) рубашкой вверх"
+        "ru": "• Положите все свои карты (с руки и из палитры) рубашкой"
     },
     {
         "id": "rules_win_loss_front_of_you",
         "en": "   front of you.",
-        "ru": "   перед собой."
+        "ru": "   вверх перед собой."
     },
     {
         "id": "rules_win_loss_no_cards_hand",
@@ -643,7 +648,7 @@
     {
         "id": "change_password_previous",
         "en": "Previous password",
-        "ru": "Предыдущий пароль"
+        "ru": "Старый пароль"
     },
     {
         "id": "change_password_new",
@@ -654,6 +659,36 @@
         "id": "change_password_repeat",
         "en": "Repeat password",
         "ru": "Повторите пароль"
+    },
+    {
+        "id": "user_not_found",
+        "en": "User not found",
+        "ru": "Пользователь не найден"
+    },
+    {
+        "id": "incorrect_password",
+        "en": "Incorrect password",
+        "ru": "Неверный пароль"
+    },
+    {
+        "id": "passwords_do_not_match",
+        "en": "Passwords different",
+        "ru": "Пароли не совпадают"
+    },
+    {
+        "id": "profile_not_found",
+        "en": "Profile not found",
+        "ru": "Профиль не найден"
+    },
+    {
+        "id": "email_already_registered",
+        "en": "Email already registered",
+        "ru": "Email уже зарегистрирован"
+    },
+    {
+        "id": "online",
+        "en": "Online",
+        "ru": "Онлайн"
     }
 
 ]

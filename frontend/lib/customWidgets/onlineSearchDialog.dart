@@ -4,9 +4,11 @@ import 'dart:async';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:provider/provider.dart';
 
 import '../data/styles.dart';
 import '../data/urls.dart';
+import '../providers/provider.dart';
 
 class onlineSearchDialog extends StatefulWidget {
 
@@ -213,7 +215,7 @@ class _OnlineSearchDialogState extends State<onlineSearchDialog> {
         Navigator.pop(context);
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text("Oops! No players found"),
+            content: Text(Provider.of<GameProvider>(context).localizations!.getString('online_search_no_players', Provider.of<GameProvider>(context).languageCode),),
             backgroundColor: greyTimerColor,
           ),
         );
@@ -222,7 +224,7 @@ class _OnlineSearchDialogState extends State<onlineSearchDialog> {
         Navigator.pop(context);
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text("Oops! No players found"),
+            content: Text(Provider.of<GameProvider>(context).localizations!.getString('online_search_no_players', Provider.of<GameProvider>(context).languageCode),),
             backgroundColor: greyTimerColor,
           ),
         );
@@ -246,6 +248,8 @@ class _OnlineSearchDialogState extends State<onlineSearchDialog> {
 
   @override
   Widget build(BuildContext context) {
+  GameProvider gameProvider = Provider.of<GameProvider>(context);
+
   return Dialog(
     child: Container(
       width: 604,
@@ -269,7 +273,7 @@ class _OnlineSearchDialogState extends State<onlineSearchDialog> {
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
                 Expanded(flex: 1, child: Text("")),
-                Text("Searching your opponents...", style: titleStyle,),
+                Text(gameProvider.localizations!.getString("online_search_title", gameProvider.languageCode), style: titleStyle,),
                 Expanded(flex: 1, child: Text("")),
                 Stack(
                   alignment: Alignment.center,
@@ -308,11 +312,11 @@ class _OnlineSearchDialogState extends State<onlineSearchDialog> {
                       await leaveTheRoom(myID);
                       Navigator.pop(context);
                     },
-                  child: Text('CANCEL'),
+                  child: Text(gameProvider.localizations!.getString("online_search_cancel", gameProvider.languageCode)),
                   ),
                 ),
                 Expanded(flex: 1, child: Text("")),
-                Text("Hints about important points in the rules will change here", style: basicTextStyle,),
+                Text(gameProvider.localizations!.getString("online_search_hint", gameProvider.languageCode), style: basicTextStyle,),
                 Expanded(flex: 1, child: Text("")),
               ],
             ),

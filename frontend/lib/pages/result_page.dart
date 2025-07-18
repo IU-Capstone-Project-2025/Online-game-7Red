@@ -1,10 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:frontend/providers/provider.dart';
 
 import '../data/styles.dart';
 import '../data/urls.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
+import 'package:provider/provider.dart';
 
 
 class ResultPage extends StatefulWidget {
@@ -64,6 +66,8 @@ class _ResultPageState extends State<ResultPage> {
 
   @override
   Widget build(BuildContext context) {
+    final gameProvider = Provider.of<GameProvider>(context);
+
     return Scaffold(
       body: Container(
         decoration: BoxDecoration(
@@ -88,7 +92,7 @@ class _ResultPageState extends State<ResultPage> {
                       if (placesNames != null)
                         if (placesNames!.length > 2)
                           Icon(Icons.account_circle, size: 48, color: grey3A3A3AColor,),
-                      Text(placesNames != null ? (placesNames!.length > 2 ? placesNames![2] : "") : "Loading...", style: basicTextStyle,),
+                      Text(placesNames != null ? (placesNames!.length > 2 ? placesNames![2] : "") : gameProvider.localizations!.getString("loading", gameProvider.languageCode), style: basicTextStyle,),
                       Padding(padding: const EdgeInsets.only(top: 10)),
                       Container(
                         width: 90,
@@ -106,7 +110,7 @@ class _ResultPageState extends State<ResultPage> {
                     mainAxisAlignment: MainAxisAlignment.end,
                     children: [
                       Icon(Icons.account_circle, size: 48, color: grey3A3A3AColor,),
-                      Text(placesNames != null ? placesNames![0] : "Loading...", style: basicTextStyle,),
+                      Text(placesNames != null ? placesNames![0] : gameProvider.localizations!.getString("loading", gameProvider.languageCode), style: basicTextStyle,),
                       Padding(padding: const EdgeInsets.only(top: 10)),
                       Container(
                         width: 90,
@@ -124,7 +128,7 @@ class _ResultPageState extends State<ResultPage> {
                     mainAxisAlignment: MainAxisAlignment.end,
                     children: [
                       Icon(Icons.account_circle, size: 48, color: grey3A3A3AColor,),
-                      Text(placesNames != null ? placesNames![1] : "Loading...", style: basicTextStyle,),
+                      Text(placesNames != null ? placesNames![1] : gameProvider.localizations!.getString("loading", gameProvider.languageCode), style: basicTextStyle,),
                       Padding(padding: const EdgeInsets.only(top: 10)),
                       Container(
                         width: 90,
@@ -157,16 +161,16 @@ class _ResultPageState extends State<ResultPage> {
                       Column(
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
-                          Text("Place", style: resLitleStyle,),
-                          Text(myPlace.toString() ?? "Loading...", style: resBigStyle,)
+                          Text(gameProvider.localizations!.getString("result_place", gameProvider.languageCode), style: resLitleStyle,),
+                          Text(myPlace.toString() ?? gameProvider.localizations!.getString("loading", gameProvider.languageCode), style: resBigStyle,)
                         ],
                       ),
                       Expanded(flex: 2, child: Text("")),
                       Column(
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
-                          Text("Time", style: resLitleStyle,),
-                          Text(formatTime(totalTime!) ?? "Loading...", style: resBigStyle,)
+                          Text(gameProvider.localizations!.getString("result_time", gameProvider.languageCode), style: resLitleStyle,),
+                          Text(formatTime(totalTime!) ?? gameProvider.localizations!.getString("loading", gameProvider.languageCode), style: resBigStyle,)
                         ],
                       ),
                       Expanded(flex: 1, child: Text("")),
@@ -210,7 +214,7 @@ class _ResultPageState extends State<ResultPage> {
                           const Expanded(flex: 1, child: Text(""),),
                           Icon(Icons.refresh, size: 70),
                           const Expanded(flex: 1, child: Text(""),),
-                          Text("Play again", style: buttonTextStyle, textAlign: TextAlign.center,),
+                          Text(gameProvider.localizations!.getString("play_again", gameProvider.languageCode), style: buttonTextStyle, textAlign: TextAlign.center,),
                           const Expanded(flex: 1, child: Text(""),),
                         ],
                       ),
@@ -261,7 +265,7 @@ class _ResultPageState extends State<ResultPage> {
                           const Expanded(flex: 1, child: Text(""),),
                           Icon(Icons.door_back_door_outlined, size: 70),
                           const Expanded(flex: 1, child: Text(""),),
-                          Text("Leave the room", style: buttonTextStyle, textAlign: TextAlign.center,),
+                          Text(gameProvider.localizations!.getString("room_leave", gameProvider.languageCode), style: buttonTextStyle, textAlign: TextAlign.center,),
                           const Expanded(flex: 1, child: Text(""),),
                         ],
                       ),

@@ -1,5 +1,8 @@
 import 'package:flutter/material.dart';
 import '../data/styles.dart';
+import 'package:provider/provider.dart';
+
+import '../providers/provider.dart';
 
 class WelkomePage extends StatefulWidget {
   const WelkomePage({super.key});
@@ -11,6 +14,8 @@ class WelkomePage extends StatefulWidget {
 class _WelkomePageState extends State<WelkomePage> {
   @override
   Widget build(BuildContext context) {
+    final gameProvider = Provider.of<GameProvider>(context);
+
     return Scaffold(
       body: Container(
         decoration: BoxDecoration(
@@ -31,7 +36,7 @@ class _WelkomePageState extends State<WelkomePage> {
                 height: 200,
               ),
               const Expanded(flex: 2, child: Text("")),
-              Text("Welcome to the game!", style: titleStyle),
+              Text(gameProvider.localizations!.getString("welcome", gameProvider.languageCode), style: titleStyle),
               const Expanded(flex: 1, child: Text("")),
               Row(
                 mainAxisAlignment: MainAxisAlignment.center,
@@ -69,12 +74,12 @@ class _WelkomePageState extends State<WelkomePage> {
                             // Go to sign in page
                             Navigator.of(context).pushNamed('/signin');
                           },
-                          child: const Text('SIGN  IN'),
+                          child: Text(gameProvider.localizations!.getString("sign_in_botton", gameProvider.languageCode)),
                         ),
                       ),
                       Text(""),
                       Text(
-                        "If you already have an account",
+                        gameProvider.localizations!.getString("already_have_account", gameProvider.languageCode),
                         style: basicTextStyle,
                       ),
                     ],
@@ -114,12 +119,12 @@ class _WelkomePageState extends State<WelkomePage> {
                             // Go to sign up page
                             Navigator.of(context).pushNamed('/signup');
                           },
-                          child: const Text('SIGN  UP'),
+                          child: Text(gameProvider.localizations!.getString("sign_up_botton", gameProvider.languageCode)),
                         ),
                       ),
                       Text(""),
                       Text(
-                        "If you want to create an account",
+                        gameProvider.localizations!.getString("create_account", gameProvider.languageCode),
                         style: basicTextStyle,
                       ),
                     ],
