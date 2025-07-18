@@ -136,7 +136,6 @@ class _ProfilePageState extends State<ProfilePage> {
                                         Expanded(flex: 1, child: Text("")),
                                         IconButton(
                                           onPressed: () {
-                                            // TODO: change name
                                             showDialog(
                                               context: context,
                                               builder: (context) => ChangePersInfo(changeNameEmail: 1),
@@ -176,7 +175,6 @@ class _ProfilePageState extends State<ProfilePage> {
                                         Expanded(flex: 1, child: Text("")),
                                         IconButton(
                                           onPressed: () {
-                                            // TODO: change email
                                             showDialog(
                                               context: context,
                                               builder: (context) => ChangePersInfo(changeNameEmail: 2),
@@ -216,7 +214,6 @@ class _ProfilePageState extends State<ProfilePage> {
                                         Expanded(flex: 1, child: Text("")),
                                         IconButton(
                                           onPressed: () {
-                                            // TODO: change password
                                             showDialog(
                                               context: context,
                                               builder: (context) => changePassword(),
@@ -319,7 +316,18 @@ class _ProfilePageState extends State<ProfilePage> {
                                     child: Column(
                                       children: [
                                         const Expanded(flex: 1, child: Text(""),),
-                                        Icon(Icons.language, size: 60),
+                                        if (gameProvider.languageCode == "en") 
+                                          Image(
+                                            image: AssetImage('lib/assets/usa_lang.png'), 
+                                            width: 60, 
+                                            height: 60,
+                                          ) 
+                                        else 
+                                          Image(
+                                            image: AssetImage('lib/assets/rus_lang.png'),
+                                            width: 60,
+                                            height: 60,
+                                          ),
                                         const Expanded(flex: 1, child: Text(""),),
                                         Text(gameProvider.localizations!.getString("profile_language", gameProvider.languageCode), style: buttonTextStyle, textAlign: TextAlign.center,),
                                         const Expanded(flex: 1, child: Text(""),),

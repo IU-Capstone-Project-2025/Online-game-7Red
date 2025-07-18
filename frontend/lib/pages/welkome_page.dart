@@ -28,7 +28,25 @@ class _WelkomePageState extends State<WelkomePage> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.center,
             children: [
-              const Expanded(flex: 5, child: Text("")),
+              Padding(padding: const EdgeInsets.only(top: 15)),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  const Expanded(flex: 1, child: Text("")),
+                  SizedBox(
+                    width: 60,
+                    height: 60,
+                    child: IconButton(
+                      onPressed: () {
+                        gameProvider.toggleLanguage();
+                      },
+                      icon: const Icon(Icons.language, size: 44),
+                    ),
+                  ),
+                  Padding(padding: const EdgeInsets.only(left: 15)),
+                ],
+              ),
+              const Expanded(flex: 4, child: Text("")),
               // Red7 logo
               Image(
                 image: AssetImage('lib/assets/logo.png'),
