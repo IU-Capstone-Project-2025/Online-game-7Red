@@ -581,11 +581,6 @@
         "ru": "ОТМЕНИТЬ"
     },
     {
-        "id": "online_search_no_players",
-        "en": "Oops! No players found",
-        "ru": "Упс! Игроки не найдены"
-    },
-    {
         "id": "online_search_hint",
         "en": "Hints about important points in the rules will change here",
         "ru": "Подсказки по важным моментам правил будут появляться здесь"
@@ -699,7 +694,15 @@
         "id": "game_lose",
         "en": "You are lose",
         "ru": "Вы проиграли"
+    },
+    {
+        "id": "no_opponents",
+        "en": "Oops, no free\nopponents now...",
+        "ru": "Упс, нет свободных\nоппонентов..."
+    },
+    {
+        "id": "not_implemented_yet",
+        "en": "Function not implemented yet",
+        "ru": "Функция ещё не реализована"
     }
-
-    
 ]

@@ -207,7 +207,9 @@ class _ResultPageState extends State<ResultPage> {
                         ),
                       ),
                       onPressed: () async{
-                        // Play again function 
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(content: Text(gameProvider.localizations!.getString("not_implemented_yet", gameProvider.languageCode), textAlign: TextAlign.center,))
+                        );
                       },
                       child: Column(
                         children: [

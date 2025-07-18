@@ -96,12 +96,23 @@ class _SignUpPageState extends State<SignUpPage> {
                     height: 60,
                     child: IconButton(
                       onPressed: () {
-                        Navigator.pushNamed(context, '/');
+                        Navigator.pop(context);
                       },
                       icon: const Icon(Icons.arrow_back_rounded, size: 44),
                     ),
                   ),
                   const Expanded(flex: 1, child: Text("")),
+                  SizedBox(
+                    width: 60,
+                    height: 60,
+                    child: IconButton(
+                      onPressed: () {
+                        gameProvider.toggleLanguage();
+                      },
+                      icon: const Icon(Icons.language, size: 44),
+                    ),
+                  ),
+                  Padding(padding: const EdgeInsets.only(left: 15)),
                 ],
               ),
               // Red7 logo

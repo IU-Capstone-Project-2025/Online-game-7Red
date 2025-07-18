@@ -354,7 +354,7 @@ class _GameRoomPageState extends State<GameRoomPage> {
         // Win
         ScaffoldMessenger.of(
             context,
-          ).showSnackBar(SnackBar(content: Text(Provider.of<GameProvider>(context).localizations!.getString('game_over', Provider.of<GameProvider>(context).languageCode))));
+          ).showSnackBar(SnackBar(content: Text(Provider.of<GameProvider>(context).localizations!.getString('game_over', Provider.of<GameProvider>(context).languageCode), textAlign: TextAlign.center,)));
         delayWin = 5;
         _delayTimer = Timer.periodic(Duration(seconds: 1), (timer) {
           if (delayWin > 0) {
@@ -383,7 +383,7 @@ class _GameRoomPageState extends State<GameRoomPage> {
           // Loose
           ScaffoldMessenger.of(
             context,
-          ).showSnackBar(SnackBar(content: Text(Provider.of<GameProvider>(context).localizations!.getString('game_lose', Provider.of<GameProvider>(context).languageCode))));
+          ).showSnackBar(SnackBar(content: Text(Provider.of<GameProvider>(context).localizations!.getString('game_lose', Provider.of<GameProvider>(context).languageCode), textAlign: TextAlign.center,)));
           delay = 5;
           _delayTimer = Timer.periodic(Duration(seconds: 1), (timer) {
             if (delay > 0) {
@@ -617,8 +617,8 @@ class _GameRoomPageState extends State<GameRoomPage> {
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
                         SizedBox(
-                          width: 114,
-                          height: 114,
+                          width: Provider.of<GameProvider>(context).languageCode == 'en' ? 114 : 122,
+                          height: Provider.of<GameProvider>(context).languageCode == 'en' ? 114 : 122,
                           child: ElevatedButton(
                             style: ButtonStyle(
                                 backgroundColor: WidgetStateProperty.all<Color>(
@@ -656,8 +656,8 @@ class _GameRoomPageState extends State<GameRoomPage> {
                         ),
                         Padding(padding: const EdgeInsets.only(left: 40)),
                         SizedBox(
-                          width: 114,
-                          height: 114,
+                          width: Provider.of<GameProvider>(context).languageCode == 'en' ? 114 : 122,
+                          height: Provider.of<GameProvider>(context).languageCode == 'en' ? 114 : 122,
                           child: ElevatedButton(
                             style: ButtonStyle(
                                 backgroundColor: WidgetStateProperty.all<Color>(
@@ -1057,8 +1057,8 @@ class _GameRoomPageState extends State<GameRoomPage> {
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
                           Image(
-                            image: AssetImage('lib/assets/rules_pallete.png'),
-                            width: 310,
+                            image: AssetImage(gameProvider.languageCode == 'en' ? 'lib/assets/rules_pallete.png' : 'lib/assets/rules_pallete_ru.png'),
+                            width: 330,
                             height: 161,
                           ),
                           Padding(padding: const EdgeInsets.only(left: 29)),
@@ -1215,6 +1215,7 @@ class _GameRoomPageState extends State<GameRoomPage> {
                           mainAxisAlignment: MainAxisAlignment.center,
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
+                            Padding(padding: const EdgeInsets.only(right: 55), child: Text(""),),
                             Expanded(flex: 1, child: Text("")),
                             Column(
                               children: [
@@ -1286,7 +1287,7 @@ class _GameRoomPageState extends State<GameRoomPage> {
                                 children: [
                                   Padding(padding: const EdgeInsets.only(top: 20)),
                                   SizedBox(
-                                    width: 105,
+                                    width: 115,
                                     height: 50,
                                     child: 
                                     ElevatedButton(
@@ -1309,10 +1310,14 @@ class _GameRoomPageState extends State<GameRoomPage> {
                                 ],
                               )
                             else 
-                              SizedBox(
-                                height: 105,
-                                width: 50,
-                                child: Text(''),
+                              Column(
+                                children: [
+                                  SizedBox(
+                                    height: 115,
+                                    width: 50,
+                                    child: Text(''),
+                                  ),
+                                ],
                               ),
                             Expanded(flex: 1, child: Text("")),
                             IconButton(
