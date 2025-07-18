@@ -261,10 +261,10 @@ class _WaitingRoomPageState extends State<WaitingRoomPage> {
                     Column(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        Text("Room", style: boldTextStyle),
+                        Text(gameProvider.localizations!.getString("waiting_room_room", gameProvider.languageCode), style: boldTextStyle),
                         SelectableText(room_id, style: bigNumberStyle),
                         Padding(padding: const EdgeInsets.only(top: 10)),
-                        Text("Password", style: boldTextStyle),
+                        Text(gameProvider.localizations!.getString("password", gameProvider.languageCode), style: boldTextStyle),
                         SelectableText(gameProvider.roomPassword, style: bigNumberStyle),
                       ],
                     ),
@@ -273,9 +273,9 @@ class _WaitingRoomPageState extends State<WaitingRoomPage> {
                       mainAxisAlignment: MainAxisAlignment.start,
                       children: [
                         Padding(padding: const EdgeInsets.only(top: 20)),
-                        Text("Online", style: onlineRoomStyleGreen),
+                        Text(gameProvider.localizations!.getString("online", gameProvider.languageCode), style: onlineRoomStyleGreen),
                         // Padding(padding: const EdgeInsets.only(top: 5)),
-                        Text("Room", style: onlineRoomStyle),
+                        Text(gameProvider.localizations!.getString("waiting_room_room", gameProvider.languageCode), style: onlineRoomStyle),
                       ],
                     )
                 ],
@@ -355,7 +355,7 @@ class _WaitingRoomPageState extends State<WaitingRoomPage> {
                       gameProvider.saveReady();
                     }
                 },
-                child: ready ? const Text('UNREADY') : const Text('GET READY'),
+                child: ready ? Text(gameProvider.localizations!.getString("waiting_room_unready", gameProvider.languageCode)) : Text(gameProvider.localizations!.getString("waiting_room_ready", gameProvider.languageCode)),
                 ),
               ),
               const Expanded(flex: 3, child: Text("")),

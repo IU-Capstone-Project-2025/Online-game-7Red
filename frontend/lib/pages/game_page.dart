@@ -5,6 +5,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:circular_countdown_timer/circular_countdown_timer.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
+import 'package:provider/provider.dart';
 
 import '../data/styles.dart';
 import '../customWidgets/cards.dart';
@@ -12,6 +13,7 @@ import '../socket/web_socket.dart';
 import '../data/player.dart';
 import '../data/urls.dart';
 import '../customWidgets/ruleDialog.dart';
+import 'package:frontend/providers/provider.dart';
 
 class GameRoomPage extends StatefulWidget {
   const GameRoomPage({super.key});
@@ -77,7 +79,7 @@ class _GameRoomPageState extends State<GameRoomPage> {
   void initState() {
     super.initState();
     // connect to web socket immediately
-    _connectToWebSocket();
+    _connectToWebSocket(); 
   }
 
   void _connectToWebSocket() async{
@@ -599,8 +601,11 @@ class _GameRoomPageState extends State<GameRoomPage> {
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
                     Expanded(flex: 1, child: Text(""),), 
-                    Text(myPlace == 1 ? "1st" : (myPlace == 2 ? "2nd" : (myPlace == 3 ? "3rd" : "4th") ), style: resLoseStyleBig),
-                    Text("place", style: resLoseStyle,),
+                    Text(myPlace == 1 ? Provider.of<GameProvider>(context).localizations!.getString('game_first_place', Provider.of<GameProvider>(context).languageCode)
+                        : (myPlace == 2 ? Provider.of<GameProvider>(context).localizations!.getString('game_second_place', Provider.of<GameProvider>(context).languageCode) 
+                        : (myPlace == 3 ? Provider.of<GameProvider>(context).localizations!.getString('game_third_place', Provider.of<GameProvider>(context).languageCode)  
+                        : Provider.of<GameProvider>(context).localizations!.getString('game_fourth_place', Provider.of<GameProvider>(context).languageCode)  )), style: resLoseStyleBig),
+                    Text(Provider.of<GameProvider>(context).localizations!.getString('game_place', Provider.of<GameProvider>(context).languageCode)  , style: resLoseStyle,),
                     Expanded(flex: 1, child: Text(""),),
                     Row(
                       mainAxisAlignment: MainAxisAlignment.center,
@@ -637,7 +642,7 @@ class _GameRoomPageState extends State<GameRoomPage> {
                                 const Expanded(flex: 1, child: Text(""),),
                                 Icon(Icons.remove_red_eye_outlined, size: 70),
                                 const Expanded(flex: 1, child: Text(""),),
-                                Text("Spectator", style: buttonTextStyle, textAlign: TextAlign.center,),
+                                Text(Provider.of<GameProvider>(context).localizations!.getString('game_spectator', Provider.of<GameProvider>(context).languageCode)  , style: buttonTextStyle, textAlign: TextAlign.center,),
                                 const Expanded(flex: 1, child: Text(""),),
                               ],
                             ),
@@ -691,7 +696,7 @@ class _GameRoomPageState extends State<GameRoomPage> {
                                 const Expanded(flex: 1, child: Text(""),),
                                 Icon(Icons.door_back_door_outlined, size: 70),
                                 const Expanded(flex: 1, child: Text(""),),
-                                Text("Leave the room", style: buttonTextStyle, textAlign: TextAlign.center,),
+                                Text(Provider.of<GameProvider>(context).localizations!.getString('room_leave', Provider.of<GameProvider>(context).languageCode)  , style: buttonTextStyle, textAlign: TextAlign.center,),
                                 const Expanded(flex: 1, child: Text(""),),
                               ],
                             ),
@@ -742,7 +747,7 @@ class _GameRoomPageState extends State<GameRoomPage> {
                     Row(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        Text("Are you sure you want to exit?\nYou will not be able to return to\nthe game", style: confirmExitStyle, textAlign: TextAlign.center,),
+                        Text(Provider.of<GameProvider>(context).localizations!.getString('game_confirm_exit', Provider.of<GameProvider>(context).languageCode)  , style: confirmExitStyle, textAlign: TextAlign.center,),
                       ],
                     ),
                     Expanded(flex: 1, child: Text(""),),
@@ -795,7 +800,7 @@ class _GameRoomPageState extends State<GameRoomPage> {
                             const Expanded(flex: 1, child: Text(""),),
                             Icon(Icons.door_back_door_outlined, size: 70),
                             const Expanded(flex: 1, child: Text(""),),
-                            Text("Leave the room", style: buttonTextStyle, textAlign: TextAlign.center,),
+                            Text(Provider.of<GameProvider>(context).localizations!.getString('room_leave', Provider.of<GameProvider>(context).languageCode)  , style: buttonTextStyle, textAlign: TextAlign.center,),
                             const Expanded(flex: 1, child: Text(""),),
                           ],
                         ),
@@ -851,6 +856,7 @@ class _GameRoomPageState extends State<GameRoomPage> {
   
   @override
   Widget build(BuildContext context) {
+    final gameProvider = Provider.of<GameProvider>(context);
 
     return Scaffold(
       body: Container(
@@ -915,7 +921,7 @@ class _GameRoomPageState extends State<GameRoomPage> {
                         children: [
                           Icon(playerUp != null ? getNumOfCardsIcon(playerUp!.numOfCards) : Icons.filter_7, size: 24, color: grey3A3A3AColor,),
                           Padding(padding: const EdgeInsets.only(right: 5),),
-                          Text(playerUp?.name ?? "Waiting...", style: buttonTextStyle),
+                          Text(playerUp?.name ?? gameProvider.localizations!.getString("waiting", gameProvider.languageCode), style: buttonTextStyle),
                         ],
                       )
                     ]
@@ -962,7 +968,7 @@ class _GameRoomPageState extends State<GameRoomPage> {
                         children: [
                           Icon(playerLeft != null ? getNumOfCardsIcon(playerLeft!.numOfCards) : Icons.filter_7, size: 24, color: grey3A3A3AColor,),
                           Padding(padding: const EdgeInsets.only(right: 5),),
-                          Text(playerLeft?.name ?? "Waiting...", style: buttonTextStyle),
+                          Text(playerLeft?.name ?? gameProvider.localizations!.getString("waiting", gameProvider.languageCode), style: buttonTextStyle),
                         ],
                       )
                   ]),
@@ -1173,7 +1179,7 @@ class _GameRoomPageState extends State<GameRoomPage> {
                         children: [
                           Icon(playerRight != null ? getNumOfCardsIcon(playerRight!.numOfCards) : Icons.filter_7, size: 24, color: grey3A3A3AColor,),
                           Padding(padding: const EdgeInsets.only(right: 5),),
-                          Text(playerRight?.name ?? "Waiting...", style: buttonTextStyle),
+                          Text(playerRight?.name ?? gameProvider.localizations!.getString("waiting", gameProvider.languageCode), style: buttonTextStyle),
                         ],
                       )
                   ]),
@@ -1285,7 +1291,8 @@ class _GameRoomPageState extends State<GameRoomPage> {
                                           _submitTurn();
                                         }
                                       },
-                                    child: Text('SUBMIT'),
+                                    child: Text(
+                                      gameProvider.localizations!.getString("game_submit", gameProvider.languageCode),),
                                     ),
                                   ),
                                 ],

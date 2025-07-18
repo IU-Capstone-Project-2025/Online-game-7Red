@@ -24,6 +24,7 @@ class _ProfilePageState extends State<ProfilePage> {
   Widget build(BuildContext context) {
     final gameProvider = Provider.of<GameProvider>(context);
     // gameProvider.localizations!.getString("", gameProvider.languageCode)
+    // Provider.of<GameProvider>(context).localizations!.getString('', Provider.of<GameProvider>(context).languageCode)
     gameProvider.loadMyPersonalInfo();
 
     return Scaffold(
@@ -50,7 +51,6 @@ class _ProfilePageState extends State<ProfilePage> {
                     child: IconButton(
                       onPressed: () {
                         Navigator.pop(context);
-                        // Navigator.pushNamed(context, '/mainmenu');
                       },
                       icon: const Icon(Icons.arrow_back_rounded, size: 44),
                     ),

@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 
 import '../data/styles.dart';
+import '../providers/provider.dart';
 
 class RulesPage extends StatefulWidget {
   const RulesPage({super.key});
@@ -12,6 +14,7 @@ class RulesPage extends StatefulWidget {
 class _RulesPageState extends State<RulesPage> {
   @override
   Widget build(BuildContext context) {
+    final gameProvider = Provider.of<GameProvider>(context);
 
     return Scaffold(
       // Add background image
@@ -44,7 +47,7 @@ class _RulesPageState extends State<RulesPage> {
                     ),
                   ),
                   const Expanded(flex: 1, child: Text("")),
-                  Text("Rules", style: titleBigStyle,),
+                  Text(gameProvider.localizations!.getString("main_menu_show_rules", gameProvider.languageCode), style: titleBigStyle,),
                   const Expanded(flex: 1, child: Text("")),
                   Padding(padding: const EdgeInsets.only(right: 75)),
                 ],
@@ -80,7 +83,7 @@ class _RulesPageState extends State<RulesPage> {
                         children: [
                           // - - - - - Deck - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
                           Padding(padding: const EdgeInsets.only(top: 30)),
-                          Text("Deck", style: titleRuleStyle, textAlign: TextAlign.center,),
+                          Text(gameProvider.localizations!.getString("rules_deck", gameProvider.languageCode), style: titleRuleStyle, textAlign: TextAlign.center,),
                           Padding(padding: const EdgeInsets.only(top: 30)),
                           Row(
                             children: [
@@ -88,15 +91,15 @@ class _RulesPageState extends State<RulesPage> {
                               Column(
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
-                                  Text("• A total of 49 unique cards", style: ruleTextStyle,),
+                                  Text(gameProvider.localizations!.getString("rules_deck_49_cards", gameProvider.languageCode), style: ruleTextStyle,),
                                   Padding(padding: const EdgeInsets.only(top: 5)),
-                                  Text("• Each card has a value (number) and a color", style: ruleTextStyle,),
+                                  Text(gameProvider.localizations!.getString("rules_deck_card_value_color", gameProvider.languageCode), style: ruleTextStyle,),
                                   Padding(padding: const EdgeInsets.only(top: 5)),
-                                  Text("• Card values: from 1 to 7", style: ruleTextStyle,),
+                                  Text(gameProvider.localizations!.getString("rules_deck_card_values", gameProvider.languageCode), style: ruleTextStyle,),
                                   Padding(padding: const EdgeInsets.only(top: 5)),
-                                  Text("• Colors: 7 colors of the rainbow (each color includes", style: ruleTextStyle,),
+                                  Text(gameProvider.localizations!.getString("rules_deck_colors", gameProvider.languageCode), style: ruleTextStyle,),
                                   Padding(padding: const EdgeInsets.only(top: 5)),
-                                  Text("   cards of all values)", style: ruleTextStyle,),
+                                  Text(gameProvider.localizations!.getString("rules_deck_cards_of_all_values", gameProvider.languageCode), style: ruleTextStyle,),
                                 ],
                               ),
                               Expanded(flex: 1, child: Text(""),),
@@ -126,7 +129,7 @@ class _RulesPageState extends State<RulesPage> {
                           ),
                           // - - - - - Game start - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
                           Padding(padding: const EdgeInsets.only(top: 30)),
-                          Text("Game start", style: titleRuleStyle, textAlign: TextAlign.center,),
+                          Text(gameProvider.localizations!.getString("rules_game_start", gameProvider.languageCode), style: titleRuleStyle, textAlign: TextAlign.center,),
                           Padding(padding: const EdgeInsets.only(top: 30)),
                           Row(
                             children: [
@@ -134,17 +137,17 @@ class _RulesPageState extends State<RulesPage> {
                               Column(
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
-                                  Text("• Each player is dealt 7 cards", style: ruleTextStyle,),
+                                  Text(gameProvider.localizations!.getString("rules_game_start_deal", gameProvider.languageCode), style: ruleTextStyle,),
                                   Padding(padding: const EdgeInsets.only(top: 5)),
-                                  Text("• The cards lying on the table in front of you are your palette.", style: ruleTextStyle,),
+                                  Text(gameProvider.localizations!.getString("rules_game_start_palette", gameProvider.languageCode), style: ruleTextStyle,),
                                   Padding(padding: const EdgeInsets.only(top: 5)),
-                                  Text("   Initially, it is empty for all players", style: ruleTextStyle,),
+                                  Text(gameProvider.localizations!.getString("rules_game_start_palette_empty", gameProvider.languageCode), style: ruleTextStyle,),
                                   Padding(padding: const EdgeInsets.only(top: 5)),
-                                  Text("• A starting card is placed in the center — this is the canvas", style: ruleTextStyle,),
+                                  Text(gameProvider.localizations!.getString("rules_game_start_canvas", gameProvider.languageCode), style: ruleTextStyle,),
                                   Padding(padding: const EdgeInsets.only(top: 5)),
-                                  Text("• The top card of the canvas determines the current rule by which", style: ruleTextStyle,),
+                                  Text(gameProvider.localizations!.getString("rules_game_start_rule", gameProvider.languageCode), style: ruleTextStyle,),
                                   Padding(padding: const EdgeInsets.only(top: 5)),
-                                  Text("   players can win.", style: ruleTextStyle,),
+                                  Text(gameProvider.localizations!.getString("rules_game_start_players_can_win", gameProvider.languageCode), style: ruleTextStyle,),
                                 ],
                               ),
                               Expanded(flex: 1, child: Text(""),),
@@ -174,7 +177,7 @@ class _RulesPageState extends State<RulesPage> {
                           ),
                           // - - - - - Gameplay - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
                           Padding(padding: const EdgeInsets.only(top: 30)),
-                          Text("Gameplay", style: titleRuleStyle, textAlign: TextAlign.center,),
+                          Text(gameProvider.localizations!.getString("rules_gameplay", gameProvider.languageCode), style: titleRuleStyle, textAlign: TextAlign.center,),
                           Padding(padding: const EdgeInsets.only(top: 30)),
                           Row(
                             children: [
@@ -182,19 +185,19 @@ class _RulesPageState extends State<RulesPage> {
                               Column(
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
-                                  Text("On your turn, you must perform one of the following actions:", style: ruleTextStyle,),
+                                  Text(gameProvider.localizations!.getString("rules_gameplay_actions", gameProvider.languageCode), style: ruleTextStyle,),
                                   Padding(padding: const EdgeInsets.only(top: 5)),
-                                  Text("1.  Play a card into your palette (face-up).", style: ruleTextStyle,),
+                                  Text(gameProvider.localizations!.getString("rules_gameplay_action1", gameProvider.languageCode), style: ruleTextStyle,),
                                   Padding(padding: const EdgeInsets.only(top: 5)),
-                                  Text("2. Play a card to the canvas to change the current rule.", style: ruleTextStyle,),
+                                  Text(gameProvider.localizations!.getString("rules_gameplay_action2", gameProvider.languageCode), style: ruleTextStyle,),
                                   Padding(padding: const EdgeInsets.only(top: 5)),
-                                  Text("      • You must be leading under the new rule.", style: ruleTextStyle,),
+                                  Text(gameProvider.localizations!.getString("rules_gameplay_action2_leading", gameProvider.languageCode), style: ruleTextStyle,),
                                   Padding(padding: const EdgeInsets.only(top: 5)),
-                                  Text("3. Play a card into your palette and then to the canvas to change", style: ruleTextStyle,),
+                                  Text(gameProvider.localizations!.getString("rules_gameplay_action3", gameProvider.languageCode), style: ruleTextStyle,),
                                   Padding(padding: const EdgeInsets.only(top: 5)),
-                                  Text("   the rule.", style: ruleTextStyle,),
+                                  Text(gameProvider.localizations!.getString("rules_gameplay_action3_rule", gameProvider.languageCode), style: ruleTextStyle,),
                                   Padding(padding: const EdgeInsets.only(top: 5)),
-                                  Text("      • You must be leading under the new rule.", style: ruleTextStyle,),
+                                  Text(gameProvider.localizations!.getString("rules_gameplay_action3_leading", gameProvider.languageCode), style: ruleTextStyle,),
                                 ],
                               ),
                               Expanded(flex: 1, child: Text(""),),
@@ -224,7 +227,7 @@ class _RulesPageState extends State<RulesPage> {
                           ),
                           // - - - - - Determining the Leader - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
                           Padding(padding: const EdgeInsets.only(top: 30)),
-                          Text("Determining the Leader", style: titleRuleStyle, textAlign: TextAlign.center,),
+                          Text(gameProvider.localizations!.getString("rules_leader_title", gameProvider.languageCode), style: titleRuleStyle, textAlign: TextAlign.center,),
                           Padding(padding: const EdgeInsets.only(top: 30)),
                           Row(
                             children: [
@@ -232,25 +235,29 @@ class _RulesPageState extends State<RulesPage> {
                               Column(
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
-                                  Text("• You are leading if your palette contains more cards that match", style: ruleTextStyle,),
+                                  Text(gameProvider.localizations!.getString("rules_leader_palette_match", gameProvider.languageCode), style: ruleTextStyle,),
                                   Padding(padding: const EdgeInsets.only(top: 5)),
-                                  Text("   the current rule than any other player. Other cards in your", style: ruleTextStyle,),
+                                  Text(gameProvider.localizations!.getString("rules_leader_palette_match_rule", gameProvider.languageCode), style: ruleTextStyle,),
                                   Padding(padding: const EdgeInsets.only(top: 5)),
-                                  Text("   palette do not count.", style: ruleTextStyle,),
+                                  Text(gameProvider.localizations!.getString("rules_leader_palette_do_not_count", gameProvider.languageCode), style: ruleTextStyle,),
                                   Padding(padding: const EdgeInsets.only(top: 5)),
-                                  Text("• If tied, the leader is the player with the highest card that", style: ruleTextStyle,),
+                                  Text(gameProvider.localizations!.getString("rules_leader_tied", gameProvider.languageCode), style: ruleTextStyle,),
                                   Padding(padding: const EdgeInsets.only(top: 5)),
-                                  Text("   matches the rule:", style: ruleTextStyle,),
+                                  Text(gameProvider.localizations!.getString("rules_leader_tied_match_rule", gameProvider.languageCode), style: ruleTextStyle,),
                                   Padding(padding: const EdgeInsets.only(top: 5)),
-                                  Text("      - First compare by value.", style: ruleTextStyle,),
+                                  Text(gameProvider.localizations!.getString("rules_leader_compare_value", gameProvider.languageCode), style: ruleTextStyle,),
                                   Padding(padding: const EdgeInsets.only(top: 5)),
-                                  Text("      - If values are equal, compare colors in the order: Red > ", style: ruleTextStyle,),
+                                  Text(gameProvider.localizations!.getString("rules_leader_compare_color", gameProvider.languageCode), style: ruleTextStyle,),
                                   Padding(padding: const EdgeInsets.only(top: 5)),
-                                  Text("         Orange > Yellow > Green > Blue > Indigo> Purple.", style: ruleTextStyle,),
+                                  Text(gameProvider.localizations!.getString("rules_leader_compare_color_order", gameProvider.languageCode), style: ruleTextStyle,),
+                                  if (gameProvider.languageCode == 'ru')
+                                    Padding(padding: const EdgeInsets.only(top: 5)),
+                                  if (gameProvider.languageCode == 'ru')
+                                    Text(gameProvider.localizations!.getString("rules_leader_compare_color_order_2", gameProvider.languageCode), style: ruleTextStyle,),
                                   Padding(padding: const EdgeInsets.only(top: 5)),
-                                  Text("      - If you have no cards matching the rule (e.g., under the ", style: ruleTextStyle,),
+                                  Text(gameProvider.localizations!.getString("rules_leader_no_cards_match", gameProvider.languageCode), style: ruleTextStyle,),
                                   Padding(padding: const EdgeInsets.only(top: 5)),
-                                  Text("         Green or Purple rule), you cannot be the leader.", style: ruleTextStyle,),
+                                  Text(gameProvider.localizations!.getString("rules_leader_no_cards_match_rule", gameProvider.languageCode), style: ruleTextStyle,),
                                 ],
                               ),
                               Expanded(flex: 1, child: Text(""),),
@@ -280,7 +287,7 @@ class _RulesPageState extends State<RulesPage> {
                           ),
                           // - - - - - Win and Loss Conditions - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
                           Padding(padding: const EdgeInsets.only(top: 30)),
-                          Text("Win and Loss Conditions", style: titleRuleStyle, textAlign: TextAlign.center,),
+                          Text(gameProvider.localizations!.getString("rules_win_loss_title", gameProvider.languageCode), style: titleRuleStyle, textAlign: TextAlign.center,),
                           Padding(padding: const EdgeInsets.only(top: 30)),
                           Row(
                             children: [
@@ -288,21 +295,21 @@ class _RulesPageState extends State<RulesPage> {
                               Column(
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
-                                  Text("• If you are not leading under the current rule at the end of", style: ruleTextStyle,),
+                                  Text(gameProvider.localizations!.getString("rules_win_loss_not_leading", gameProvider.languageCode), style: ruleTextStyle,),
                                   Padding(padding: const EdgeInsets.only(top: 5)),
-                                  Text("   your turn, you lose and are eliminated from the round.", style: ruleTextStyle,),
+                                  Text(gameProvider.localizations!.getString("rules_win_loss_lose_eliminated", gameProvider.languageCode), style: ruleTextStyle,),
                                   Padding(padding: const EdgeInsets.only(top: 5)),
-                                  Text("• Place all your cards (from hand and palette) face down in ", style: ruleTextStyle,),
+                                  Text(gameProvider.localizations!.getString("rules_win_loss_place_cards", gameProvider.languageCode), style: ruleTextStyle,),
                                   Padding(padding: const EdgeInsets.only(top: 5)),
-                                  Text("   front of you.", style: ruleTextStyle,),
+                                  Text(gameProvider.localizations!.getString("rules_win_loss_front_of_you", gameProvider.languageCode), style: ruleTextStyle,),
                                   Padding(padding: const EdgeInsets.only(top: 5)),
-                                  Text("• If at the start of your turn you have no cards in hand — you", style: ruleTextStyle,),
+                                  Text(gameProvider.localizations!.getString("rules_win_loss_no_cards_hand", gameProvider.languageCode), style: ruleTextStyle,),
                                   Padding(padding: const EdgeInsets.only(top: 5)),
-                                  Text("   lose and are eliminated.", style: ruleTextStyle,),
+                                  Text(gameProvider.localizations!.getString("rules_win_loss_lose_eliminated_start", gameProvider.languageCode), style: ruleTextStyle,),
                                   Padding(padding: const EdgeInsets.only(top: 5)),
-                                  Text("• If you are the last remaining player at the start of your", style: ruleTextStyle,),
+                                  Text(gameProvider.localizations!.getString("rules_win_loss_last_player", gameProvider.languageCode), style: ruleTextStyle,),
                                   Padding(padding: const EdgeInsets.only(top: 5)),
-                                  Text("   turn — you win the round!", style: ruleTextStyle,),
+                                  Text(gameProvider.localizations!.getString("rules_win_loss_win_round", gameProvider.languageCode), style: ruleTextStyle,),
                                 ],
                               ),
                               Expanded(flex: 1, child: Text(""),),
@@ -332,7 +339,7 @@ class _RulesPageState extends State<RulesPage> {
                           ),
                           // - - - - - Color Rules - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
                           Padding(padding: const EdgeInsets.only(top: 30)),
-                          Text("Color Rules", style: titleRuleStyle, textAlign: TextAlign.center,),
+                          Text(gameProvider.localizations!.getString("rules_color_rules_title", gameProvider.languageCode), style: titleRuleStyle, textAlign: TextAlign.center,),
                           Padding(padding: const EdgeInsets.only(top: 30)),
                           Row(
                             children: [
@@ -340,19 +347,19 @@ class _RulesPageState extends State<RulesPage> {
                               Column(
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
-                                  Text("• Red — Highest card wins.", style: ruleTextStyle,),
+                                  Text(gameProvider.localizations!.getString("rules_color_red", gameProvider.languageCode), style: ruleTextStyle,),
                                   Padding(padding: const EdgeInsets.only(top: 5)),
-                                  Text("• Orange — Most cards of the same value.", style: ruleTextStyle,),
+                                  Text(gameProvider.localizations!.getString("rules_color_orange", gameProvider.languageCode), style: ruleTextStyle,),
                                   Padding(padding: const EdgeInsets.only(top: 5)),
-                                  Text("• Yellow — Most cards of the same color.", style: ruleTextStyle,),
+                                  Text(gameProvider.localizations!.getString("rules_color_yellow", gameProvider.languageCode), style: ruleTextStyle,),
                                   Padding(padding: const EdgeInsets.only(top: 5)),
-                                  Text("• Green — Most even-numbered cards.", style: ruleTextStyle,),
+                                  Text(gameProvider.localizations!.getString("rules_color_green", gameProvider.languageCode), style: ruleTextStyle,),
                                   Padding(padding: const EdgeInsets.only(top: 5)),
-                                  Text("• Blue — Most cards of different colors.", style: ruleTextStyle,),
+                                  Text(gameProvider.localizations!.getString("rules_color_blue", gameProvider.languageCode), style: ruleTextStyle,),
                                   Padding(padding: const EdgeInsets.only(top: 5)),
-                                  Text("• Indigo — Longest sequence of consecutive numbers (e.g., 4, 5, 6).", style: ruleTextStyle,),
+                                  Text(gameProvider.localizations!.getString("rules_color_indigo", gameProvider.languageCode), style: ruleTextStyle,),
                                   Padding(padding: const EdgeInsets.only(top: 5)),
-                                  Text("• Purple — Most cards with value less than 4.", style: ruleTextStyle,),
+                                  Text(gameProvider.localizations!.getString("rules_color_purple", gameProvider.languageCode), style: ruleTextStyle,),
                                 ],
                               ),
                               Expanded(flex: 1, child: Text(""),),

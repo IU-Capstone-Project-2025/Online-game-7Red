@@ -88,7 +88,7 @@ class _MainMenuPageState extends State<MainMenuPage> {
                     height: 80,
                     child: IconButton(
                       onPressed: () {
-                        Navigator.pushNamed(context, '/profile');
+                        Navigator.pushNamed(context, '/settings');
                       },
                       icon: const Icon(Icons.settings, size: 60),
                     ),

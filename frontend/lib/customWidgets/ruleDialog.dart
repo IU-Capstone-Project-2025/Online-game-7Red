@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 
 import '../data/styles.dart';
+import '../providers/provider.dart';
 
 class RuleDialog extends StatefulWidget {
 
@@ -17,23 +19,23 @@ class _RuleDialogState extends State<RuleDialog> {
   // Method for getting text for each slide of the rules
   String getText(int slide) {
     if (slide == 1) {
-      return 'Each card has a value (a number from 1 to 7) and a color\n(one of the 7 colors of the rainbow). There are 49 unique\ncards in total.';
+      return Provider.of<GameProvider>(context).localizations!.getString('rule_slide_1', Provider.of<GameProvider>(context).languageCode);
     } else if (slide == 2) {
-      return 'At the start of the game, each player is dealt 7 cards\ninto their hand.';
+      return Provider.of<GameProvider>(context).localizations!.getString('rule_slide_2', Provider.of<GameProvider>(context).languageCode);
     } else if (slide == 3) {
-      return 'The number of cards in your opponents’ hands is shown\nnext to their names.';
+      return Provider.of<GameProvider>(context).localizations!.getString('rule_slide_3', Provider.of<GameProvider>(context).languageCode);
     } else if (slide == 4) {
-      return 'In the center lies a card (the canvas), which determines the\ncurrent rule (the game always starts with the Red rule),\nalong with a reference showing all possible rules.';
+      return Provider.of<GameProvider>(context).localizations!.getString('rule_slide_4', Provider.of<GameProvider>(context).languageCode);
     } else if (slide == 5) {
-      return 'The cards lying on the table in front of you are your\npalette. Initially, it is empty for all players.';
+      return Provider.of<GameProvider>(context).localizations!.getString('rule_slide_5', Provider.of<GameProvider>(context).languageCode);
     } else if (slide == 6) {
-      return 'All players take turns in a clockwise order. The first playeris\nchosen at random. Each turn lasts while the timer runs (60\nseconds). The winner is the last remaining player in the game.';
+      return Provider.of<GameProvider>(context).localizations!.getString('rule_slide_6', Provider.of<GameProvider>(context).languageCode);
     } else if (slide == 7) {
-      return 'At the end of their turn, the player must be winning according\nto the current rule, or else they lose. If the results are\ntied, the leader is determined by the highest card.';
+      return Provider.of<GameProvider>(context).localizations!.getString('rule_slide_7', Provider.of<GameProvider>(context).languageCode);
     } else if (slide == 8) {
-      return 'The highest card is determined first by value; if equal, then\nthe card whose color is closer to red is considered higher.';
+      return Provider.of<GameProvider>(context).localizations!.getString('rule_slide_8', Provider.of<GameProvider>(context).languageCode);
     } else if (slide == 9) {
-      return 'On your turn, you may play a card to your palette, change the\nrule (by playing to the canvas), or do both. To confirm your\nmove, click the "Confirm" button.';
+      return Provider.of<GameProvider>(context).localizations!.getString('rule_slide_9', Provider.of<GameProvider>(context).languageCode);
     }
     return '';
   }

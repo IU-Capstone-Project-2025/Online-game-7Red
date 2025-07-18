@@ -52,7 +52,7 @@ class _ChangePersInfoState extends State<ChangePersInfo> {
     } else if (responseBody['detail'] == 'Profile not found') {
       setState(() {
         logSuccess = false;
-        postText = 'Profile not found';
+        postText = Provider.of<GameProvider>(context).localizations!.getString('profile_not_found', Provider.of<GameProvider>(context).languageCode);
       });
     }
   }
@@ -79,7 +79,7 @@ class _ChangePersInfoState extends State<ChangePersInfo> {
     } else if (responseBody['detail'] == 'Email already registered') {
       setState(() {
         logSuccess = false;
-        postText = 'Email already registered';
+        postText = Provider.of<GameProvider>(context).localizations!.getString('email_already_registered', Provider.of<GameProvider>(context).languageCode);
       });
     }
   }
@@ -114,7 +114,7 @@ class _ChangePersInfoState extends State<ChangePersInfo> {
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
                   Padding(padding: const EdgeInsets.only(left: 47)),
-                  Text("Previous", style: basicTextStyle,),
+                  Text(gameProvider.localizations!.getString("change_pers_info_previous", gameProvider.languageCode), style: basicTextStyle,),
                   const Expanded(flex: 1, child: Text("")),
                 ]
               ),
@@ -143,7 +143,7 @@ class _ChangePersInfoState extends State<ChangePersInfo> {
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
                   Padding(padding: const EdgeInsets.only(left: 47)),
-                  Text("New", style: basicTextStyle),
+                  Text(gameProvider.localizations!.getString("change_pers_info_new", gameProvider.languageCode), style: basicTextStyle),
                   const Expanded(flex: 1, child: Text("")),
                   Text(errNew, style: errorTextStyle, textAlign: TextAlign.right),
                   Padding(padding: const EdgeInsets.only(right: 47)),
@@ -203,17 +203,17 @@ class _ChangePersInfoState extends State<ChangePersInfo> {
                       // Check if all fields are filled
                       if (controller.text.isEmpty) {
                         setState(() {
-                          postText = 'All fields are required';
+                          postText = gameProvider.localizations!.getString("error_all_fields_required", gameProvider.languageCode);
                         });
                         return;
                       } else if (changeNameEmail == 1 && controller.text.length > 10) {
                         setState(() {
-                          errNew = '1-10 symbols';
+                          errNew = gameProvider.localizations!.getString("sign_up_error_nickname_length", gameProvider.languageCode);
                         });
                         return;
                       } else if (changeNameEmail == 2 && !EmailValidator.validate(controller.text)) {
                         setState(() {
-                          errNew = 'Invalid email';
+                          errNew = gameProvider.localizations!.getString("sign_in_error_invalid_email", gameProvider.languageCode);
                         });
                         return;
                       } else {
@@ -233,7 +233,7 @@ class _ChangePersInfoState extends State<ChangePersInfo> {
                         Navigator.of(context).pop();
                       }
                     },
-                    child: const Text('CHANGE'),
+                    child: Text(gameProvider.localizations!.getString("change_pers_info_button", gameProvider.languageCode)),
                   ),
                 ),
                 Padding(padding: const EdgeInsets.only(top: 5)),

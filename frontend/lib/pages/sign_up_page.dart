@@ -64,7 +64,7 @@ class _SignUpPageState extends State<SignUpPage> {
     } else {
       setState(() {
         regSuccess = false;
-        errEmail = '(already in use)';
+        errEmail = Provider.of<GameProvider>(context).localizations!.getString('sign_up_error_email_already_in_use', Provider.of<GameProvider>(context).languageCode);
       });
     }
   }
@@ -111,7 +111,7 @@ class _SignUpPageState extends State<SignUpPage> {
                 height: 115,
               ),
               const Expanded(flex: 1, child: Text("")),
-              Text("Sign up to Red7", style: titleStyle),
+              Text(gameProvider.localizations!.getString('sign_up_title', gameProvider.languageCode), style: titleStyle),
               const Expanded(flex: 1, child: Text("")),
               Container(
                 width: 352,
@@ -128,7 +128,7 @@ class _SignUpPageState extends State<SignUpPage> {
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
                         Padding(padding: const EdgeInsets.only(left: 47)),
-                        Text("Nickname", style: basicTextStyle,),
+                        Text(gameProvider.localizations!.getString('nickname', gameProvider.languageCode), style: basicTextStyle,),
                         const Expanded(flex: 1, child: Text("")),
                         Text(errNickname, style: errorTextStyle, textAlign: TextAlign.right),
                         Padding(padding: const EdgeInsets.only(right: 47)),
@@ -158,7 +158,7 @@ class _SignUpPageState extends State<SignUpPage> {
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
                         Padding(padding: const EdgeInsets.only(left: 47)),
-                        Text("Email address", style: basicTextStyle),
+                        Text(gameProvider.localizations!.getString('email', gameProvider.languageCode), style: basicTextStyle),
                         const Expanded(flex: 1, child: Text("")),
                         Text(errEmail, style: errorTextStyle, textAlign: TextAlign.right),
                         Padding(padding: const EdgeInsets.only(right: 47)),
@@ -188,7 +188,7 @@ class _SignUpPageState extends State<SignUpPage> {
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
                         Padding(padding: const EdgeInsets.only(left: 47)),
-                        Text("Password", style: basicTextStyle),
+                        Text(gameProvider.localizations!.getString('password', gameProvider.languageCode), style: basicTextStyle),
                         const Expanded(flex: 1, child: Text("")),
                         Text(errPassword, style: errorTextStyle, textAlign: TextAlign.right),
                         Padding(padding: const EdgeInsets.only(right: 47)),
@@ -230,7 +230,7 @@ class _SignUpPageState extends State<SignUpPage> {
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
                         Padding(padding: const EdgeInsets.only(left: 47)),
-                        Text("Repeat password", style: basicTextStyle),
+                        Text(gameProvider.localizations!.getString('sign_up_repeat_password', gameProvider.languageCode), style: basicTextStyle),
                         const Expanded(flex: 1, child: Text("")),
                         Text(errRepeatedPassword, style: errorTextStyle, textAlign: TextAlign.right),
                         Padding(padding: const EdgeInsets.only(right: 47)),
@@ -294,35 +294,35 @@ class _SignUpPageState extends State<SignUpPage> {
                             // Check if all fields are filled
                             if (controller.text.isEmpty || controller2.text.isEmpty || controller3.text.isEmpty || controller4.text.isEmpty) {
                               setState(() {
-                                postText = 'All fields are required';
+                                postText = gameProvider.localizations!.getString('error_all_fields_required', gameProvider.languageCode);
                               });
                               return;
                             }
                             // Check if nickname is valid
                             else if (controller.text.length > 10) {
                               setState(() {
-                                errNickname = '1-10 symbols';
+                                errNickname = gameProvider.localizations!.getString('sign_up_error_nickname_length', gameProvider.languageCode);
                               });
                               return;
                             }
                             // Check if email is valid
                             else if (!EmailValidator.validate(controller2.text)) {
                               setState(() {
-                                errEmail = 'Invalid email';
+                                errEmail = gameProvider.localizations!.getString('sign_in_error_invalid_email', gameProvider.languageCode);
                               });
                               return;
                             }
                             // Check if password is valid
                             else if (controller3.text.length > 16 || controller3.text.length < 6) {
                               setState(() {
-                                errPassword = '6-16 symbols';
+                                errPassword = gameProvider.localizations!.getString('sign_up_error_password_length', gameProvider.languageCode);
                               });
                               return;
                             }
                             // Check if repeated password is valid
                             else if (controller3.text != controller4.text) {
                               setState(() {
-                                errRepeatedPassword = 'Different';
+                                errRepeatedPassword = gameProvider.localizations!.getString('sign_up_error_passwords_different', gameProvider.languageCode);
                               });
                               return;
                             } 
@@ -340,11 +340,11 @@ class _SignUpPageState extends State<SignUpPage> {
                               }
                             }
                           },
-                          child: const Text('SIGN  UP'),
+                          child: Text(gameProvider.localizations!.getString('sign_up_botton', gameProvider.languageCode)),
                         ),
                       ),
                       Padding(padding: const EdgeInsets.only(top: 5)),
-                      Text("$postText", style: errorTextStyle,),
+                      Text(postText, style: errorTextStyle,),
                       Padding(padding: const EdgeInsets.only(top: 5)),
                   ],
                 ),
