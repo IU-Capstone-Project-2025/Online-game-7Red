@@ -163,7 +163,7 @@
     {
         "id": "game_submit",
         "en": "SUBMIT",
-        "ru": "Сходить"
+        "ru": "СХОДИТЬ"
     },
     {
         "id": "game_spectator",
@@ -689,6 +689,17 @@
         "id": "online",
         "en": "Online",
         "ru": "Онлайн"
+    },
+    {
+        "id": "game_over",
+        "en": "Game is over!",
+        "ru": "Игра окончена!"
+    },
+    {
+        "id": "game_lose",
+        "en": "You are lose",
+        "ru": "Вы проиграли"
     }
 
+    
 ]

@@ -75,6 +75,8 @@ class _GameRoomPageState extends State<GameRoomPage> {
   int delay = 5;
   int delayWin = 5;
 
+  bool exited = false;
+
   @override
   void initState() {
     super.initState();
@@ -134,7 +136,9 @@ class _GameRoomPageState extends State<GameRoomPage> {
         _handleRightTurn();
         break;
       case 'change_turn':
-        _handleChangeTurn(message);
+        if (!exited) {
+          _handleChangeTurn(message);
+        } 
         break;
     }
   }
@@ -350,7 +354,7 @@ class _GameRoomPageState extends State<GameRoomPage> {
         // Win
         ScaffoldMessenger.of(
             context,
-          ).showSnackBar(SnackBar(content: Text('Game is over!')));
+          ).showSnackBar(SnackBar(content: Text(Provider.of<GameProvider>(context).localizations!.getString('game_over', Provider.of<GameProvider>(context).languageCode))));
         delayWin = 5;
         _delayTimer = Timer.periodic(Duration(seconds: 1), (timer) {
           if (delayWin > 0) {
@@ -379,7 +383,7 @@ class _GameRoomPageState extends State<GameRoomPage> {
           // Loose
           ScaffoldMessenger.of(
             context,
-          ).showSnackBar(SnackBar(content: Text('You are loose')));
+          ).showSnackBar(SnackBar(content: Text(Provider.of<GameProvider>(context).localizations!.getString('game_lose', Provider.of<GameProvider>(context).languageCode))));
           delay = 5;
           _delayTimer = Timer.periodic(Duration(seconds: 1), (timer) {
             if (delay > 0) {
@@ -394,20 +398,20 @@ class _GameRoomPageState extends State<GameRoomPage> {
             }
           });
           return;
-        }
-        if (_nextLose == 1 && _activePlayers.length == 2) {
+        } else if (_nextLose == 1 && _activePlayers.length == 2) {
           _turnTimer?.cancel();
           youLose = true;
           myPlace = _activePlayers.length;
           // set a place for the looser
           _players[_players.indexOf(_players.firstWhere((p) => p.id == _currentPlayerId))].place = _activePlayers.length;
+        } else {
+          // Start my turn
+          myTurn = true;
+          palleteChanged = false;
+          ruleChanged = false;
+          my_pallete_ch = "";
+          myAllTurn = true;
         }
-        // Start my turn
-        myTurn = true;
-        palleteChanged = false;
-        ruleChanged = false;
-        my_pallete_ch = "";
-        myAllTurn = true;
       }
       // Start turn timer
       _startTurnTimer();
@@ -428,7 +432,7 @@ class _GameRoomPageState extends State<GameRoomPage> {
           timer.cancel();
           // If time is over and it is turn of this player — senf timeout to Backend
           if (myAllTurn) {
-            _submitTurnTimeout();
+            _submitTurnTimeout(true);
           }
         }
       });
@@ -499,7 +503,7 @@ class _GameRoomPageState extends State<GameRoomPage> {
   ///
   /// The server then handles the message and sends a response to all the players
   /// in the room.
-  void _submitTurnTimeout() {
+  void _submitTurnTimeout(bool isTimeOut) {
     _turnTimer?.cancel();
 
     setState(() {
@@ -511,7 +515,9 @@ class _GameRoomPageState extends State<GameRoomPage> {
       myPlace = _activePlayers.length;
       _players[_players.indexOf(_players.firstWhere((p) => p.id == _currentPlayerId))].place = _activePlayers.length;
       // Loose
-      loosing();
+      if (isTimeOut) {
+        loosing();
+      }
     });
 
     final message = {
@@ -778,20 +784,25 @@ class _GameRoomPageState extends State<GameRoomPage> {
                         onPressed: () async {
                           _turnTimer!.cancel();
                           _allTimeTimer?.cancel();
+                          exited = true;
                           if (myAllTurn) {
-                            _submitTurnTimeout();
+                            _submitTurnTimeout(false);    // При выходе во время своего хода отправляю таймаут
+                            // _webSocket.disconnect();   // Если сразу закрываю вебсокет — другие игроки не видят ход и ждут бескоенечно
                           } else {
-                            _exit();
+                            _exit();                      // При выходе вне своего хода. Тут пофиг, оно всегда работает
                           }
                           if (!aiGame) {
-                            await leaveRoom(userID!, roomID!);
+                            await leaveRoom(userID!, roomID!);  // выхожу из комнаты через http
                           }
                           SharedPreferences prefs = await SharedPreferences.getInstance();
                           await prefs.remove('roomId');
                           await prefs.remove('roomPassword');
                           await prefs.remove('aiGame');
                           await prefs.remove('playerNum');
-                          _webSocket.disconnect();
+                          _webSocket.disconnect();        // Если закрываю вебсокет спустя кучу времени — оно успевает прислать мне всё, что
+                                                          // было после моего выхода (как я проиграл и тд), но тут уже у челика могут быть 
+                                                          // проблемы с тем, что он в главном меню, а его перекидывает в страничку с результатами 
+                                                          // (если это была игра 1 на 1)
                           Navigator.of(context).pop();
                           Navigator.pushNamed(context, '/mainmenu');
                         },
