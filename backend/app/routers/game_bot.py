@@ -132,8 +132,11 @@ async def websocket_game(websocket: WebSocket, player_id: int):
                         game.cur_rule_card = rule_ch
                         game.current_rule = game.rule_to_int(rule_ch[0])
 
-                    next_lose = not game.check_winning_at_beginning(player_id)
+                    next_lose = not game.check_winning_at_beginning(player_id)                        
                     await broadcast_game_state(game, -1, is_winning, pal_ch, rule_ch, next_lose, player_id)
+                    #if player has no possible moves at the beginning
+                    if next_lose:
+                        await broadcast_game_state(game, player_id, False, None, None, False, player_id)
                 #if bot made a move that ends the game, sending a message about it to the frontend
                 else:
                     logging.info(f'Game is over (game with player {player_id})!')
