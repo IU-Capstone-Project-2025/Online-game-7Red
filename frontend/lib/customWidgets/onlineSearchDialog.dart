@@ -9,6 +9,7 @@ import 'package:provider/provider.dart';
 import '../data/styles.dart';
 import '../data/urls.dart';
 import '../providers/provider.dart';
+import '../customWidgets/noOpponents.dart';
 
 class onlineSearchDialog extends StatefulWidget {
 
@@ -213,20 +214,16 @@ class _OnlineSearchDialogState extends State<onlineSearchDialog> {
       } else if (responseBody['status'] == "no_players") {
         stopTimers();
         Navigator.pop(context);
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(Provider.of<GameProvider>(context).localizations!.getString('online_search_no_players', Provider.of<GameProvider>(context).languageCode),),
-            backgroundColor: greyTimerColor,
-          ),
+        showDialog(
+          context: context,
+          builder: (context) => noOpponents(),
         );
       } else if (responseBody['status'] == "not_in_queue") {
         stopTimers();
         Navigator.pop(context);
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(Provider.of<GameProvider>(context).localizations!.getString('online_search_no_players', Provider.of<GameProvider>(context).languageCode),),
-            backgroundColor: greyTimerColor,
-          ),
+        showDialog(
+          context: context,
+          builder: (context) => noOpponents(),
         );
       }
     } else {

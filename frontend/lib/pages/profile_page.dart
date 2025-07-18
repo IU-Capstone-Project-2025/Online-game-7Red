@@ -272,7 +272,9 @@ class _ProfilePageState extends State<ProfilePage> {
                                       ),
                                     ),
                                     onPressed: () {
-                                      
+                                      ScaffoldMessenger.of(context).showSnackBar(
+                                        SnackBar(content: Text(gameProvider.localizations!.getString("not_implemented_yet", gameProvider.languageCode), textAlign: TextAlign.center,))
+                                      );
                                     },
                                     child: Column(
                                       children: [

@@ -354,7 +354,7 @@ class _GameRoomPageState extends State<GameRoomPage> {
         // Win
         ScaffoldMessenger.of(
             context,
-          ).showSnackBar(SnackBar(content: Text(Provider.of<GameProvider>(context).localizations!.getString('game_over', Provider.of<GameProvider>(context).languageCode))));
+          ).showSnackBar(SnackBar(content: Text(Provider.of<GameProvider>(context).localizations!.getString('game_over', Provider.of<GameProvider>(context).languageCode), textAlign: TextAlign.center,)));
         delayWin = 5;
         _delayTimer = Timer.periodic(Duration(seconds: 1), (timer) {
           if (delayWin > 0) {
@@ -383,7 +383,7 @@ class _GameRoomPageState extends State<GameRoomPage> {
           // Loose
           ScaffoldMessenger.of(
             context,
-          ).showSnackBar(SnackBar(content: Text(Provider.of<GameProvider>(context).localizations!.getString('game_lose', Provider.of<GameProvider>(context).languageCode))));
+          ).showSnackBar(SnackBar(content: Text(Provider.of<GameProvider>(context).localizations!.getString('game_lose', Provider.of<GameProvider>(context).languageCode), textAlign: TextAlign.center,)));
           delay = 5;
           _delayTimer = Timer.periodic(Duration(seconds: 1), (timer) {
             if (delay > 0) {
