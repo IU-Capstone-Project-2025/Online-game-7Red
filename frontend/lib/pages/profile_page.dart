@@ -64,7 +64,7 @@ class _ProfilePageState extends State<ProfilePage> {
               Padding(padding: const EdgeInsets.only(top: 15)),
               Container(
                 width: 800,
-                height: 631,
+                height: 600, //631
                 decoration: BoxDecoration(
                   image: const DecorationImage(
                     image: AssetImage('lib/assets/background.jpg'),
@@ -82,7 +82,7 @@ class _ProfilePageState extends State<ProfilePage> {
                   child: Center(
                     child: Container(
                       width: 764,
-                      height: 595,
+                      height: 564,
                       decoration: BoxDecoration(
                         borderRadius: BorderRadius.circular(20),
                         border: Border.all(color: grey3A3A3AColor, width: 3),

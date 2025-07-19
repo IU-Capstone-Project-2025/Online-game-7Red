@@ -77,6 +77,15 @@ class _GameRoomPageState extends State<GameRoomPage> {
 
   bool exited = false;
 
+  Color ringColorUp = greyTimerColor;
+  Color ringColorLeft = greyTimerColor;
+  Color ringColorRight = greyTimerColor;
+  Color ringColorDown = greyTimerColor;
+
+  int myTimerDuration = 60;
+  bool isReverseAnimationDown = true;
+  Color MyTimerColor = greenTimerColor;
+
   @override
   void initState() {
     super.initState();
@@ -260,20 +269,26 @@ class _GameRoomPageState extends State<GameRoomPage> {
         if (gamemode == 2 && _activePlayers.length != 2) {
           if (player.id == playerUp!.id) {
             playerUp!.pallete = [];
+            ringColorUp = redCard;
           }
         } else if (gamemode == 3 && _activePlayers.length != 2) {
           if (player.id == playerRight!.id) {
             playerRight!.pallete = [];
+            ringColorRight = redCard;
           } else if (player.id == playerLeft!.id) {
             playerLeft!.pallete = [];
+            ringColorLeft = redCard;
           }
         } else if (gamemode == 4 && _activePlayers.length != 2) {
           if (player.id == playerRight!.id) {
             playerRight!.pallete = [];
+            ringColorRight = redCard;
           } else if (player.id == playerUp!.id) {
             playerUp!.pallete = [];
+            ringColorUp = redCard;
           } else if (player.id == playerLeft!.id) {
             playerLeft!.pallete = [];
+            ringColorLeft = redCard;
           }
         }
         // Remove player from active players, kill his timer
@@ -345,16 +360,82 @@ class _GameRoomPageState extends State<GameRoomPage> {
           timer.reset();
         }
         _allTimeTimer?.cancel();
-        if (youLose == false) {
-          myPlace = 1;
-        }
         // set a place for the winner
         _players[_players.indexOf(_players.firstWhere((p) => p.id == _currentPlayerId))].place = 1;
+
+        if (youLose == false) {
+          myPlace = 1;
+          // Анимация выигрыша (Фиолетовый кружочек), а оставшемуся красный кружочек
+          setState(() {
+            // myTimerDuration = 5;
+            isReverseAnimationDown = false;
+            ringColorDown = violetCard;
+            MyTimerColor = greyTimerColor;
+            if (gamemode == 2) {
+              ringColorUp = redCard;
+            } else if (gamemode == 3) {
+              if (timers[(_players.indexOf(_players.firstWhere((p) => p.place == 2)) + 1) % _players.length] == _countDownControllerRight) {
+              ringColorRight = redCard;
+              } else if (timers[(_players.indexOf(_players.firstWhere((p) => p.place == 2)) + 1) % _players.length] == _countDownControllerLeft) {
+                ringColorLeft = redCard;
+              }
+            } else if (gamemode == 4) {
+              if (timers[(_players.indexOf(_players.firstWhere((p) => p.place == 2)) + 1) % _players.length] == _countDownControllerRight) {
+              ringColorRight = redCard;
+              } else if (timers[(_players.indexOf(_players.firstWhere((p) => p.place == 2)) + 1) % _players.length] == _countDownControllerUp) {
+                ringColorUp = redCard;
+              } else if (timers[(_players.indexOf(_players.firstWhere((p) => p.place == 2)) + 1) % _players.length] == _countDownControllerLeft) {
+                ringColorLeft = redCard;
+              }
+            }
+          });
+          _countDownControllerDown.restart(duration: 5);
+        } else {
+          // Анимация проигрыша (Красный кружочек), а оставшемуся фиолетовый кружочек
+          if (_players.firstWhere((p) => p.id == userID).place == 2) {
+            setState(() {
+              // myTimerDuration = 5;
+              isReverseAnimationDown = false;
+              ringColorDown = redCard;
+              MyTimerColor = greyTimerColor;
+            });
+            _countDownControllerDown.restart(duration: 5);
+          }
+          if (gamemode == 2) {
+            ringColorUp = violetCard;
+          } else if (gamemode == 3) {
+            if (timers[(_players.indexOf(_players.firstWhere((p) => p.place == 2)) + 1) % _players.length] == _countDownControllerRight) {
+            ringColorRight = redCard;
+            } else if (timers[(_players.indexOf(_players.firstWhere((p) => p.place == 2)) + 1) % _players.length] == _countDownControllerLeft) {
+              ringColorLeft = redCard;
+            }
+            if (timers[(_players.indexOf(_players.firstWhere((p) => p.place == 1)) + 1) % _players.length] == _countDownControllerRight) {
+            ringColorRight = violetCard;
+            } else if (timers[(_players.indexOf(_players.firstWhere((p) => p.place == 1)) + 1) % _players.length] == _countDownControllerLeft) {
+              ringColorLeft = violetCard;
+            }
+          } else if (gamemode == 4) {
+            if (timers[(_players.indexOf(_players.firstWhere((p) => p.place == 2)) + 1) % _players.length] == _countDownControllerRight) {
+            ringColorRight = redCard;
+            } else if (timers[(_players.indexOf(_players.firstWhere((p) => p.place == 2)) + 1) % _players.length] == _countDownControllerUp) {
+              ringColorUp = redCard;
+            } else if (timers[(_players.indexOf(_players.firstWhere((p) => p.place == 2)) + 1) % _players.length] == _countDownControllerLeft) {
+              ringColorLeft = redCard;
+            }
+            if (timers[(_players.indexOf(_players.firstWhere((p) => p.place == 1)) + 1) % _players.length] == _countDownControllerRight) {
+            ringColorRight = violetCard;
+            } else if (timers[(_players.indexOf(_players.firstWhere((p) => p.place == 1)) + 1) % _players.length] == _countDownControllerUp) {
+              ringColorUp = violetCard;
+            } else if (timers[(_players.indexOf(_players.firstWhere((p) => p.place == 1)) + 1) % _players.length] == _countDownControllerLeft) {
+              ringColorLeft = violetCard;
+            }
+          }
+        }
         _webSocket.disconnect();
         // Win
-        ScaffoldMessenger.of(
-            context,
-          ).showSnackBar(SnackBar(content: Text(Provider.of<GameProvider>(context).localizations!.getString('game_over', Provider.of<GameProvider>(context).languageCode), textAlign: TextAlign.center,)));
+        // ScaffoldMessenger.of(
+        //     context,
+        //   ).showSnackBar(SnackBar(content: Text(Provider.of<GameProvider>(context).localizations!.getString('game_over', Provider.of<GameProvider>(context).languageCode), textAlign: TextAlign.center,)));
         delayWin = 5;
         _delayTimer = Timer.periodic(Duration(seconds: 1), (timer) {
           if (delayWin > 0) {
@@ -381,9 +462,17 @@ class _GameRoomPageState extends State<GameRoomPage> {
           // set a place for the looser
           _players[_players.indexOf(_players.firstWhere((p) => p.id == _currentPlayerId))].place = _activePlayers.length;
           // Loose
-          ScaffoldMessenger.of(
-            context,
-          ).showSnackBar(SnackBar(content: Text(Provider.of<GameProvider>(context).localizations!.getString('game_lose', Provider.of<GameProvider>(context).languageCode), textAlign: TextAlign.center,)));
+          // Анимация проигрыша (Красный кружочек)
+          setState(() {
+            // myTimerDuration = 5;
+            isReverseAnimationDown = false;
+            ringColorDown = redCard;
+            MyTimerColor = greyTimerColor;
+          });
+          _countDownControllerDown.restart(duration: 5);
+          // ScaffoldMessenger.of(
+          //   context,
+          // ).showSnackBar(SnackBar(content: Text(Provider.of<GameProvider>(context).localizations!.getString('game_lose', Provider.of<GameProvider>(context).languageCode), textAlign: TextAlign.center,)));
           delay = 5;
           _delayTimer = Timer.periodic(Duration(seconds: 1), (timer) {
             if (delay > 0) {
@@ -915,7 +1004,7 @@ class _GameRoomPageState extends State<GameRoomPage> {
                       },
                       strokeCap: StrokeCap.round,
                       isReverseAnimation: true,
-                      ringColor: greyTimerColor,
+                      ringColor: ringColorUp,
                       autoStart: false,
                       textStyle: invisTextStyle,
                       ),
@@ -967,7 +1056,7 @@ class _GameRoomPageState extends State<GameRoomPage> {
                           },
                           strokeCap: StrokeCap.round,
                           isReverseAnimation: true,
-                          ringColor: greyTimerColor,
+                          ringColor: ringColorLeft,
                           autoStart: false,
                           textStyle: invisTextStyle,
                           ),
@@ -1178,7 +1267,7 @@ class _GameRoomPageState extends State<GameRoomPage> {
                           },
                           strokeCap: StrokeCap.round,
                           isReverseAnimation: true,
-                          ringColor: greyTimerColor,
+                          ringColor: ringColorRight,
                           autoStart: false,
                           textStyle: invisTextStyle,
                           ),
@@ -1225,9 +1314,9 @@ class _GameRoomPageState extends State<GameRoomPage> {
                                   children: [
                                     CircularCountDownTimer(
                                     controller: _countDownControllerDown,
-                                    duration: 60,
+                                    duration: myTimerDuration,
                                     isReverse: true,
-                                    fillColor: greenTimerColor,
+                                    fillColor: MyTimerColor,
                                     height: 67,
                                     width: 67,
                                     strokeWidth: 7,
@@ -1235,8 +1324,8 @@ class _GameRoomPageState extends State<GameRoomPage> {
                                       // later
                                     },
                                     strokeCap: StrokeCap.round,
-                                    isReverseAnimation: true,
-                                    ringColor: greyTimerColor,
+                                    isReverseAnimation: isReverseAnimationDown,
+                                    ringColor: ringColorDown,
                                     autoStart: false,
                                     textStyle: invisTextStyle,
                                     ),

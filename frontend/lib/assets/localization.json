@@ -581,9 +581,74 @@
         "ru": "ОТМЕНИТЬ"
     },
     {
-        "id": "online_search_hint",
-        "en": "Hints about important points in the rules will change here",
-        "ru": "Подсказки по важным моментам правил будут появляться здесь"
+        "id": "online_search_hint_0",
+        "en": "When each player has only one card in their palette, the Orange, Yellow, or Light Blue rules function the same as the Red rule.",
+        "ru": "Когда у всех по одной карте в палитре, оранжевое, жёлтое или голубое правила делают тоже самое что и красное."
+    },
+    {
+        "id": "online_search_hint_1",
+        "en": "If (in the case of the Green or Purple rules) your palette contains no cards matching the canvas rule, you cannot gain the lead.",
+        "ru": "Если (в случае зелёного или фиолетового правил) в вашей палитре нет карт, отвечающих правилу холста, вы не можете получить лидерство."
+    },
+    {
+        "id": "online_search_hint_2",
+        "en": "Sometimes, even if you're winning when changing the rule, it’s a good idea to add an extra card to your palette.",
+        "ru": "Иногда, когда вы меняете правило несмотря на то, что вы выигрываете стоит доложить ещё одну карту в палетку."
+    },
+    {
+        "id": "online_search_hint_3",
+        "en": "Most of the time, it's better to play cards into your palette rather than onto the canvas.",
+        "ru": "Чаще всего лучше класть карты в палетку, а не на холст."
+    },
+    {
+        "id": "online_search_hint_4",
+        "en": "The canvas is the place where the card that defines the game’s rule lies.",
+        "ru": "Холст — это место, где лежит карта, которая определяет правила игры."
+    },
+    {
+        "id": "online_search_hint_5",
+        "en": "The palette is your set of cards used for scoring according to the current rule.",
+        "ru": "Палитра — это ваши карты, которые используются при подсчёте по текущему правилу."
+    },
+    {
+        "id": "online_search_hint_6",
+        "en": "You are leading if your palette contains more cards matching the current canvas rule than any other player’s. All other cards in your palette are ignored.",
+        "ru": "Вы лидируете, если в вашей палитре больше карт, отвечающих текущему правилу холста, чем у других игроков. Остальные карты вашей палитры не учитываются."
+    },
+    {
+        "id": "online_search_hint_7",
+        "en": "To determine leadership, players’ highest matching cards are compared by value first, then by color if necessary.",
+        "ru": "Для лидерства сначала сравниваются номиналы самых старших карт игроков и затем, при необходимости их, цвета."
+    },
+    {
+        "id": "online_search_hint_8",
+        "en": "If at the start of your turn you have no cards in hand, you lose and are eliminated from the round.",
+        "ru": "Если в начале вашего хода у вас на руке нет карт, вы проигрываете и выбываете из раунда."
+    },
+    {
+        "id": "online_search_hint_9",
+        "en": "If you are not leading according to the current rule at the end of your turn, you lose and are eliminated from the round.",
+        "ru": "Если вы не лидируете в конце своего хода по текущему правилу, то проигрываете и выбываете из раунда."
+    },
+    {
+        "id": "online_search_hint_10",
+        "en": "If at the start of your turn you are the last remaining player in the game, you win the round.",
+        "ru": "Если в начале вашего хода вы — последний, кто остался в игре, то вы побеждаете в раунде."
+    },
+    {
+        "id": "online_search_hint_11",
+        "en": "The deck contains 49 unique cards, with values from 1 to 7, in all seven colors of the rainbow.",
+        "ru": "Всего в колоде 49 уникальных карт номиналом от 1 до 7, всех семи цветов радуги."
+    },
+    {
+        "id": "online_search_hint_12",
+        "en": "A 7 always beats a 6, but a red 6 beats an orange one, because in the rainbow, orange comes after red.",
+        "ru": "Семёрка всегда старше шестёрки, но красная шестёрка старше оранжевой, поскольку в радуге оранжевый цвет идёт после красного."
+    },
+    {
+        "id": "online_search_hint_13",
+        "en": "The strongest cards in the palette are the red 3, 6, and 7.",
+        "ru": "Самые сильные карты в палитре это красные 3, 6 и 7."
     },
     {
         "id": "id_game_room",
