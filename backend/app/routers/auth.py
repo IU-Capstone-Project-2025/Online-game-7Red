@@ -1,4 +1,4 @@
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, HTTPException, Body
 from app.models import SignInRequest, SignUpRequest
 from passlib.context import CryptContext
 from app.database import (delete_user, add_visit, create_user_statistics, create_user, search_user_by_login, create_profile, get_profile_by_user_id, check_and_award_7_days_streak)
@@ -67,7 +67,7 @@ async def signin(request: SignInRequest):
     }
 
 @router.post("/delete")
-async def delete_user(user_id: int):
+async def delete_user(user_id: int = Body(..., embed=True)):
     """
     Delete a user from the database by user_id.
     """

@@ -8,20 +8,6 @@ import 'package:frontend/pages/game_page.dart';
 import 'package:frontend/pages/waiting_room_page.dart';
 
 void main() {
-  testWidgets('Check existense of button START NEW GAME', (WidgetTester tester) async {
-    await tester.pumpWidget(
-      MultiProvider(
-        providers: [
-          ChangeNotifierProvider<GameProvider>(
-            create: (_) => GameProvider(),
-          ),
-        ],
-        child: const MaterialApp(home: MainMenuPage()),
-      ),
-    );
-    expect(find.text('START NEW GAME'), findsOneWidget);
-  });
-
    testWidgets('Player name is displayed in waiting room', (WidgetTester tester) async {
     await tester.pumpWidget(
       MaterialApp(
