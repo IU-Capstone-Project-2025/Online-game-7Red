@@ -5,6 +5,7 @@ import 'package:http/http.dart' as http;
 import 'dart:convert';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:provider/provider.dart';
+import 'dart:math';
 
 import '../data/styles.dart';
 import '../data/urls.dart';
@@ -36,6 +37,7 @@ class _OnlineSearchDialogState extends State<onlineSearchDialog> {
   String room_id = '';
   String room_password = '';
   int myID = -1;
+  int? currHint;
 
   @override
   void initState() {
@@ -55,7 +57,8 @@ class _OnlineSearchDialogState extends State<onlineSearchDialog> {
     startTotalTimer();
     prefs = await SharedPreferences.getInstance();
     myID = prefs?.getInt('myID') ?? 0;
-    connectToRoom(myID);
+    currHint = Random().nextInt(14);
+    // connectToRoom(myID);                         //⭐️
   }
 
   void _startTurnTimer() {
@@ -313,7 +316,11 @@ class _OnlineSearchDialogState extends State<onlineSearchDialog> {
                   ),
                 ),
                 Expanded(flex: 1, child: Text("")),
-                Text(gameProvider.localizations!.getString("online_search_hint", gameProvider.languageCode), style: basicTextStyle,),
+                // Text(),
+                Padding(
+                  padding: const EdgeInsets.only(left: 20, right: 20),
+                  child: Text(gameProvider.localizations!.getString("online_search_hint_$currHint", gameProvider.languageCode), style: basicTextStyle, textAlign: TextAlign.center,),
+                ),
                 Expanded(flex: 1, child: Text("")),
               ],
             ),
