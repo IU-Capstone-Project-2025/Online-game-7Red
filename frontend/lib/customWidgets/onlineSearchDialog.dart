@@ -58,7 +58,7 @@ class _OnlineSearchDialogState extends State<onlineSearchDialog> {
     prefs = await SharedPreferences.getInstance();
     myID = prefs?.getInt('myID') ?? 0;
     currHint = Random().nextInt(14);
-    // connectToRoom(myID);                         //⭐️
+    connectToRoom(myID);
   }
 
   void _startTurnTimer() {
