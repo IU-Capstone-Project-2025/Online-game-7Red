@@ -55,7 +55,7 @@ class _ProfilePageState extends State<ProfilePage> {
       if (bytes.length > 2 * 1024 * 1024) {
         setState(() {
           _imageError = "Файл превышает 2 МБ";
-          ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text("File greater than 2MB", textAlign: TextAlign.center)));
+          ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(Provider.of<GameProvider>(context).localizations!.getString("big_file_size", Provider.of<GameProvider>(context).languageCode), textAlign: TextAlign.center)));
           _selectedImageBytes = null;
         });
         return;
@@ -87,10 +87,8 @@ class _ProfilePageState extends State<ProfilePage> {
       final responseBody = await response.stream.bytesToString();
       if (response.statusCode == 200) {
         print("Upload success: $responseBody");
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text("Аватар загружен")));
       } else {
         print("Upload failed: $responseBody");
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text("Ошибка загрузки")));
       }
     } catch (e) {
       print("Upload exception: $e");
@@ -107,8 +105,7 @@ class _ProfilePageState extends State<ProfilePage> {
           _downloadedAvatar = Image.memory(response.bodyBytes, fit: BoxFit.cover);
         });
       } else {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text("Аватар не найден или ошибка сервера")));
+        print("Аватар не был загружен до этого");
       }
     } catch (e) {
       print("Fetch error: $e");
