@@ -55,6 +55,7 @@ class _ProfilePageState extends State<ProfilePage> {
       if (bytes.length > 2 * 1024 * 1024) {
         setState(() {
           _imageError = "Файл превышает 2 МБ";
+          ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text("File greater than 2MB", textAlign: TextAlign.center)));
           _selectedImageBytes = null;
         });
         return;
@@ -103,7 +104,7 @@ class _ProfilePageState extends State<ProfilePage> {
       final response = await http.get(uri);
       if (response.statusCode == 200) {
         setState(() {
-          _downloadedAvatar = Image.memory(response.bodyBytes);
+          _downloadedAvatar = Image.memory(response.bodyBytes, fit: BoxFit.cover);
         });
       } else {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -225,7 +226,7 @@ class _ProfilePageState extends State<ProfilePage> {
                                                     if (_selectedImageBytes != null && _imageError == null) {
                                                       _uploadImage();
                                                       setState(() {
-                                                        _downloadedAvatar = Image.memory(_selectedImageBytes!, fit: BoxFit.cover,);
+                                                        _downloadedAvatar = Image.memory(_selectedImageBytes!, fit: BoxFit.cover);
                                                       });
                                                     }
                                                   },
