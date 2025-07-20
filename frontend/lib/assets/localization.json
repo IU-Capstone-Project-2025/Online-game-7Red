@@ -769,5 +769,10 @@
         "id": "not_implemented_yet",
         "en": "Function not implemented yet",
         "ru": "Функция ещё не реализована"
+    },
+    {
+        "id": "big_file_size",
+        "en": "File greater than 2MB",
+        "ru": "Файл больше 2МБ"
     }
 ]

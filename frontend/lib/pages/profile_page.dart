@@ -2,11 +2,16 @@ import 'package:flutter/material.dart';
 import 'package:frontend/customWidgets/changePassword.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:provider/provider.dart';
+import 'package:http/http.dart' as http;
+import 'package:image_picker/image_picker.dart';
+import 'dart:typed_data';
+import 'package:http_parser/http_parser.dart';
 
 import '../data/styles.dart';
 import '../providers/provider.dart';
 import '../customWidgets/changePersInfo.dart';
 import '../customWidgets/confirmExit.dart';
+import '../data/urls.dart';
 
 class ProfilePage extends StatefulWidget {
   const ProfilePage({super.key});
@@ -19,6 +24,94 @@ class _ProfilePageState extends State<ProfilePage> {
   SharedPreferences? prefs;
 
   bool obscure = true;
+
+  Uint8List? _selectedImageBytes;
+  String? _imageError;
+  final ImagePicker _picker = ImagePicker();
+  Image? _downloadedAvatar;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadData();
+  }
+
+  void _loadData() async {
+    if (Provider.of<GameProvider>(context).myID == -1) {
+      prefs = await SharedPreferences.getInstance();
+      Provider.of<GameProvider>(context).myID = await prefs?.getInt('myID') ?? -1;
+      print("user_id that I use for my account: ${Provider.of<GameProvider>(context).myID}");
+    }
+    _fetchAvatar();
+    setState(() {});
+  }
+
+  Future<void> _pickImage() async {
+    final pickedFile = await _picker.pickImage(source: ImageSource.gallery);
+    if (pickedFile != null) {
+      final bytes = await pickedFile.readAsBytes();
+
+      // Ограничение по размеру (2 МБ)
+      if (bytes.length > 2 * 1024 * 1024) {
+        setState(() {
+          _imageError = "Файл превышает 2 МБ";
+          ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(Provider.of<GameProvider>(context).localizations!.getString("big_file_size", Provider.of<GameProvider>(context).languageCode), textAlign: TextAlign.center)));
+          _selectedImageBytes = null;
+        });
+        return;
+      }
+
+      setState(() {
+        _selectedImageBytes = bytes;
+        _imageError = null;
+      });
+    }
+  }
+
+  Future<void> _uploadImage() async {
+    if (_selectedImageBytes == null ) return;
+
+    final uri = Uri.parse("$uploadImageUrl${Provider.of<GameProvider>(context).myID}");
+
+    final request = http.MultipartRequest('POST', uri);
+
+    request.files.add(http.MultipartFile.fromBytes(
+      'file',
+      _selectedImageBytes!,
+      filename: 'avatar.jpg',
+      contentType: MediaType('image', 'jpeg'),
+    ));
+
+    try {
+      final response = await request.send();
+      final responseBody = await response.stream.bytesToString();
+      if (response.statusCode == 200) {
+        print("Upload success: $responseBody");
+      } else {
+        print("Upload failed: $responseBody");
+      }
+    } catch (e) {
+      print("Upload exception: $e");
+    }
+  }
+
+  Future<void> _fetchAvatar() async {
+    final uri = Uri.parse("$fetchImageUrl${Provider.of<GameProvider>(context).myID}");
+
+    try {
+      final response = await http.get(uri);
+      if (response.statusCode == 200) {
+        setState(() {
+          _downloadedAvatar = Image.memory(response.bodyBytes, fit: BoxFit.cover);
+        });
+      } else {
+        print("Аватар не был загружен до этого");
+      }
+    } catch (e) {
+      print("Fetch error: $e");
+    }
+  }
+
 
   @override
   Widget build(BuildContext context) {
@@ -96,15 +189,54 @@ class _ProfilePageState extends State<ProfilePage> {
                               children: [
                                 Expanded(flex: 1, child: Text("")),
                                 Container(
-                                  width: 217,
-                                  height: 217,
+                                  width: 220,
+                                  height: 220,
                                   decoration: BoxDecoration(
                                     color: greyTimerColor,
                                     borderRadius: BorderRadius.circular(20),
                                     border: Border.all(color: grey3A3A3AColor, width: 1),
                                   ),
-                                  child: Center(
-                                    child: Icon(Icons.account_circle_rounded, size: 200,),
+                                  child: Stack(
+                                    children: [
+                                      Center(
+                                        child:
+                                          _downloadedAvatar != null
+                                            ? SizedBox(
+                                              width: 200,
+                                              height: 200,
+                                              child: ClipOval(
+                                                child: _downloadedAvatar
+                                              ),
+                                            )
+                                            : Icon(Icons.account_circle_rounded, size: 200,),
+                                      ),
+                                      SizedBox(
+                                        child: Column(
+                                          children: [
+                                            Expanded(flex: 1, child: Text("")),
+                                            Row(
+                                              mainAxisAlignment: MainAxisAlignment.end,
+                                              children: [
+                                                IconButton(
+                                                  onPressed: () async{
+                                                    await _pickImage();
+                                                    if (_selectedImageBytes != null && _imageError == null) {
+                                                      _uploadImage();
+                                                      setState(() {
+                                                        _downloadedAvatar = Image.memory(_selectedImageBytes!, fit: BoxFit.cover);
+                                                      });
+                                                    }
+                                                  },
+                                                  icon: const Icon(Icons.edit_rounded, size: 20),
+                                                ),
+                                                Padding(padding: const EdgeInsets.only(right: 5)),
+                                              ],
+                                            ),
+                                            Padding(padding: const EdgeInsets.only(bottom: 5)),
+                                          ],
+                                        ),
+                                      )
+                                    ],
                                   ),
                                 ),
                                 Expanded(flex: 1, child: Text("")),
