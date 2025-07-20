@@ -1,7 +1,7 @@
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, HTTPException, Body
 from app.models import SignInRequest, SignUpRequest
 from passlib.context import CryptContext
-from app.database import (delete_user, add_visit, create_user_statistics, create_user, search_user_by_login, create_profile, get_profile_by_user_id, check_and_award_7_days_streak)
+from app.database import (delete_user_from_db, add_visit, create_user_statistics, create_user, search_user_by_login, create_profile, get_profile_by_user_id, check_and_award_7_days_streak)
 
 router = APIRouter(prefix="/api/auth", tags=["auth"])
 
@@ -67,13 +67,13 @@ async def signin(request: SignInRequest):
     }
 
 @router.post("/delete")
-async def delete_user(user_id: int):
+async def delete_user(user_id: int = Body(..., embed=True)):
     """
     Delete a user from the database by user_id.
     """
     
     try:
-        await delete_user(user_id)
+        await delete_user_from_db(user_id)
         return {"message": f"User {user_id} deleted successfully"}
     except Exception as e:
         raise HTTPException(status_code=404, detail=str(e))

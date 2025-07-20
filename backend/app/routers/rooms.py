@@ -60,7 +60,7 @@ async def join_room(request: JoinRoomRequest):
         raise HTTPException(status_code=403, detail="Game already started")
     
     try:
-        await add_user_to_room(request.user_id, request.assigned_id)
+        await add_user_to_room(request.user_id, request.assigned_id, room_type="private")
     except Exception as e:
         if "User already in the room" in str(e):
             raise HTTPException(status_code=409, detail="User already in the room")
