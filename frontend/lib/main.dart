@@ -47,7 +47,7 @@ class MyApp extends StatelessWidget {
         '/result': (context) => ResultPage(),
         '/rules': (context) => RulesPage(),
         '/statistics': (context) => StatisticsPage(),
-        '/profile': (context) => ProfilePage(),
+        '/settings': (context) => ProfilePage(),
       },
     );
   }

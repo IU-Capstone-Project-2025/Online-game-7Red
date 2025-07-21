@@ -2,11 +2,16 @@ import 'package:flutter/material.dart';
 import 'package:frontend/customWidgets/changePassword.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:provider/provider.dart';
+import 'package:http/http.dart' as http;
+import 'package:image_picker/image_picker.dart';
+import 'dart:typed_data';
+import 'package:http_parser/http_parser.dart';
 
 import '../data/styles.dart';
 import '../providers/provider.dart';
 import '../customWidgets/changePersInfo.dart';
 import '../customWidgets/confirmExit.dart';
+import '../data/urls.dart';
 
 class ProfilePage extends StatefulWidget {
   const ProfilePage({super.key});
@@ -20,10 +25,99 @@ class _ProfilePageState extends State<ProfilePage> {
 
   bool obscure = true;
 
+  Uint8List? _selectedImageBytes;
+  String? _imageError;
+  final ImagePicker _picker = ImagePicker();
+  Image? _downloadedAvatar;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadData();
+  }
+
+  void _loadData() async {
+    if (Provider.of<GameProvider>(context).myID == -1) {
+      prefs = await SharedPreferences.getInstance();
+      Provider.of<GameProvider>(context).myID = await prefs?.getInt('myID') ?? -1;
+      print("user_id that I use for my account: ${Provider.of<GameProvider>(context).myID}");
+    }
+    _fetchAvatar();
+    setState(() {});
+  }
+
+  Future<void> _pickImage() async {
+    final pickedFile = await _picker.pickImage(source: ImageSource.gallery);
+    if (pickedFile != null) {
+      final bytes = await pickedFile.readAsBytes();
+
+      // Ограничение по размеру (1 МБ)
+      if (bytes.length > 1024 * 1024) {
+        setState(() {
+          _imageError = "Файл превышает 2 МБ";
+          ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(Provider.of<GameProvider>(context).localizations!.getString("big_file_size", Provider.of<GameProvider>(context).languageCode), textAlign: TextAlign.center)));
+          _selectedImageBytes = null;
+        });
+        return;
+      }
+
+      setState(() {
+        _selectedImageBytes = bytes;
+        _imageError = null;
+      });
+    }
+  }
+
+  Future<void> _uploadImage() async {
+    if (_selectedImageBytes == null ) return;
+
+    final uri = Uri.parse("$uploadImageUrl${Provider.of<GameProvider>(context).myID}");
+
+    final request = http.MultipartRequest('POST', uri);
+
+    request.files.add(http.MultipartFile.fromBytes(
+      'file',
+      _selectedImageBytes!,
+      filename: 'avatar.jpg',
+      contentType: MediaType('image', 'jpeg'),
+    ));
+
+    try {
+      final response = await request.send();
+      final responseBody = await response.stream.bytesToString();
+      if (response.statusCode == 200) {
+        print("Upload success: $responseBody");
+      } else {
+        print("Upload failed: $responseBody");
+      }
+    } catch (e) {
+      print("Upload exception: $e");
+    }
+  }
+
+  Future<void> _fetchAvatar() async {
+    final uri = Uri.parse("$fetchImageUrl${Provider.of<GameProvider>(context).myID}");
+
+    try {
+      final response = await http.get(uri);
+      if (response.statusCode == 200) {
+        setState(() {
+          _downloadedAvatar = Image.memory(response.bodyBytes, fit: BoxFit.cover);
+        });
+      } else {
+        print("Аватар не был загружен до этого");
+      }
+    } catch (e) {
+      print("Fetch error: $e");
+    }
+  }
+
+
   @override
   Widget build(BuildContext context) {
     final gameProvider = Provider.of<GameProvider>(context);
     // gameProvider.localizations!.getString("", gameProvider.languageCode)
+    // Provider.of<GameProvider>(context).localizations!.getString('', Provider.of<GameProvider>(context).languageCode)
     gameProvider.loadMyPersonalInfo();
 
     return Scaffold(
@@ -49,8 +143,7 @@ class _ProfilePageState extends State<ProfilePage> {
                     height: 60,
                     child: IconButton(
                       onPressed: () {
-                        Navigator.pop(context);
-                        // Navigator.pushNamed(context, '/mainmenu');
+                        Navigator.pushNamed(context, '/mainmenu');
                       },
                       icon: const Icon(Icons.arrow_back_rounded, size: 44),
                     ),
@@ -64,7 +157,7 @@ class _ProfilePageState extends State<ProfilePage> {
               Padding(padding: const EdgeInsets.only(top: 15)),
               Container(
                 width: 800,
-                height: 631,
+                height: 600, //631
                 decoration: BoxDecoration(
                   image: const DecorationImage(
                     image: AssetImage('lib/assets/background.jpg'),
@@ -82,7 +175,7 @@ class _ProfilePageState extends State<ProfilePage> {
                   child: Center(
                     child: Container(
                       width: 764,
-                      height: 595,
+                      height: 564,
                       decoration: BoxDecoration(
                         borderRadius: BorderRadius.circular(20),
                         border: Border.all(color: grey3A3A3AColor, width: 3),
@@ -96,15 +189,54 @@ class _ProfilePageState extends State<ProfilePage> {
                               children: [
                                 Expanded(flex: 1, child: Text("")),
                                 Container(
-                                  width: 217,
-                                  height: 217,
+                                  width: 220,
+                                  height: 220,
                                   decoration: BoxDecoration(
                                     color: greyTimerColor,
-                                    borderRadius: BorderRadius.circular(20),
+                                    borderRadius: BorderRadius.only(topLeft: Radius.circular(200), topRight: Radius.circular(200), bottomLeft: Radius.circular(200), bottomRight: Radius.circular(34)),
                                     border: Border.all(color: grey3A3A3AColor, width: 1),
                                   ),
-                                  child: Center(
-                                    child: Icon(Icons.account_circle_rounded, size: 200,),
+                                  child: Stack(
+                                    children: [
+                                      Center(
+                                        child:
+                                          _downloadedAvatar != null
+                                            ? SizedBox(
+                                              width: 220,
+                                              height: 220,
+                                              child: ClipOval(
+                                                child: _downloadedAvatar
+                                              ),
+                                            )
+                                            : Icon(Icons.account_circle_rounded, size: 220,),
+                                      ),
+                                      SizedBox(
+                                        child: Column(
+                                          children: [
+                                            Expanded(flex: 1, child: Text("")),
+                                            Row(
+                                              mainAxisAlignment: MainAxisAlignment.end,
+                                              children: [
+                                                IconButton(
+                                                  onPressed: () async{
+                                                    await _pickImage();
+                                                    if (_selectedImageBytes != null && _imageError == null) {
+                                                      _uploadImage();
+                                                      setState(() {
+                                                        _downloadedAvatar = Image.memory(_selectedImageBytes!, fit: BoxFit.cover);
+                                                      });
+                                                    }
+                                                  },
+                                                  icon: const Icon(Icons.edit_rounded, size: 20),
+                                                ),
+                                                // Padding(padding: const EdgeInsets.only(right: 5)),
+                                              ],
+                                            ),
+                                            // Padding(padding: const EdgeInsets.only(bottom: 5)),
+                                          ],
+                                        ),
+                                      )
+                                    ],
                                   ),
                                 ),
                                 Expanded(flex: 1, child: Text("")),
@@ -136,7 +268,6 @@ class _ProfilePageState extends State<ProfilePage> {
                                         Expanded(flex: 1, child: Text("")),
                                         IconButton(
                                           onPressed: () {
-                                            // TODO: change name
                                             showDialog(
                                               context: context,
                                               builder: (context) => ChangePersInfo(changeNameEmail: 1),
@@ -176,7 +307,6 @@ class _ProfilePageState extends State<ProfilePage> {
                                         Expanded(flex: 1, child: Text("")),
                                         IconButton(
                                           onPressed: () {
-                                            // TODO: change email
                                             showDialog(
                                               context: context,
                                               builder: (context) => ChangePersInfo(changeNameEmail: 2),
@@ -216,7 +346,6 @@ class _ProfilePageState extends State<ProfilePage> {
                                         Expanded(flex: 1, child: Text("")),
                                         IconButton(
                                           onPressed: () {
-                                            // TODO: change password
                                             showDialog(
                                               context: context,
                                               builder: (context) => changePassword(),
@@ -272,7 +401,9 @@ class _ProfilePageState extends State<ProfilePage> {
                                       ),
                                     ),
                                     onPressed: () {
-                                      
+                                      ScaffoldMessenger.of(context).showSnackBar(
+                                        SnackBar(content: Text(gameProvider.localizations!.getString("not_implemented_yet", gameProvider.languageCode), textAlign: TextAlign.center,))
+                                      );
                                     },
                                     child: Column(
                                       children: [
@@ -317,7 +448,18 @@ class _ProfilePageState extends State<ProfilePage> {
                                     child: Column(
                                       children: [
                                         const Expanded(flex: 1, child: Text(""),),
-                                        Icon(Icons.language, size: 60),
+                                        if (gameProvider.languageCode == "en") 
+                                          Image(
+                                            image: AssetImage('lib/assets/usa_lang.png'), 
+                                            width: 60, 
+                                            height: 60,
+                                          ) 
+                                        else 
+                                          Image(
+                                            image: AssetImage('lib/assets/rus_lang.png'),
+                                            width: 60,
+                                            height: 60,
+                                          ),
                                         const Expanded(flex: 1, child: Text(""),),
                                         Text(gameProvider.localizations!.getString("profile_language", gameProvider.languageCode), style: buttonTextStyle, textAlign: TextAlign.center,),
                                         const Expanded(flex: 1, child: Text(""),),

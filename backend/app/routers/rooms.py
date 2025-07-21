@@ -60,7 +60,7 @@ async def join_room(request: JoinRoomRequest):
         raise HTTPException(status_code=403, detail="Game already started")
     
     try:
-        await add_user_to_room(request.user_id, request.assigned_id)
+        await add_user_to_room(request.user_id, request.assigned_id, room_type="private")
     except Exception as e:
         if "User already in the room" in str(e):
             raise HTTPException(status_code=409, detail="User already in the room")
@@ -177,14 +177,6 @@ async def find_online(user_id: int = Body(..., embed=True)):
     online_queue.append(user_id)
     online_queue_status[user_id] = {"status":"waiting"}
     
-    # if len(online_queue) >= ONLINE_ROOM_SIZE:
-    #     while len(online_queue) >= ONLINE_ROOM_SIZE:
-    #         players = online_queue[:ONLINE_ROOM_SIZE]
-    #         for uid in players:
-    #             online_queue.remove(uid)
-    #         await start_online_game(players)
-    #     return online_queue_status[user_id]
-    # return {"status":"waiting"}
     if len(online_queue) >= 2:
         players = online_queue[:ONLINE_ROOM_SIZE]
         for uid in players:

@@ -4,7 +4,7 @@ name: CI/CD Pipeline
 
 on:
   push:
-    branches: [ refact ]
+    branches: [ main ]
 
 # Global environment variables used across all jobs
 env:
@@ -13,8 +13,72 @@ env:
   FRONTEND_TAG: frontend-${{ github.sha }}  # Unique tag for frontend image using commit SHA
 
 jobs:
+  backend_test:
+    runs-on: ubuntu-latest
+    env:
+      # Database and project configuration from GitHub secrets
+      DATABASE_URL: ${{ secrets.DATABASE_URL }}
+      PROJECT_ID: ${{ secrets.PROJECT_ID }}
+      DB_USER: ${{ secrets.DB_USER }}
+      DB_PASS: ${{ secrets.DB_PASS }}
+      BRANCH_ID=: ${{ secrets.BRANCH_ID }}
+    steps:
+      - uses: actions/checkout@v3
+      
+      # Set up Python 3.11 environment
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.11'
+          
+      # Install Python dependencies from requirements.txt
+      - name: Install dependencies
+        working-directory: ./backend
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+          
+      - name: Run Unit and Api tests
+        working-directory: ./backend
+        run: |
+          export PYTHONPATH=$PYTHONPATH:$GITHUB_WORKSPACE
+          cd tests
+          pytest -v test_unit.py
+          pytest -v test_api_integration.py
+
+  # Job 2: Run frontend tests (Flutter/Dart) - only runs if backend tests pass
+  frontend_test:
+    needs: backend_test
+    runs-on: ubuntu-latest
+    env:
+      # Same environment variables as backend for consistency
+      DATABASE_URL: ${{ secrets.DATABASE_URL }}
+      PROJECT_ID: ${{ secrets.PROJECT_ID }}
+      DB_USER: ${{ secrets.DB_USER }}
+      DB_PASS: ${{ secrets.DB_PASS }}
+      BRANCH_ID=: ${{ secrets.BRANCH_ID }}
+    steps:
+      - uses: actions/checkout@v3
+      
+      # Set up Flutter SDK with specific version for consistency
+      - name: Set up Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          flutter-version: '3.32.1'  
+          channel: 'stable'
+          
+      - name: Install dependencies
+        working-directory: ./frontend
+        run: flutter pub get
+
+      - name: Run Flutter widget tests
+        working-directory: ./frontend
+        run: flutter test test/widget_test.dart
+       
+
   # Job 3: Build Docker images and push to Docker Hub - only runs if all tests pass
-  build-and-push: 
+  build-and-push:
+    needs: frontend_test  
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3

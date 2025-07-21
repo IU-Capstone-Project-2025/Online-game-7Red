@@ -176,10 +176,8 @@ async def game_websocket(
                     #is_winning = True
                     logging.info(f"this is type now: {type_cur}")
 
-                #print(f'Cur player before {game.current_player}')
                 prev_player = game.current_player
                 game.next_player() #changing current player to the next one
-                #print(f'Cur player after {game.current_player}')
                 logging.info(f"List of EXITED IDS: {manager.exited_id[room_id]}")
 
                 is_active = True #variable for correctly handling switch between active/inactive states of a player

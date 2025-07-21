@@ -364,7 +364,7 @@ class Red7Env:
             return self._get_obs(), reward, self.done, {}
         reward += 0.3
         has_winning_move = any(
-            check_win(opponent_palette + [rc], [palette], card_color(rc))
+            check_win(opponent_palette + [rc], [palette], self.rule)
             for rc in opponent_hand
         ) or any(
             check_win(opponent_palette, [palette], card_color(rc))

@@ -44,7 +44,7 @@ class _ConfirmExitState extends State<confirmExit> {
                 Row(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    Text("Are you sure you\nwant to exit?", style: confirmExitStyle, textAlign: TextAlign.center,),
+                    Text(gameProvider.languageCode == "en" ? "Are you sure you\nwant to exit?" : "Вы уверены, что\nхотите выйти?", style: confirmExitStyle, textAlign: TextAlign.center,),
                   ],
                 ),
                 Expanded(flex: 1, child: Text(""),),
@@ -82,7 +82,7 @@ class _ConfirmExitState extends State<confirmExit> {
                         const Expanded(flex: 1, child: Text(""),),
                         Icon(Icons.door_back_door_outlined, size: 70),
                         const Expanded(flex: 1, child: Text(""),),
-                        Text("Leave the room", style: buttonTextStyle, textAlign: TextAlign.center,),
+                        Text(gameProvider.localizations!.getString("room_leave", gameProvider.languageCode), style: buttonTextStyle, textAlign: TextAlign.center,),
                         const Expanded(flex: 1, child: Text(""),),
                       ],
                     ),

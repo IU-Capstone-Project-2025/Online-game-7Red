@@ -32,3 +32,5 @@ String onlineLeaveUrl = '/api/rooms/cancel_find_online';
 String changeNicknameUrl = '/api/settings/change_nickname';
 String changeEmailUrl = '/api/settings/change_email';
 String changePasswordUrl = '/api/settings/change_password';
+String uploadImageUrl = '/api/profile_page/upload-avatar/';
+String fetchImageUrl = '/api/profile_page/get-avatar/';

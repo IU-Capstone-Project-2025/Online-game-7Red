@@ -5,6 +5,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:circular_countdown_timer/circular_countdown_timer.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
+import 'package:provider/provider.dart';
 
 import '../data/styles.dart';
 import '../customWidgets/cards.dart';
@@ -12,6 +13,7 @@ import '../socket/web_socket.dart';
 import '../data/player.dart';
 import '../data/urls.dart';
 import '../customWidgets/ruleDialog.dart';
+import 'package:frontend/providers/provider.dart';
 
 class GameRoomPage extends StatefulWidget {
   const GameRoomPage({super.key});
@@ -73,11 +75,27 @@ class _GameRoomPageState extends State<GameRoomPage> {
   int delay = 5;
   int delayWin = 5;
 
+  bool exited = false;
+
+  Color ringColorUp = greyTimerColor;
+  Color ringColorLeft = greyTimerColor;
+  Color ringColorRight = greyTimerColor;
+  Color ringColorDown = greyTimerColor;
+
+  int myTimerDuration = 60;
+  bool isReverseAnimationDown = true;
+  Color MyTimerColor = greenTimerColor;
+
+  Image? _downloadedAvatarUp;
+  Image? _downloadedAvatarLeft;
+  Image? _downloadedAvatarRight;
+  Image? _downloadedAvatarDown;
+
   @override
   void initState() {
     super.initState();
     // connect to web socket immediately
-    _connectToWebSocket();
+    _connectToWebSocket(); 
   }
 
   void _connectToWebSocket() async{
@@ -132,7 +150,9 @@ class _GameRoomPageState extends State<GameRoomPage> {
         _handleRightTurn();
         break;
       case 'change_turn':
-        _handleChangeTurn(message);
+        if (!exited) {
+          _handleChangeTurn(message);
+        } 
         break;
     }
   }
@@ -173,8 +193,12 @@ class _GameRoomPageState extends State<GameRoomPage> {
           if (player.isMe == false ) {
             playerUp = player;
             timers = [_countDownControllerDown, _countDownControllerUp];
+            _fetchAvatar(_activePlayers[0], "up");
+            _fetchAvatar(_activePlayers[1], "down");
           } else {
             playerUp = _players.firstWhere((p) => p.id == _activePlayers[1]);
+            _fetchAvatar(_activePlayers[1], "up");
+            _fetchAvatar(_activePlayers[0], "down");
             timers = [_countDownControllerUp, _countDownControllerDown];
           }
         }
@@ -183,6 +207,9 @@ class _GameRoomPageState extends State<GameRoomPage> {
         final myIndex = _players.indexOf(_players.firstWhere((p) => p.id == userID));
         playerRight = _players[(myIndex + 1) % _players.length];
         playerLeft = _players[(myIndex + 2) % _players.length];
+        _fetchAvatar(_activePlayers[myIndex], "down");
+        _fetchAvatar(_activePlayers[(myIndex + 1) % _players.length], "right");
+        _fetchAvatar(_activePlayers[(myIndex + 2) % _players.length], "left");
         // Set animated timers
         timers = [_countDownControllerDown, _countDownControllerDown, _countDownControllerDown,];
         timers[(myIndex + 1) % _players.length] = _countDownControllerDown;
@@ -194,6 +221,10 @@ class _GameRoomPageState extends State<GameRoomPage> {
         playerRight = _players[(myIndex + 1) % _players.length];
         playerUp = _players[(myIndex + 2) % _players.length];
         playerLeft = _players[(myIndex + 3) % _players.length];
+        _fetchAvatar(_activePlayers[myIndex], "down");
+        _fetchAvatar(_activePlayers[(myIndex + 1) % _players.length], "right");
+        _fetchAvatar(_activePlayers[(myIndex + 2) % _players.length], "up");
+        _fetchAvatar(_activePlayers[(myIndex + 3) % _players.length], "left");
         // Set animated timers
         timers = [_countDownControllerDown, _countDownControllerDown, _countDownControllerDown, _countDownControllerDown];
         timers[(myIndex + 1) % _players.length] = _countDownControllerDown;
@@ -254,20 +285,26 @@ class _GameRoomPageState extends State<GameRoomPage> {
         if (gamemode == 2 && _activePlayers.length != 2) {
           if (player.id == playerUp!.id) {
             playerUp!.pallete = [];
+            ringColorUp = redCard;
           }
         } else if (gamemode == 3 && _activePlayers.length != 2) {
           if (player.id == playerRight!.id) {
             playerRight!.pallete = [];
+            ringColorRight = redCard;
           } else if (player.id == playerLeft!.id) {
             playerLeft!.pallete = [];
+            ringColorLeft = redCard;
           }
         } else if (gamemode == 4 && _activePlayers.length != 2) {
           if (player.id == playerRight!.id) {
             playerRight!.pallete = [];
+            ringColorRight = redCard;
           } else if (player.id == playerUp!.id) {
             playerUp!.pallete = [];
+            ringColorUp = redCard;
           } else if (player.id == playerLeft!.id) {
             playerLeft!.pallete = [];
+            ringColorLeft = redCard;
           }
         }
         // Remove player from active players, kill his timer
@@ -339,16 +376,82 @@ class _GameRoomPageState extends State<GameRoomPage> {
           timer.reset();
         }
         _allTimeTimer?.cancel();
-        if (youLose == false) {
-          myPlace = 1;
-        }
         // set a place for the winner
         _players[_players.indexOf(_players.firstWhere((p) => p.id == _currentPlayerId))].place = 1;
+
+        if (youLose == false) {
+          myPlace = 1;
+          // Анимация выигрыша (Фиолетовый кружочек), а оставшемуся красный кружочек
+          setState(() {
+            // myTimerDuration = 5;
+            isReverseAnimationDown = false;
+            ringColorDown = violetCard;
+            MyTimerColor = greyTimerColor;
+            if (gamemode == 2) {
+              ringColorUp = redCard;
+            } else if (gamemode == 3) {
+              if (timers[(_players.indexOf(_players.firstWhere((p) => p.place == 2)) + 1) % _players.length] == _countDownControllerRight) {
+              ringColorRight = redCard;
+              } else if (timers[(_players.indexOf(_players.firstWhere((p) => p.place == 2)) + 1) % _players.length] == _countDownControllerLeft) {
+                ringColorLeft = redCard;
+              }
+            } else if (gamemode == 4) {
+              if (timers[(_players.indexOf(_players.firstWhere((p) => p.place == 2)) + 1) % _players.length] == _countDownControllerRight) {
+              ringColorRight = redCard;
+              } else if (timers[(_players.indexOf(_players.firstWhere((p) => p.place == 2)) + 1) % _players.length] == _countDownControllerUp) {
+                ringColorUp = redCard;
+              } else if (timers[(_players.indexOf(_players.firstWhere((p) => p.place == 2)) + 1) % _players.length] == _countDownControllerLeft) {
+                ringColorLeft = redCard;
+              }
+            }
+          });
+          _countDownControllerDown.restart(duration: 5);
+        } else {
+          // Анимация проигрыша (Красный кружочек), а оставшемуся фиолетовый кружочек
+          if (_players.firstWhere((p) => p.id == userID).place == 2) {
+            setState(() {
+              // myTimerDuration = 5;
+              isReverseAnimationDown = false;
+              ringColorDown = redCard;
+              MyTimerColor = greyTimerColor;
+            });
+            _countDownControllerDown.restart(duration: 5);
+          }
+          if (gamemode == 2) {
+            ringColorUp = violetCard;
+          } else if (gamemode == 3) {
+            if (timers[(_players.indexOf(_players.firstWhere((p) => p.place == 2)) + 1) % _players.length] == _countDownControllerRight) {
+            ringColorRight = redCard;
+            } else if (timers[(_players.indexOf(_players.firstWhere((p) => p.place == 2)) + 1) % _players.length] == _countDownControllerLeft) {
+              ringColorLeft = redCard;
+            }
+            if (timers[(_players.indexOf(_players.firstWhere((p) => p.place == 1)) + 1) % _players.length] == _countDownControllerRight) {
+            ringColorRight = violetCard;
+            } else if (timers[(_players.indexOf(_players.firstWhere((p) => p.place == 1)) + 1) % _players.length] == _countDownControllerLeft) {
+              ringColorLeft = violetCard;
+            }
+          } else if (gamemode == 4) {
+            if (timers[(_players.indexOf(_players.firstWhere((p) => p.place == 2)) + 1) % _players.length] == _countDownControllerRight) {
+            ringColorRight = redCard;
+            } else if (timers[(_players.indexOf(_players.firstWhere((p) => p.place == 2)) + 1) % _players.length] == _countDownControllerUp) {
+              ringColorUp = redCard;
+            } else if (timers[(_players.indexOf(_players.firstWhere((p) => p.place == 2)) + 1) % _players.length] == _countDownControllerLeft) {
+              ringColorLeft = redCard;
+            }
+            if (timers[(_players.indexOf(_players.firstWhere((p) => p.place == 1)) + 1) % _players.length] == _countDownControllerRight) {
+            ringColorRight = violetCard;
+            } else if (timers[(_players.indexOf(_players.firstWhere((p) => p.place == 1)) + 1) % _players.length] == _countDownControllerUp) {
+              ringColorUp = violetCard;
+            } else if (timers[(_players.indexOf(_players.firstWhere((p) => p.place == 1)) + 1) % _players.length] == _countDownControllerLeft) {
+              ringColorLeft = violetCard;
+            }
+          }
+        }
         _webSocket.disconnect();
         // Win
-        ScaffoldMessenger.of(
-            context,
-          ).showSnackBar(SnackBar(content: Text('Game is over!')));
+        // ScaffoldMessenger.of(
+        //     context,
+        //   ).showSnackBar(SnackBar(content: Text(Provider.of<GameProvider>(context).localizations!.getString('game_over', Provider.of<GameProvider>(context).languageCode), textAlign: TextAlign.center,)));
         delayWin = 5;
         _delayTimer = Timer.periodic(Duration(seconds: 1), (timer) {
           if (delayWin > 0) {
@@ -375,9 +478,17 @@ class _GameRoomPageState extends State<GameRoomPage> {
           // set a place for the looser
           _players[_players.indexOf(_players.firstWhere((p) => p.id == _currentPlayerId))].place = _activePlayers.length;
           // Loose
-          ScaffoldMessenger.of(
-            context,
-          ).showSnackBar(SnackBar(content: Text('You are loose')));
+          // Анимация проигрыша (Красный кружочек)
+          setState(() {
+            // myTimerDuration = 5;
+            isReverseAnimationDown = false;
+            ringColorDown = redCard;
+            MyTimerColor = greyTimerColor;
+          });
+          _countDownControllerDown.restart(duration: 5);
+          // ScaffoldMessenger.of(
+          //   context,
+          // ).showSnackBar(SnackBar(content: Text(Provider.of<GameProvider>(context).localizations!.getString('game_lose', Provider.of<GameProvider>(context).languageCode), textAlign: TextAlign.center,)));
           delay = 5;
           _delayTimer = Timer.periodic(Duration(seconds: 1), (timer) {
             if (delay > 0) {
@@ -392,20 +503,20 @@ class _GameRoomPageState extends State<GameRoomPage> {
             }
           });
           return;
-        }
-        if (_nextLose == 1 && _activePlayers.length == 2) {
+        } else if (_nextLose == 1 && _activePlayers.length == 2) {
           _turnTimer?.cancel();
           youLose = true;
           myPlace = _activePlayers.length;
           // set a place for the looser
           _players[_players.indexOf(_players.firstWhere((p) => p.id == _currentPlayerId))].place = _activePlayers.length;
+        } else {
+          // Start my turn
+          myTurn = true;
+          palleteChanged = false;
+          ruleChanged = false;
+          my_pallete_ch = "";
+          myAllTurn = true;
         }
-        // Start my turn
-        myTurn = true;
-        palleteChanged = false;
-        ruleChanged = false;
-        my_pallete_ch = "";
-        myAllTurn = true;
       }
       // Start turn timer
       _startTurnTimer();
@@ -426,7 +537,7 @@ class _GameRoomPageState extends State<GameRoomPage> {
           timer.cancel();
           // If time is over and it is turn of this player — senf timeout to Backend
           if (myAllTurn) {
-            _submitTurnTimeout();
+            _submitTurnTimeout(true);
           }
         }
       });
@@ -497,7 +608,7 @@ class _GameRoomPageState extends State<GameRoomPage> {
   ///
   /// The server then handles the message and sends a response to all the players
   /// in the room.
-  void _submitTurnTimeout() {
+  void _submitTurnTimeout(bool isTimeOut) {
     _turnTimer?.cancel();
 
     setState(() {
@@ -509,7 +620,9 @@ class _GameRoomPageState extends State<GameRoomPage> {
       myPlace = _activePlayers.length;
       _players[_players.indexOf(_players.firstWhere((p) => p.id == _currentPlayerId))].place = _activePlayers.length;
       // Loose
-      loosing();
+      if (isTimeOut) {
+        loosing();
+      }
     });
 
     final message = {
@@ -599,15 +712,18 @@ class _GameRoomPageState extends State<GameRoomPage> {
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
                     Expanded(flex: 1, child: Text(""),), 
-                    Text(myPlace == 1 ? "1st" : (myPlace == 2 ? "2nd" : (myPlace == 3 ? "3rd" : "4th") ), style: resLoseStyleBig),
-                    Text("place", style: resLoseStyle,),
+                    Text(myPlace == 1 ? Provider.of<GameProvider>(context).localizations!.getString('game_first_place', Provider.of<GameProvider>(context).languageCode)
+                        : (myPlace == 2 ? Provider.of<GameProvider>(context).localizations!.getString('game_second_place', Provider.of<GameProvider>(context).languageCode) 
+                        : (myPlace == 3 ? Provider.of<GameProvider>(context).localizations!.getString('game_third_place', Provider.of<GameProvider>(context).languageCode)  
+                        : Provider.of<GameProvider>(context).localizations!.getString('game_fourth_place', Provider.of<GameProvider>(context).languageCode)  )), style: resLoseStyleBig),
+                    Text(Provider.of<GameProvider>(context).localizations!.getString('game_place', Provider.of<GameProvider>(context).languageCode)  , style: resLoseStyle,),
                     Expanded(flex: 1, child: Text(""),),
                     Row(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
                         SizedBox(
-                          width: 114,
-                          height: 114,
+                          width: Provider.of<GameProvider>(context).languageCode == 'en' ? 114 : 122,
+                          height: Provider.of<GameProvider>(context).languageCode == 'en' ? 114 : 122,
                           child: ElevatedButton(
                             style: ButtonStyle(
                                 backgroundColor: WidgetStateProperty.all<Color>(
@@ -637,7 +753,7 @@ class _GameRoomPageState extends State<GameRoomPage> {
                                 const Expanded(flex: 1, child: Text(""),),
                                 Icon(Icons.remove_red_eye_outlined, size: 70),
                                 const Expanded(flex: 1, child: Text(""),),
-                                Text("Spectator", style: buttonTextStyle, textAlign: TextAlign.center,),
+                                Text(Provider.of<GameProvider>(context).localizations!.getString('game_spectator', Provider.of<GameProvider>(context).languageCode)  , style: buttonTextStyle, textAlign: TextAlign.center,),
                                 const Expanded(flex: 1, child: Text(""),),
                               ],
                             ),
@@ -645,8 +761,8 @@ class _GameRoomPageState extends State<GameRoomPage> {
                         ),
                         Padding(padding: const EdgeInsets.only(left: 40)),
                         SizedBox(
-                          width: 114,
-                          height: 114,
+                          width: Provider.of<GameProvider>(context).languageCode == 'en' ? 114 : 122,
+                          height: Provider.of<GameProvider>(context).languageCode == 'en' ? 114 : 122,
                           child: ElevatedButton(
                             style: ButtonStyle(
                                 backgroundColor: WidgetStateProperty.all<Color>(
@@ -691,7 +807,7 @@ class _GameRoomPageState extends State<GameRoomPage> {
                                 const Expanded(flex: 1, child: Text(""),),
                                 Icon(Icons.door_back_door_outlined, size: 70),
                                 const Expanded(flex: 1, child: Text(""),),
-                                Text("Leave the room", style: buttonTextStyle, textAlign: TextAlign.center,),
+                                Text(Provider.of<GameProvider>(context).localizations!.getString('room_leave', Provider.of<GameProvider>(context).languageCode)  , style: buttonTextStyle, textAlign: TextAlign.center,),
                                 const Expanded(flex: 1, child: Text(""),),
                               ],
                             ),
@@ -742,7 +858,7 @@ class _GameRoomPageState extends State<GameRoomPage> {
                     Row(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        Text("Are you sure you want to exit?\nYou will not be able to return to\nthe game", style: confirmExitStyle, textAlign: TextAlign.center,),
+                        Text(Provider.of<GameProvider>(context).localizations!.getString('game_confirm_exit', Provider.of<GameProvider>(context).languageCode)  , style: confirmExitStyle, textAlign: TextAlign.center,),
                       ],
                     ),
                     Expanded(flex: 1, child: Text(""),),
@@ -773,20 +889,25 @@ class _GameRoomPageState extends State<GameRoomPage> {
                         onPressed: () async {
                           _turnTimer!.cancel();
                           _allTimeTimer?.cancel();
+                          exited = true;
                           if (myAllTurn) {
-                            _submitTurnTimeout();
+                            _submitTurnTimeout(false);    // При выходе во время своего хода отправляю таймаут
+                            // _webSocket.disconnect();   // Если сразу закрываю вебсокет — другие игроки не видят ход и ждут бескоенечно
                           } else {
-                            _exit();
+                            _exit();                      // При выходе вне своего хода. Тут пофиг, оно всегда работает
                           }
                           if (!aiGame) {
-                            await leaveRoom(userID!, roomID!);
+                            await leaveRoom(userID!, roomID!);  // выхожу из комнаты через http
                           }
                           SharedPreferences prefs = await SharedPreferences.getInstance();
                           await prefs.remove('roomId');
                           await prefs.remove('roomPassword');
                           await prefs.remove('aiGame');
                           await prefs.remove('playerNum');
-                          _webSocket.disconnect();
+                          _webSocket.disconnect();        // Если закрываю вебсокет спустя кучу времени — оно успевает прислать мне всё, что
+                                                          // было после моего выхода (как я проиграл и тд), но тут уже у челика могут быть 
+                                                          // проблемы с тем, что он в главном меню, а его перекидывает в страничку с результатами 
+                                                          // (если это была игра 1 на 1)
                           Navigator.of(context).pop();
                           Navigator.pushNamed(context, '/mainmenu');
                         },
@@ -795,7 +916,7 @@ class _GameRoomPageState extends State<GameRoomPage> {
                             const Expanded(flex: 1, child: Text(""),),
                             Icon(Icons.door_back_door_outlined, size: 70),
                             const Expanded(flex: 1, child: Text(""),),
-                            Text("Leave the room", style: buttonTextStyle, textAlign: TextAlign.center,),
+                            Text(Provider.of<GameProvider>(context).localizations!.getString('room_leave', Provider.of<GameProvider>(context).languageCode)  , style: buttonTextStyle, textAlign: TextAlign.center,),
                             const Expanded(flex: 1, child: Text(""),),
                           ],
                         ),
@@ -847,10 +968,36 @@ class _GameRoomPageState extends State<GameRoomPage> {
     Navigator.pushNamed(context, '/result');
   }
 
+  Future<void> _fetchAvatar(int id, String position) async {
+    final uri = Uri.parse("$fetchImageUrl$id");
+
+    try {
+      final response = await http.get(uri);
+      if (response.statusCode == 200) {
+        setState(() {
+          if (position == 'left') {
+            _downloadedAvatarLeft = Image.memory(response.bodyBytes, fit: BoxFit.cover);
+          } else if (position == 'right') {
+            _downloadedAvatarRight = Image.memory(response.bodyBytes, fit: BoxFit.cover);
+          } else if (position == 'up') {
+            _downloadedAvatarUp = Image.memory(response.bodyBytes, fit: BoxFit.cover);
+          } else if (position == 'down') {
+            _downloadedAvatarDown = Image.memory(response.bodyBytes, fit: BoxFit.cover);
+          }
+        });
+      } else {
+        print("Аватар не был загружен до этого");
+      }
+    } catch (e) {
+      print("Fetch error: $e");
+    }
+  }
+
 
   
   @override
   Widget build(BuildContext context) {
+    final gameProvider = Provider.of<GameProvider>(context);
 
     return Scaffold(
       body: Container(
@@ -898,11 +1045,19 @@ class _GameRoomPageState extends State<GameRoomPage> {
                       },
                       strokeCap: StrokeCap.round,
                       isReverseAnimation: true,
-                      ringColor: greyTimerColor,
+                      ringColor: ringColorUp,
                       autoStart: false,
                       textStyle: invisTextStyle,
                       ),
-                      Icon(Icons.account_circle, size: 72, color: grey3A3A3AColor,),
+                      _downloadedAvatarUp != null
+                        ? SizedBox(
+                          width: 59,
+                          height: 59,
+                          child: ClipOval(
+                            child: _downloadedAvatarUp
+                          ),
+                        )
+                        : Icon(Icons.account_circle, size: 72, color: grey3A3A3AColor,),
                     ],
                   ),
                   if (gamemode == 2 || gamemode == 4)
@@ -915,7 +1070,7 @@ class _GameRoomPageState extends State<GameRoomPage> {
                         children: [
                           Icon(playerUp != null ? getNumOfCardsIcon(playerUp!.numOfCards) : Icons.filter_7, size: 24, color: grey3A3A3AColor,),
                           Padding(padding: const EdgeInsets.only(right: 5),),
-                          Text(playerUp?.name ?? "Waiting...", style: buttonTextStyle),
+                          Text(playerUp?.name ?? gameProvider.localizations!.getString("waiting", gameProvider.languageCode), style: buttonTextStyle),
                         ],
                       )
                     ]
@@ -950,19 +1105,27 @@ class _GameRoomPageState extends State<GameRoomPage> {
                           },
                           strokeCap: StrokeCap.round,
                           isReverseAnimation: true,
-                          ringColor: greyTimerColor,
+                          ringColor: ringColorLeft,
                           autoStart: false,
                           textStyle: invisTextStyle,
                           ),
-                          Icon(Icons.account_circle, size: 72, color: grey3A3A3AColor,),
-                        ],
+                          _downloadedAvatarLeft != null
+                            ? SizedBox(
+                              width: 59,
+                              height: 59,
+                              child: ClipOval(
+                                child: _downloadedAvatarLeft
+                              ),
+                            )
+                            : Icon(Icons.account_circle, size: 72, color: grey3A3A3AColor,),
+                            ],
                       ),
                       Padding(padding: const EdgeInsets.only(top: 5)),
                       Row(
                         children: [
                           Icon(playerLeft != null ? getNumOfCardsIcon(playerLeft!.numOfCards) : Icons.filter_7, size: 24, color: grey3A3A3AColor,),
                           Padding(padding: const EdgeInsets.only(right: 5),),
-                          Text(playerLeft?.name ?? "Waiting...", style: buttonTextStyle),
+                          Text(playerLeft?.name ?? gameProvider.localizations!.getString("waiting", gameProvider.languageCode), style: buttonTextStyle),
                         ],
                       )
                   ]),
@@ -1040,8 +1203,8 @@ class _GameRoomPageState extends State<GameRoomPage> {
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
                           Image(
-                            image: AssetImage('lib/assets/rules_pallete.png'),
-                            width: 310,
+                            image: AssetImage(gameProvider.languageCode == 'en' ? 'lib/assets/rules_pallete.png' : 'lib/assets/rules_pallete_ru.png'),
+                            width: 330,
                             height: 161,
                           ),
                           Padding(padding: const EdgeInsets.only(left: 29)),
@@ -1161,19 +1324,27 @@ class _GameRoomPageState extends State<GameRoomPage> {
                           },
                           strokeCap: StrokeCap.round,
                           isReverseAnimation: true,
-                          ringColor: greyTimerColor,
+                          ringColor: ringColorRight,
                           autoStart: false,
                           textStyle: invisTextStyle,
                           ),
-                          Icon(Icons.account_circle, size: 72, color: grey3A3A3AColor,),
-                        ],
+                          _downloadedAvatarRight != null
+                            ? SizedBox(
+                              width: 59,
+                              height: 59,
+                              child: ClipOval(
+                                child: _downloadedAvatarRight
+                              ),
+                            )
+                            : Icon(Icons.account_circle, size: 72, color: grey3A3A3AColor,),
+                            ],
                       ),
                       Padding(padding: const EdgeInsets.only(top: 5)),
                       Row(
                         children: [
                           Icon(playerRight != null ? getNumOfCardsIcon(playerRight!.numOfCards) : Icons.filter_7, size: 24, color: grey3A3A3AColor,),
                           Padding(padding: const EdgeInsets.only(right: 5),),
-                          Text(playerRight?.name ?? "Waiting...", style: buttonTextStyle),
+                          Text(playerRight?.name ?? gameProvider.localizations!.getString("waiting", gameProvider.languageCode), style: buttonTextStyle),
                         ],
                       )
                   ]),
@@ -1198,6 +1369,7 @@ class _GameRoomPageState extends State<GameRoomPage> {
                           mainAxisAlignment: MainAxisAlignment.center,
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
+                            Padding(padding: const EdgeInsets.only(right: 55), child: Text(""),),
                             Expanded(flex: 1, child: Text("")),
                             Column(
                               children: [
@@ -1207,9 +1379,9 @@ class _GameRoomPageState extends State<GameRoomPage> {
                                   children: [
                                     CircularCountDownTimer(
                                     controller: _countDownControllerDown,
-                                    duration: 60,
+                                    duration: myTimerDuration,
                                     isReverse: true,
-                                    fillColor: greenTimerColor,
+                                    fillColor: MyTimerColor,
                                     height: 67,
                                     width: 67,
                                     strokeWidth: 7,
@@ -1217,12 +1389,20 @@ class _GameRoomPageState extends State<GameRoomPage> {
                                       // later
                                     },
                                     strokeCap: StrokeCap.round,
-                                    isReverseAnimation: true,
-                                    ringColor: greyTimerColor,
+                                    isReverseAnimation: isReverseAnimationDown,
+                                    ringColor: ringColorDown,
                                     autoStart: false,
                                     textStyle: invisTextStyle,
                                     ),
-                                    Icon(Icons.account_circle, size: 72, color: grey3A3A3AColor,),
+                                    _downloadedAvatarDown != null
+                                      ? SizedBox(
+                                        width: 59,
+                                        height: 59,
+                                        child: ClipOval(
+                                          child: _downloadedAvatarDown
+                                        ),
+                                      )
+                                      : Icon(Icons.account_circle, size: 72, color: grey3A3A3AColor,),
                                   ],
                                 ),
                               ],
@@ -1269,7 +1449,7 @@ class _GameRoomPageState extends State<GameRoomPage> {
                                 children: [
                                   Padding(padding: const EdgeInsets.only(top: 20)),
                                   SizedBox(
-                                    width: 105,
+                                    width: 115,
                                     height: 50,
                                     child: 
                                     ElevatedButton(
@@ -1285,16 +1465,21 @@ class _GameRoomPageState extends State<GameRoomPage> {
                                           _submitTurn();
                                         }
                                       },
-                                    child: Text('SUBMIT'),
+                                    child: Text(
+                                      gameProvider.localizations!.getString("game_submit", gameProvider.languageCode),),
                                     ),
                                   ),
                                 ],
                               )
                             else 
-                              SizedBox(
-                                height: 105,
-                                width: 50,
-                                child: Text(''),
+                              Column(
+                                children: [
+                                  SizedBox(
+                                    height: 115,
+                                    width: 50,
+                                    child: Text(''),
+                                  ),
+                                ],
                               ),
                             Expanded(flex: 1, child: Text("")),
                             IconButton(

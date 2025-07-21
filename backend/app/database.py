@@ -9,7 +9,7 @@ from asyncio import Lock
 room_add_lock = Lock()
 
 # Load environment variables from .env file
-load_dotenv(os.path.join(os.path.dirname(__file__), '../database/.env'))
+load_dotenv(os.path.join(os.path.dirname(__file__), '../../.env'))
 
 # Get database URL from environment variables
 DATABASE_URL = os.getenv("DATABASE_URL")
@@ -158,7 +158,7 @@ async def create_user(login: str, password: str, created_at: datetime | None = N
     return await database.execute(query)
 
 # Delete a user account by ID
-async def delete_user(user_id: int):
+async def delete_user_from_db(user_id: int):
     query = users.delete().where(users.c.id == user_id)
     return await database.execute(query)
 

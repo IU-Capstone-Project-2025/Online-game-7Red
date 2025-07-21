@@ -4,9 +4,13 @@ import 'dart:async';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:provider/provider.dart';
+import 'dart:math';
 
 import '../data/styles.dart';
 import '../data/urls.dart';
+import '../providers/provider.dart';
+import '../customWidgets/noOpponents.dart';
 
 class onlineSearchDialog extends StatefulWidget {
 
@@ -33,6 +37,7 @@ class _OnlineSearchDialogState extends State<onlineSearchDialog> {
   String room_id = '';
   String room_password = '';
   int myID = -1;
+  int? currHint;
 
   @override
   void initState() {
@@ -52,6 +57,7 @@ class _OnlineSearchDialogState extends State<onlineSearchDialog> {
     startTotalTimer();
     prefs = await SharedPreferences.getInstance();
     myID = prefs?.getInt('myID') ?? 0;
+    currHint = Random().nextInt(14);
     connectToRoom(myID);
   }
 
@@ -211,20 +217,16 @@ class _OnlineSearchDialogState extends State<onlineSearchDialog> {
       } else if (responseBody['status'] == "no_players") {
         stopTimers();
         Navigator.pop(context);
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text("Oops! No players found"),
-            backgroundColor: greyTimerColor,
-          ),
+        showDialog(
+          context: context,
+          builder: (context) => noOpponents(),
         );
       } else if (responseBody['status'] == "not_in_queue") {
         stopTimers();
         Navigator.pop(context);
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text("Oops! No players found"),
-            backgroundColor: greyTimerColor,
-          ),
+        showDialog(
+          context: context,
+          builder: (context) => noOpponents(),
         );
       }
     } else {
@@ -246,6 +248,8 @@ class _OnlineSearchDialogState extends State<onlineSearchDialog> {
 
   @override
   Widget build(BuildContext context) {
+  GameProvider gameProvider = Provider.of<GameProvider>(context);
+
   return Dialog(
     child: Container(
       width: 604,
@@ -269,7 +273,7 @@ class _OnlineSearchDialogState extends State<onlineSearchDialog> {
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
                 Expanded(flex: 1, child: Text("")),
-                Text("Searching your opponents...", style: titleStyle,),
+                Text(gameProvider.localizations!.getString("online_search_title", gameProvider.languageCode), style: titleStyle,),
                 Expanded(flex: 1, child: Text("")),
                 Stack(
                   alignment: Alignment.center,
@@ -308,11 +312,15 @@ class _OnlineSearchDialogState extends State<onlineSearchDialog> {
                       await leaveTheRoom(myID);
                       Navigator.pop(context);
                     },
-                  child: Text('CANCEL'),
+                  child: Text(gameProvider.localizations!.getString("online_search_cancel", gameProvider.languageCode)),
                   ),
                 ),
                 Expanded(flex: 1, child: Text("")),
-                Text("Hints about important points in the rules will change here", style: basicTextStyle,),
+                // Text(),
+                Padding(
+                  padding: const EdgeInsets.only(left: 20, right: 20),
+                  child: Text(gameProvider.localizations!.getString("online_search_hint_$currHint", gameProvider.languageCode), style: basicTextStyle, textAlign: TextAlign.center,),
+                ),
                 Expanded(flex: 1, child: Text("")),
               ],
             ),

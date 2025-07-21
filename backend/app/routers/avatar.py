@@ -13,14 +13,14 @@ from dotenv import load_dotenv
 router = APIRouter(prefix="/api/profile_page", tags=["Profile page"])
 
 #loading environment variables from .env file
-load_dotenv(os.path.join(os.path.dirname(__file__), '../database/.env'))
+load_dotenv(os.path.join(os.path.dirname(__file__), '../../../.env'))
 
 #getting server related data from environment variables
 SERVER_PW = os.getenv("SERVER_PW")
 
 #configuration
 ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg'}
-MAX_FILE_SIZE = 2 * 1024 * 1024  # 2MB
+MAX_FILE_SIZE = 1 * 1024 * 1024  # 1MB
 
 #function that checks correct file format
 def allowed_file(filename: str) -> bool:

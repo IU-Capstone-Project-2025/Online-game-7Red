@@ -59,7 +59,7 @@ class _SignInPageState extends State<SignInPage> {
     } else {
       setState(() {
         logSuccess = false;
-        postText = 'Invalid email or password';
+        postText = Provider.of<GameProvider>(context).localizations!.getString('sign_in_error_invalid_credentials', Provider.of<GameProvider>(context).languageCode);
       });
     }
   }
@@ -91,12 +91,23 @@ class _SignInPageState extends State<SignInPage> {
                     height: 60,
                     child: IconButton(
                       onPressed: () {
-                        Navigator.pushNamed(context, '/');
+                        Navigator.pop(context);
                       },
                       icon: const Icon(Icons.arrow_back_rounded, size: 44),
                     ),
                   ),
                   const Expanded(flex: 1, child: Text("")),
+                  SizedBox(
+                    width: 60,
+                    height: 60,
+                    child: IconButton(
+                      onPressed: () {
+                        gameProvider.toggleLanguage();
+                      },
+                      icon: const Icon(Icons.language, size: 44),
+                    ),
+                  ),
+                  Padding(padding: const EdgeInsets.only(left: 15)),
                 ],
               ),
               // Show Logo
@@ -106,7 +117,7 @@ class _SignInPageState extends State<SignInPage> {
                 height: 115,
               ),
               const Expanded(flex: 1, child: Text("")),
-              Text("Sign in to Red7", style: titleStyle),
+              Text(gameProvider.localizations!.getString("sign_in_title", gameProvider.languageCode), style: titleStyle),
               const Expanded(flex: 1, child: Text("")),
               Container(
                 width: 352,
@@ -123,7 +134,7 @@ class _SignInPageState extends State<SignInPage> {
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
                         Padding(padding: const EdgeInsets.only(left: 47)),
-                        Text("Email address", style: basicTextStyle,),
+                        Text(gameProvider.localizations!.getString("email", gameProvider.languageCode), style: basicTextStyle,),
                         const Expanded(flex: 1, child: Text("")),
                         Text(errEmail, style: errorTextStyle, textAlign: TextAlign.right),
                         Padding(padding: const EdgeInsets.only(right: 47)),
@@ -153,7 +164,7 @@ class _SignInPageState extends State<SignInPage> {
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
                         Padding(padding: const EdgeInsets.only(left: 47)),
-                        Text("Password", style: basicTextStyle),
+                        Text(gameProvider.localizations!.getString("password", gameProvider.languageCode), style: basicTextStyle),
                         const Expanded(flex: 1, child: Text("")),
                       ]
                     ),
@@ -223,12 +234,12 @@ class _SignInPageState extends State<SignInPage> {
                             // Check if all fields are filled
                             if (controller.text.isEmpty || controller2.text.isEmpty) {
                               setState(() {
-                                postText = 'All fields are required';
+                                postText = gameProvider.localizations!.getString("error_all_fields_required", gameProvider.languageCode);
                               });
                               return;
                             } else if (!EmailValidator.validate(controller.text)) { // Check if email is valid
                               setState(() {
-                                errEmail = 'Invalid email';
+                                errEmail = gameProvider.localizations!.getString("sign_in_error_invalid_email", gameProvider.languageCode);
                               });
                               return;
                             } else {
@@ -245,12 +256,12 @@ class _SignInPageState extends State<SignInPage> {
                               }
                             }
                           },
-                          child: const Text('SIGN  IN'),
+                          child: Text(gameProvider.localizations!.getString("sign_in_botton", gameProvider.languageCode)),
                         ),
                       ),
                       Padding(padding: const EdgeInsets.only(top: 5)),
                       // For error messages
-                      Text("$postText", style: errorTextStyle,),
+                      Text(postText, style: errorTextStyle,),
                       Padding(padding: const EdgeInsets.only(top: 5)),
                   ],
                 ),

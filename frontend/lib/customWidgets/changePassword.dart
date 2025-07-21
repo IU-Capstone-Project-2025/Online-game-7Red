@@ -66,17 +66,17 @@ class _ChangePasswordState extends State<changePassword> {
     } else if (responseBody['detail'] == 'User not found') {
       setState(() {
         logSuccess = false;
-        postText = 'User not found';
+        postText = Provider.of<GameProvider>(context).localizations!.getString('user_not_found', Provider.of<GameProvider>(context).languageCode);
       });
     } else if (responseBody['detail'] == 'Previous password is incorrect') {
       setState(() {
         logSuccess = false;
-        postText = 'Incorrect password';
+        postText = Provider.of<GameProvider>(context).localizations!.getString('incorrect_password', Provider.of<GameProvider>(context).languageCode);
       });
     } else if (responseBody['detail'] == 'Passwords do not match') {
       setState(() {
         logSuccess = false;
-        postText = 'Passwords different';
+        postText = Provider.of<GameProvider>(context).localizations!.getString('passwords_do_not_match', Provider.of<GameProvider>(context).languageCode);
       });
     } 
   }
@@ -111,7 +111,7 @@ class _ChangePasswordState extends State<changePassword> {
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
                   Padding(padding: const EdgeInsets.only(left: 47)),
-                  Text("Previous password", style: basicTextStyle,),
+                  Text(gameProvider.localizations!.getString("change_password_previous", gameProvider.languageCode), style: basicTextStyle,),
                   const Expanded(flex: 1, child: Text("")),
                   Text(errOld, style: errorTextStyle, textAlign: TextAlign.right),
                   Padding(padding: const EdgeInsets.only(right: 47)),
@@ -153,7 +153,7 @@ class _ChangePasswordState extends State<changePassword> {
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
                   Padding(padding: const EdgeInsets.only(left: 47)),
-                  Text("New password ", style: basicTextStyle),
+                  Text(gameProvider.localizations!.getString("change_password_new", gameProvider.languageCode), style: basicTextStyle),
                   const Expanded(flex: 1, child: Text("")),
                   Text(errNew1, style: errorTextStyle, textAlign: TextAlign.right),
                   Padding(padding: const EdgeInsets.only(right: 47)),
@@ -195,7 +195,7 @@ class _ChangePasswordState extends State<changePassword> {
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
                   Padding(padding: const EdgeInsets.only(left: 47)),
-                  Text("Repeat password", style: basicTextStyle),
+                  Text(gameProvider.localizations!.getString("change_password_repeat", gameProvider.languageCode), style: basicTextStyle),
                   const Expanded(flex: 1, child: Text("")),
                   Text(errNew2, style: errorTextStyle, textAlign: TextAlign.right),
                   Padding(padding: const EdgeInsets.only(right: 47)),
@@ -270,26 +270,26 @@ class _ChangePasswordState extends State<changePassword> {
                       // Check if all fields are filled
                       if (controller.text.isEmpty || controller2.text.isEmpty || controller3.text.isEmpty) {
                         setState(() {
-                          postText = 'All fields are required';
+                          postText = gameProvider.localizations!.getString("error_all_fields_required", gameProvider.languageCode);
                         });
                         return;
                       }
                       else if (controller.text.length > 16 || controller.text.length < 6) {
                         setState(() {
-                          errOld = '6-16 symbols';
+                          errOld = gameProvider.localizations!.getString("sign_up_error_password_length", gameProvider.languageCode);
                         });
                         return;
                       }
                       else if (controller2.text.length > 16 || controller2.text.length < 6) {
                         setState(() {
-                          errNew1 = '6-16 symbols';
+                          errNew1 = gameProvider.localizations!.getString("sign_up_error_password_length", gameProvider.languageCode);
                         });
                         return;
                       }
                       // Check if repeated password is valid
                       else if (controller2.text != controller3.text) {
                         setState(() {
-                          errNew2 = 'Different';
+                          errNew2 = gameProvider.localizations!.getString("sign_up_error_passwords_different", gameProvider.languageCode);
                         });
                         return;
                       } else {
@@ -301,7 +301,7 @@ class _ChangePasswordState extends State<changePassword> {
                         }
                       }
                     },
-                    child: const Text('CHANGE'),
+                    child: Text(gameProvider.localizations!.getString("change_pers_info_button", gameProvider.languageCode)),
                   ),
                 ),
                 Padding(padding: const EdgeInsets.only(top: 5)),

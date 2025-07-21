@@ -16,6 +16,7 @@ services:
       BRANCH_ID: ${BRANCH_ID}
       DATABASE_URL: ${DATABASE_URL}
       WS_URL: ${WS_URL}
+      SERVER_PW: ${SERVER_PW}
 
   frontend:
     # Using pre-built Docker image from Docker Hub
