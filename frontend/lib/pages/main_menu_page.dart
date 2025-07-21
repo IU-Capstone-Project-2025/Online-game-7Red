@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
+import 'package:shared_preferences/shared_preferences.dart';
 
 import '../data/styles.dart';
 import '../providers/provider.dart';
@@ -17,6 +18,7 @@ class MainMenuPage extends StatefulWidget {
 }
 
 class _MainMenuPageState extends State<MainMenuPage> {
+  SharedPreferences? prefs;
 
   String postText = '';
   bool logSuccess = false;
@@ -25,6 +27,23 @@ class _MainMenuPageState extends State<MainMenuPage> {
 
   String room_id = '';
   String room_password = '';
+  Image? _downloadedAvatar;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadData();
+  }
+
+  void _loadData() async {
+    if (Provider.of<GameProvider>(context).myID == -1) {
+      prefs = await SharedPreferences.getInstance();
+      Provider.of<GameProvider>(context).myID = await prefs?.getInt('myID') ?? -1;
+      print("user_id that I use for my account: ${Provider.of<GameProvider>(context).myID}");
+    }
+    _fetchAvatar();
+    setState(() {});
+  }
 
   Future<void> createRoom(int id) async {
     final url = Uri.parse('$createRoomUrl');
@@ -48,6 +67,23 @@ class _MainMenuPageState extends State<MainMenuPage> {
       setState(() {
         logSuccess = false;
       });
+    }
+  }
+
+  Future<void> _fetchAvatar() async {
+    final uri = Uri.parse("$fetchImageUrl${Provider.of<GameProvider>(context).myID}");
+
+    try {
+      final response = await http.get(uri);
+      if (response.statusCode == 200) {
+        setState(() {
+          _downloadedAvatar = Image.memory(response.bodyBytes, fit: BoxFit.cover);
+        });
+      } else {
+        print("Аватар не был загружен до этого");
+      }
+    } catch (e) {
+      print("Fetch error: $e");
     }
   }
 
@@ -76,9 +112,19 @@ class _MainMenuPageState extends State<MainMenuPage> {
                   Padding(padding: const EdgeInsets.only(left: 15)),
                   // Button to return to WelkomePage
                   SizedBox(
-                    width: 80,
-                    height: 80,
-                    child: Icon(Icons.account_circle, size: 60, color: grey3A3A3AColor,),
+                    width: 60,
+                    height: 60,
+                    child: _downloadedAvatar != null
+                      ?  Center(
+                        child: SizedBox(
+                          width: 49,
+                          height: 49,
+                          child: ClipOval(
+                            child: _downloadedAvatar
+                          ),
+                        ),
+                      )
+                      : Icon(Icons.account_circle, size: 60, color: grey3A3A3AColor,),
                   ),
                   Text(gameProvider.myName == "HaveNotName" ? gameProvider.localizations!.getString("loading", gameProvider.languageCode) : gameProvider.myName, style: nicknameStyle),
                   const Expanded(flex: 1, child: Text("")),

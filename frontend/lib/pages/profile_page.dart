@@ -143,7 +143,7 @@ class _ProfilePageState extends State<ProfilePage> {
                     height: 60,
                     child: IconButton(
                       onPressed: () {
-                        Navigator.pop(context);
+                        Navigator.pushNamed(context, '/mainmenu');
                       },
                       icon: const Icon(Icons.arrow_back_rounded, size: 44),
                     ),

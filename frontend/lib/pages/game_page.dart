@@ -86,6 +86,11 @@ class _GameRoomPageState extends State<GameRoomPage> {
   bool isReverseAnimationDown = true;
   Color MyTimerColor = greenTimerColor;
 
+  Image? _downloadedAvatarUp;
+  Image? _downloadedAvatarLeft;
+  Image? _downloadedAvatarRight;
+  Image? _downloadedAvatarDown;
+
   @override
   void initState() {
     super.initState();
@@ -188,8 +193,12 @@ class _GameRoomPageState extends State<GameRoomPage> {
           if (player.isMe == false ) {
             playerUp = player;
             timers = [_countDownControllerDown, _countDownControllerUp];
+            _fetchAvatar(_activePlayers[0], "up");
+            _fetchAvatar(_activePlayers[1], "down");
           } else {
             playerUp = _players.firstWhere((p) => p.id == _activePlayers[1]);
+            _fetchAvatar(_activePlayers[1], "up");
+            _fetchAvatar(_activePlayers[0], "down");
             timers = [_countDownControllerUp, _countDownControllerDown];
           }
         }
@@ -198,6 +207,9 @@ class _GameRoomPageState extends State<GameRoomPage> {
         final myIndex = _players.indexOf(_players.firstWhere((p) => p.id == userID));
         playerRight = _players[(myIndex + 1) % _players.length];
         playerLeft = _players[(myIndex + 2) % _players.length];
+        _fetchAvatar(_activePlayers[myIndex], "down");
+        _fetchAvatar(_activePlayers[(myIndex + 1) % _players.length], "right");
+        _fetchAvatar(_activePlayers[(myIndex + 2) % _players.length], "left");
         // Set animated timers
         timers = [_countDownControllerDown, _countDownControllerDown, _countDownControllerDown,];
         timers[(myIndex + 1) % _players.length] = _countDownControllerDown;
@@ -209,6 +221,10 @@ class _GameRoomPageState extends State<GameRoomPage> {
         playerRight = _players[(myIndex + 1) % _players.length];
         playerUp = _players[(myIndex + 2) % _players.length];
         playerLeft = _players[(myIndex + 3) % _players.length];
+        _fetchAvatar(_activePlayers[myIndex], "down");
+        _fetchAvatar(_activePlayers[(myIndex + 1) % _players.length], "right");
+        _fetchAvatar(_activePlayers[(myIndex + 2) % _players.length], "up");
+        _fetchAvatar(_activePlayers[(myIndex + 3) % _players.length], "left");
         // Set animated timers
         timers = [_countDownControllerDown, _countDownControllerDown, _countDownControllerDown, _countDownControllerDown];
         timers[(myIndex + 1) % _players.length] = _countDownControllerDown;
@@ -952,6 +968,31 @@ class _GameRoomPageState extends State<GameRoomPage> {
     Navigator.pushNamed(context, '/result');
   }
 
+  Future<void> _fetchAvatar(int id, String position) async {
+    final uri = Uri.parse("$fetchImageUrl$id");
+
+    try {
+      final response = await http.get(uri);
+      if (response.statusCode == 200) {
+        setState(() {
+          if (position == 'left') {
+            _downloadedAvatarLeft = Image.memory(response.bodyBytes, fit: BoxFit.cover);
+          } else if (position == 'right') {
+            _downloadedAvatarRight = Image.memory(response.bodyBytes, fit: BoxFit.cover);
+          } else if (position == 'up') {
+            _downloadedAvatarUp = Image.memory(response.bodyBytes, fit: BoxFit.cover);
+          } else if (position == 'down') {
+            _downloadedAvatarDown = Image.memory(response.bodyBytes, fit: BoxFit.cover);
+          }
+        });
+      } else {
+        print("Аватар не был загружен до этого");
+      }
+    } catch (e) {
+      print("Fetch error: $e");
+    }
+  }
+
 
   
   @override
@@ -1008,7 +1049,15 @@ class _GameRoomPageState extends State<GameRoomPage> {
                       autoStart: false,
                       textStyle: invisTextStyle,
                       ),
-                      Icon(Icons.account_circle, size: 72, color: grey3A3A3AColor,),
+                      _downloadedAvatarUp != null
+                        ? SizedBox(
+                          width: 59,
+                          height: 59,
+                          child: ClipOval(
+                            child: _downloadedAvatarUp
+                          ),
+                        )
+                        : Icon(Icons.account_circle, size: 72, color: grey3A3A3AColor,),
                     ],
                   ),
                   if (gamemode == 2 || gamemode == 4)
@@ -1060,8 +1109,16 @@ class _GameRoomPageState extends State<GameRoomPage> {
                           autoStart: false,
                           textStyle: invisTextStyle,
                           ),
-                          Icon(Icons.account_circle, size: 72, color: grey3A3A3AColor,),
-                        ],
+                          _downloadedAvatarLeft != null
+                            ? SizedBox(
+                              width: 59,
+                              height: 59,
+                              child: ClipOval(
+                                child: _downloadedAvatarLeft
+                              ),
+                            )
+                            : Icon(Icons.account_circle, size: 72, color: grey3A3A3AColor,),
+                            ],
                       ),
                       Padding(padding: const EdgeInsets.only(top: 5)),
                       Row(
@@ -1271,8 +1328,16 @@ class _GameRoomPageState extends State<GameRoomPage> {
                           autoStart: false,
                           textStyle: invisTextStyle,
                           ),
-                          Icon(Icons.account_circle, size: 72, color: grey3A3A3AColor,),
-                        ],
+                          _downloadedAvatarRight != null
+                            ? SizedBox(
+                              width: 59,
+                              height: 59,
+                              child: ClipOval(
+                                child: _downloadedAvatarRight
+                              ),
+                            )
+                            : Icon(Icons.account_circle, size: 72, color: grey3A3A3AColor,),
+                            ],
                       ),
                       Padding(padding: const EdgeInsets.only(top: 5)),
                       Row(
@@ -1329,7 +1394,15 @@ class _GameRoomPageState extends State<GameRoomPage> {
                                     autoStart: false,
                                     textStyle: invisTextStyle,
                                     ),
-                                    Icon(Icons.account_circle, size: 72, color: grey3A3A3AColor,),
+                                    _downloadedAvatarDown != null
+                                      ? SizedBox(
+                                        width: 59,
+                                        height: 59,
+                                        child: ClipOval(
+                                          child: _downloadedAvatarDown
+                                        ),
+                                      )
+                                      : Icon(Icons.account_circle, size: 72, color: grey3A3A3AColor,),
                                   ],
                                 ),
                               ],
