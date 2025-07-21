@@ -51,8 +51,8 @@ class _ProfilePageState extends State<ProfilePage> {
     if (pickedFile != null) {
       final bytes = await pickedFile.readAsBytes();
 
-      // Ограничение по размеру (2 МБ)
-      if (bytes.length > 2 * 1024 * 1024) {
+      // Ограничение по размеру (1 МБ)
+      if (bytes.length > 1024 * 1024) {
         setState(() {
           _imageError = "Файл превышает 2 МБ";
           ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(Provider.of<GameProvider>(context).localizations!.getString("big_file_size", Provider.of<GameProvider>(context).languageCode), textAlign: TextAlign.center)));
@@ -143,7 +143,7 @@ class _ProfilePageState extends State<ProfilePage> {
                     height: 60,
                     child: IconButton(
                       onPressed: () {
-                        Navigator.pop(context);
+                        Navigator.pushNamed(context, '/mainmenu');
                       },
                       icon: const Icon(Icons.arrow_back_rounded, size: 44),
                     ),
@@ -193,7 +193,7 @@ class _ProfilePageState extends State<ProfilePage> {
                                   height: 220,
                                   decoration: BoxDecoration(
                                     color: greyTimerColor,
-                                    borderRadius: BorderRadius.circular(20),
+                                    borderRadius: BorderRadius.only(topLeft: Radius.circular(200), topRight: Radius.circular(200), bottomLeft: Radius.circular(200), bottomRight: Radius.circular(34)),
                                     border: Border.all(color: grey3A3A3AColor, width: 1),
                                   ),
                                   child: Stack(
@@ -202,13 +202,13 @@ class _ProfilePageState extends State<ProfilePage> {
                                         child:
                                           _downloadedAvatar != null
                                             ? SizedBox(
-                                              width: 200,
-                                              height: 200,
+                                              width: 220,
+                                              height: 220,
                                               child: ClipOval(
                                                 child: _downloadedAvatar
                                               ),
                                             )
-                                            : Icon(Icons.account_circle_rounded, size: 200,),
+                                            : Icon(Icons.account_circle_rounded, size: 220,),
                                       ),
                                       SizedBox(
                                         child: Column(
@@ -229,10 +229,10 @@ class _ProfilePageState extends State<ProfilePage> {
                                                   },
                                                   icon: const Icon(Icons.edit_rounded, size: 20),
                                                 ),
-                                                Padding(padding: const EdgeInsets.only(right: 5)),
+                                                // Padding(padding: const EdgeInsets.only(right: 5)),
                                               ],
                                             ),
-                                            Padding(padding: const EdgeInsets.only(bottom: 5)),
+                                            // Padding(padding: const EdgeInsets.only(bottom: 5)),
                                           ],
                                         ),
                                       )

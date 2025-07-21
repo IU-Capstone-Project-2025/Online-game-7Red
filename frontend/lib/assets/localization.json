@@ -772,7 +772,7 @@
     },
     {
         "id": "big_file_size",
-        "en": "File greater than 2MB",
-        "ru": "Файл больше 2МБ"
+        "en": "File greater than 1MB",
+        "ru": "Файл больше 1МБ"
     }
 ]
