@@ -4,7 +4,7 @@ name: CI/CD Pipeline
 
 on:
   push:
-    branches: [ refact ]
+    branches: [ main ]
 
 # Global environment variables used across all jobs
 env:
